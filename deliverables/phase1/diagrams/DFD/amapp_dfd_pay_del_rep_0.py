@@ -23,7 +23,7 @@ report_api.inBoundary = server_boundary
 
 # Define fluxos de dados
 Dataflow(co_producer, report_api, "Own Report Request (PDF history of Payments & Deliveries)")
-Dataflow(admin, report_api, "Report Request for Any CoProducer")
+Dataflow(admin, report_api, "Report Request for Specific CoProducer")
 Dataflow(report_api, co_producer, "PDF Report (Binary Stream)")
 Dataflow(report_api, admin, "PDF Report (Binary Stream)")
 
