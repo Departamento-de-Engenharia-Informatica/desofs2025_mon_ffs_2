@@ -1,0 +1,66 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor Administrator
+actor "Malicious Admin" as MaliciousAdmin
+
+package "AMAPP System" {
+    ' --- Casos de Uso normais ---
+    usecase "Create/Update/Delete User Account" as UC_UserAccount
+    usecase "Assign/Update/Retrieve Roles and Permissions" as UC_RolesPermissions
+    usecase "Return User Data" as UC_ReturnUserData
+    usecase "Return Permission/Role Data" as UC_ReturnRoleData
+    usecase "Review Registration Requests" as UC_ReviewRegistration
+    usecase "Update Approval Status" as UC_UpdateApproval
+
+    ' --- Abuse/Misuse Cases ---
+    usecase "Account Takeover" as Abuse_AccountTakeover #darksalmon
+    usecase "Privilege Escalation" as Abuse_PrivilegeEscalation #darksalmon
+    usecase "User Data Exfiltration" as Abuse_DataExfiltration #darksalmon
+    usecase "Permission Enumeration" as Abuse_PermissionEnum #darksalmon
+    usecase "Approve Fake Registrations" as Abuse_FakeApproval #darksalmon
+    usecase "Tamper Approval Process" as Abuse_TamperApproval #darksalmon
+
+    ' --- Mitigation Cases ---
+    usecase "Enforce Strong Authentication (MFA)" as Mitigate_StrongAuth #palegreen
+    usecase "Strict Role Management Policies" as Mitigate_RoleMgmt #palegreen
+    usecase "Access Control and Logging" as Mitigate_AccessControl #palegreen
+    usecase "Limit API Information Disclosure" as Mitigate_LimitDisclosure #palegreen
+    usecase "Multi-level Registration Review" as Mitigate_ReviewProcess #palegreen
+    usecase "Approval Auditing and Alerts" as Mitigate_Auditing #palegreen
+}
+
+' --- Fluxos normais do Administrator ---
+Administrator --> UC_UserAccount
+Administrator --> UC_RolesPermissions
+Administrator --> UC_ReturnUserData
+Administrator --> UC_ReturnRoleData
+Administrator --> UC_ReviewRegistration
+Administrator --> UC_UpdateApproval
+
+' --- Fluxos de abuso do MaliciousAdmin ---
+MaliciousAdmin --> Abuse_AccountTakeover
+MaliciousAdmin --> Abuse_PrivilegeEscalation
+MaliciousAdmin --> Abuse_DataExfiltration
+MaliciousAdmin --> Abuse_PermissionEnum
+MaliciousAdmin --> Abuse_FakeApproval
+MaliciousAdmin --> Abuse_TamperApproval
+
+' --- Ligações de ameaças (threatens) ---
+UC_UserAccount -[#red,bold]-> Abuse_AccountTakeover : threatens
+UC_RolesPermissions -[#red,bold]-> Abuse_PrivilegeEscalation : threatens
+UC_ReturnUserData -[#red,bold]-> Abuse_DataExfiltration : threatens
+UC_ReturnRoleData -[#red,bold]-> Abuse_PermissionEnum : threatens
+UC_ReviewRegistration -[#red,bold]-> Abuse_FakeApproval : threatens
+UC_UpdateApproval -[#red,bold]-> Abuse_TamperApproval : threatens
+
+' --- Ligações de mitigação (mitigates) ---
+Mitigate_StrongAuth -[#green,dashed]-> Abuse_AccountTakeover : mitigates
+Mitigate_RoleMgmt -[#green,dashed]-> Abuse_PrivilegeEscalation : mitigates
+Mitigate_AccessControl -[#green,dashed]-> Abuse_DataExfiltration : mitigates
+Mitigate_LimitDisclosure -[#green,dashed]-> Abuse_PermissionEnum : mitigates
+Mitigate_ReviewProcess -[#green,dashed]-> Abuse_FakeApproval : mitigates
+Mitigate_Auditing -[#green,dashed]-> Abuse_TamperApproval : mitigates
+
+@enduml
