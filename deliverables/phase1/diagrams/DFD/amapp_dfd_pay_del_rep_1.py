@@ -29,12 +29,12 @@ database.isSql = True
 
 # Fluxos de dados
 Dataflow(co_producer, api_endpoint, "Request own report")
-Dataflow(admin, api_endpoint, "Request report for any CoProducer")
+Dataflow(admin, api_endpoint, "Request report for specific CoProducer")
 Dataflow(api_endpoint, report_engine, "Forward authorized request")
 Dataflow(report_engine, database, "Query data (filtered by role)")
 Dataflow(database, report_engine, "Return report data")
 Dataflow(report_engine, api_endpoint, "Generated PDF (binary stream)")
 Dataflow(api_endpoint, co_producer, "PDF Report (own data only)")
-Dataflow(api_endpoint, admin, "PDF Report (comprehensive data)")
+Dataflow(api_endpoint, admin, "PDF Report (selected CoProducer data)")
 
 tm.process()
