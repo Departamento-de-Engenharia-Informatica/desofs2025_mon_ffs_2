@@ -1,0 +1,92 @@
+@startuml
+' ==== Classes base de utilizadores ====
+
+class User {
+  +UserID: String
+  +Name: String
+  +Email: String
+}
+
+class Producer {
+  +ProducerID: String
+  +Name: String
+}
+
+class AMAPAdministrator {
+  +AdminID: String
+  +Name: String
+}
+
+class CoProducer {
+  +CoProducerID: String
+  +Name: String
+}
+
+' ==== Produto e inventário ====
+class Product {
+  +ProductID: String
+  +Name: String
+  +Description: String
+  +Price: Double
+  +AvailableQty: Integer
+  +AvailabilityDate: Date
+}
+
+class Inventory {
+  +ProductID: String
+  +AvailableQty: Integer
+}
+
+' ==== Encomenda e itens ====
+class Order {
+  +OrderID: String
+  +CoProducerID: String
+  +OrderDate: Date
+  +DeliveryReq: String
+  +OrderStatus: String
+}
+
+class OrderItem {
+  +OrderItemID: String
+  +OrderID: String
+  +ProductID: String
+  +Quantity: Integer
+}
+
+' ==== Pagamento e entrega ====
+class Payment {
+  +PaymentID: String
+  +OrderID: String
+  +Amount: Double
+  +Date: Date
+  +Status: String
+}
+
+class Delivery {
+  +DeliveryID: String
+  +OrderID: String
+  +DeliveryDate: Date
+  +DeliveryLocation: String
+  +Status: String
+}
+
+' ==== Relações entre as classes ====
+User <|-- Producer
+User <|-- AMAPAdministrator
+User <|-- CoProducer
+
+CoProducer "1" --> "0.." Order : places
+Producer "1" --> "0.." Product : creates
+Product "1" --> "0..1" Inventory : is tracked in
+
+Order "1" --> "0.." OrderItem : contains
+Product "1" --> "0.." OrderItem : included in
+
+Order "1" --> "0..1" Payment : has
+Order "1" --> "0..1" Delivery : has
+
+' ==== Comportamentos especiais ====
+OrderItem ..> Inventory : updates
+
+AMAPAdministrator ..> Delivery : defines DeliveryDate
+@enduml
