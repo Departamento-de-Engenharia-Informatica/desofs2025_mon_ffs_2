@@ -1,0 +1,13 @@
+@startuml
+actor actor_Producer_acf3059e70 as "Producer"
+entity process_ValidateInput_88f2d9c06f as "Validate Input"
+entity process_StoreProduct_579e9aae81 as "Store Product"
+entity process_SendResponse_f2eb7a3ff7 as "Send Response"
+database datastore_ProductDB_d2006ce1bb as "Product DB"
+
+actor_Producer_acf3059e70 -> process_ValidateInput_88f2d9c06f: Submit Product
+process_ValidateInput_88f2d9c06f -> process_StoreProduct_579e9aae81: Validated Data
+process_StoreProduct_579e9aae81 -> datastore_ProductDB_d2006ce1bb: Save to DB
+process_StoreProduct_579e9aae81 -> process_SendResponse_f2eb7a3ff7: Operation Outcome
+process_SendResponse_f2eb7a3ff7 -> actor_Producer_acf3059e70: Return Result
+@enduml
