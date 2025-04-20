@@ -1,0 +1,10 @@
+**STRIDE Data Flow Diagram Nível 1 - User/Roles Management**
+
+| Threat Category | Property Violated | Description | Example in AMAPP (DFD) | Mitigation |
+| --- | --- | --- | --- | --- |
+| **Spoofing** | Authentication | Impersonating an administrator to perform unauthorized management operations. | An attacker submits a fake role assignment pretending to be an authorized admin. | Enforce strong MFA for admin users; Validate session tokens; Mutual TLS authentication. |
+| **Tampering** | Integrity | Altering user data, permissions, or role mappings. | Malicious modification of role assignments directly in requests to the API. | Validate all user inputs; Use signed requests; Apply strict server-side role validation. |
+| **Repudiation** | Non-repudiation | Denying user management operations performed. | An admin denies having deleted or modified a user account. | Maintain secure and immutable audit logs for all management operations. |
+| **Information Disclosure** | Confidentiality | Exposure of user data, roles, or permission structures. | An attacker intercepts API responses containing user profile or permission data. | Encrypt all traffic with TLS; Limit data exposed in responses; Apply least privilege. |
+| **Denial of Service** | Availability | Overwhelming the user management API with requests. | Bot sending massive fake account creation requests to exhaust server resources. | Implement Rate Limiting and CAPTCHA for management endpoints; Enable API Gateway protections. |
+| **Elevation of Privilege** | Authorization | Unauthorized gaining of higher privileges through manipulation of roles. | A regular user injects a role change request granting themselves administrator privileges. | Strict server-side authorization checks; Use secure claims validation; Role-based access control (RBAC). |
