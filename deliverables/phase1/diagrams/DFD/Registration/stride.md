@@ -1,0 +1,10 @@
+**STRIDE Data Flow Diagram Nível 1 - User registration**
+
+| Threat Category | Property Violated | Description | Example in AMAPP (DFD) | Mitigation |
+| --- | --- | --- | --- | --- |
+| **Spoofing** | Authentication | Impersonating a user or an administrator during the registration process. | An attacker submits fake registration data or impersonates an administrator reviewing requests. | Use strong authentication for administrators; Validate all client certificates and sessions. |
+| **Tampering** | Integrity | Modifying registration requests, approval statuses, or user data. | An attacker modifies submitted registration data or approval updates en route to the API or DB. | Input validation; Use HTTPS/TLS for all flows; Integrity checks for critical operations. |
+| **Repudiation** | Non-repudiation | Denying having submitted or approved a registration. | A user denies submitting a registration; an administrator denies approving a user without audit evidence. | Implement secure, tamper-proof audit logs; Include timestamps and user identifiers. |
+| **Information Disclosure** | Confidentiality | Leaking registration data, user profiles, or approval statuses. | Sensitive user registration details are captured by intercepting unencrypted traffic. | Enforce TLS for all communications; Encrypt sensitive fields; Apply strict access control. |
+| **Denial of Service** | Availability | Disrupting the registration service to prevent new users from registering. | Sending mass fake registration requests to overload the AMAPP API or database. | Rate limiting; CAPTCHA on registration; API Gateway protections. |
+| **Elevation of Privilege** | Authorization | Gaining unauthorized admin privileges during the approval process. | A regular user manipulates the registration approval flow to escalate privileges. | Server-side authorization checks; Validate user roles before any critical operation; Secure workflows. |

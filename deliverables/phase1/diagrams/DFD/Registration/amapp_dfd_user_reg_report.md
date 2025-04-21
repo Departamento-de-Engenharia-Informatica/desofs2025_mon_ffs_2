@@ -21,11 +21,11 @@ User Registration Level 1
 
 Name|From|To |Data|Protocol|Port
 |:----:|:----:|:---:|:----:|:--------:|:----:|
-|Submit registration data|User|AMAPP API|[]||-1|
-|Store user data|AMAPP API|AMAPP DB|[]||-1|
-|Review registration requests|Administrator|AMAPP API|[]||-1|
-|Update approval status|AMAPP API|AMAPP DB|[]||-1|
-|Notify approval decision|AMAPP API|User|[]||-1|
+|Submit registration data|User|AMAPP API|Registration Info|HTTPS|-1|
+|Store user data|AMAPP API|AMAPP DB|User Data|SQL/TLS|-1|
+|Review registration requests|AMAPP Admin|AMAPP API|Registration Review Action|HTTPS|-1|
+|Update approval status|AMAPP API|AMAPP DB|Approval Status|SQL/TLS|-1|
+|Notify approval decision|AMAPP API|User|Approval Notification|HTTPS|-1|
 
 
 ## Data Dictionary
@@ -33,6 +33,11 @@ Name|From|To |Data|Protocol|Port
 
 Name|Description|Classification
 |:----:|:--------:|:----:|
+|Registration Info|User's name, email, password.|UNKNOWN|
+|User Data|Stored user account info (hashed password, email, etc.)|UNKNOWN|
+|Registration Review Action|Administrator's decision on pending registration.|UNKNOWN|
+|Approval Status|Approval or rejection of a user registration.|UNKNOWN|
+|Approval Notification|Notification message sent to user.|UNKNOWN|
 
 
 &nbsp;

@@ -3,7 +3,7 @@
 ## System Description
 &nbsp;
 
-Detailed DFD for user login/authentication process.
+Detailed DFD for managing users and assigning roles/permissions.
 
 &nbsp;
 
@@ -12,7 +12,7 @@ Detailed DFD for user login/authentication process.
 
 ## Dataflow Diagram - Level 1 DFD
 
-![](amapp_dfd_auth_1.png)
+![](amapp_dfd_user_management_1.png)
 
 &nbsp;
 
@@ -21,10 +21,12 @@ Detailed DFD for user login/authentication process.
 
 Name|From|To |Data|Protocol|Port
 |:----:|:----:|:---:|:----:|:--------:|:----:|
-|Submit login credentials|User|AMAPP API|[]||-1|
-|Validate credentials|AMAPP API|AMAPP DB|[]||-1|
-|Return user record|AMAPP DB|AMAPP API|[]||-1|
-|Authentication JWT Token|AMAPP API|User|[]||-1|
+|Submit user or permission management request|Administrator|AMAPP API|User Management Request|HTTPS|-1|
+|Create/update/delete user account|AMAPP API|AMAPP DB|User Management Request|SQL/TLS|-1|
+|Assign/update/retrieve roles and permissions|AMAPP API|AMAPP DB|Role/Permission Management Request|SQL/TLS|-1|
+|Return user data|AMAPP DB|AMAPP API|User Data Response|SQL/TLS|-1|
+|Return permission/role data|AMAPP DB|AMAPP API|Role/Permission Data Response|SQL/TLS|-1|
+|Send operation confirmation or results|AMAPP API|Administrator|Operation Confirmation or Result|HTTPS|-1|
 
 
 ## Data Dictionary
@@ -32,6 +34,11 @@ Name|From|To |Data|Protocol|Port
 
 Name|Description|Classification
 |:----:|:--------:|:----:|
+|User Management Request|Request for creating, updating, or deleting a user.|UNKNOWN|
+|Role/Permission Management Request|Request to assign or update user roles and permissions.|UNKNOWN|
+|User Data Response|Response containing user account information.|UNKNOWN|
+|Role/Permission Data Response|Response containing assigned roles and permissions.|UNKNOWN|
+|Operation Confirmation or Result|Success or error message after operation.|UNKNOWN|
 
 
 &nbsp;
@@ -861,7 +868,7 @@ Name|Description|Classification
 <details>
   <summary>   DE01   --   Interception</summary>
   <h6> Targeted Element </h6>
-  <p> Submit login credentials </p>
+  <p> Submit user or permission management request </p>
   <h6> Severity </h6>
   <p>Medium</p>
   <h6>Example Instances</h6>
@@ -878,7 +885,7 @@ Name|Description|Classification
 <details>
   <summary>   AC05   --   Content Spoofing</summary>
   <h6> Targeted Element </h6>
-  <p> Submit login credentials </p>
+  <p> Submit user or permission management request </p>
   <h6> Severity </h6>
   <p>Medium</p>
   <h6>Example Instances</h6>
@@ -895,7 +902,7 @@ Name|Description|Classification
 <details>
   <summary>   DE03   --   Sniffing Attacks</summary>
   <h6> Targeted Element </h6>
-  <p> Submit login credentials </p>
+  <p> Submit user or permission management request </p>
   <h6> Severity </h6>
   <p>Medium</p>
   <h6>Example Instances</h6>
@@ -912,7 +919,7 @@ Name|Description|Classification
 <details>
   <summary>   CR06   --   Communication Channel Manipulation</summary>
   <h6> Targeted Element </h6>
-  <p> Submit login credentials </p>
+  <p> Submit user or permission management request </p>
   <h6> Severity </h6>
   <p>High</p>
   <h6>Example Instances</h6>
@@ -929,7 +936,7 @@ Name|Description|Classification
 <details>
   <summary>   CR08   --   Client-Server Protocol Manipulation</summary>
   <h6> Targeted Element </h6>
-  <p> Submit login credentials </p>
+  <p> Submit user or permission management request </p>
   <h6> Severity </h6>
   <p>Medium</p>
   <h6>Example Instances</h6>
@@ -946,7 +953,7 @@ Name|Description|Classification
 <details>
   <summary>   DE01   --   Interception</summary>
   <h6> Targeted Element </h6>
-  <p> Validate credentials </p>
+  <p> Create/update/delete user account </p>
   <h6> Severity </h6>
   <p>Medium</p>
   <h6>Example Instances</h6>
@@ -963,7 +970,7 @@ Name|Description|Classification
 <details>
   <summary>   AC05   --   Content Spoofing</summary>
   <h6> Targeted Element </h6>
-  <p> Validate credentials </p>
+  <p> Create/update/delete user account </p>
   <h6> Severity </h6>
   <p>Medium</p>
   <h6>Example Instances</h6>
@@ -980,7 +987,7 @@ Name|Description|Classification
 <details>
   <summary>   DE03   --   Sniffing Attacks</summary>
   <h6> Targeted Element </h6>
-  <p> Validate credentials </p>
+  <p> Create/update/delete user account </p>
   <h6> Severity </h6>
   <p>Medium</p>
   <h6>Example Instances</h6>
@@ -997,7 +1004,7 @@ Name|Description|Classification
 <details>
   <summary>   CR06   --   Communication Channel Manipulation</summary>
   <h6> Targeted Element </h6>
-  <p> Validate credentials </p>
+  <p> Create/update/delete user account </p>
   <h6> Severity </h6>
   <p>High</p>
   <h6>Example Instances</h6>
@@ -1014,7 +1021,7 @@ Name|Description|Classification
 <details>
   <summary>   CR08   --   Client-Server Protocol Manipulation</summary>
   <h6> Targeted Element </h6>
-  <p> Validate credentials </p>
+  <p> Create/update/delete user account </p>
   <h6> Severity </h6>
   <p>Medium</p>
   <h6>Example Instances</h6>
@@ -1031,7 +1038,7 @@ Name|Description|Classification
 <details>
   <summary>   DE01   --   Interception</summary>
   <h6> Targeted Element </h6>
-  <p> Return user record </p>
+  <p> Assign/update/retrieve roles and permissions </p>
   <h6> Severity </h6>
   <p>Medium</p>
   <h6>Example Instances</h6>
@@ -1048,7 +1055,7 @@ Name|Description|Classification
 <details>
   <summary>   AC05   --   Content Spoofing</summary>
   <h6> Targeted Element </h6>
-  <p> Return user record </p>
+  <p> Assign/update/retrieve roles and permissions </p>
   <h6> Severity </h6>
   <p>Medium</p>
   <h6>Example Instances</h6>
@@ -1065,7 +1072,7 @@ Name|Description|Classification
 <details>
   <summary>   DE03   --   Sniffing Attacks</summary>
   <h6> Targeted Element </h6>
-  <p> Return user record </p>
+  <p> Assign/update/retrieve roles and permissions </p>
   <h6> Severity </h6>
   <p>Medium</p>
   <h6>Example Instances</h6>
@@ -1082,7 +1089,7 @@ Name|Description|Classification
 <details>
   <summary>   CR06   --   Communication Channel Manipulation</summary>
   <h6> Targeted Element </h6>
-  <p> Return user record </p>
+  <p> Assign/update/retrieve roles and permissions </p>
   <h6> Severity </h6>
   <p>High</p>
   <h6>Example Instances</h6>
@@ -1099,7 +1106,7 @@ Name|Description|Classification
 <details>
   <summary>   CR08   --   Client-Server Protocol Manipulation</summary>
   <h6> Targeted Element </h6>
-  <p> Return user record </p>
+  <p> Assign/update/retrieve roles and permissions </p>
   <h6> Severity </h6>
   <p>Medium</p>
   <h6>Example Instances</h6>
@@ -1116,7 +1123,7 @@ Name|Description|Classification
 <details>
   <summary>   DE01   --   Interception</summary>
   <h6> Targeted Element </h6>
-  <p> Authentication JWT Token </p>
+  <p> Return user data </p>
   <h6> Severity </h6>
   <p>Medium</p>
   <h6>Example Instances</h6>
@@ -1133,7 +1140,7 @@ Name|Description|Classification
 <details>
   <summary>   AC05   --   Content Spoofing</summary>
   <h6> Targeted Element </h6>
-  <p> Authentication JWT Token </p>
+  <p> Return user data </p>
   <h6> Severity </h6>
   <p>Medium</p>
   <h6>Example Instances</h6>
@@ -1150,7 +1157,7 @@ Name|Description|Classification
 <details>
   <summary>   DE03   --   Sniffing Attacks</summary>
   <h6> Targeted Element </h6>
-  <p> Authentication JWT Token </p>
+  <p> Return user data </p>
   <h6> Severity </h6>
   <p>Medium</p>
   <h6>Example Instances</h6>
@@ -1167,7 +1174,7 @@ Name|Description|Classification
 <details>
   <summary>   CR06   --   Communication Channel Manipulation</summary>
   <h6> Targeted Element </h6>
-  <p> Authentication JWT Token </p>
+  <p> Return user data </p>
   <h6> Severity </h6>
   <p>High</p>
   <h6>Example Instances</h6>
@@ -1184,7 +1191,177 @@ Name|Description|Classification
 <details>
   <summary>   CR08   --   Client-Server Protocol Manipulation</summary>
   <h6> Targeted Element </h6>
-  <p> Authentication JWT Token </p>
+  <p> Return user data </p>
+  <h6> Severity </h6>
+  <p>Medium</p>
+  <h6>Example Instances</h6>
+  <p>An adversary could exploit existing communication protocol vulnerabilities and can launch MITM attacks and gain sensitive information or spoof client/server identities.</p>
+  <h6>Mitigations</h6>
+  <p>Use strong authentication protocols.</p>
+  <h6>References</h6>
+  <p>https://capec.mitre.org/data/definitions/220.html, http://cwe.mitre.org/data/definitions/757.html</p>
+  &nbsp;
+  &nbsp;
+  &emsp;
+</details>
+
+<details>
+  <summary>   DE01   --   Interception</summary>
+  <h6> Targeted Element </h6>
+  <p> Return permission/role data </p>
+  <h6> Severity </h6>
+  <p>Medium</p>
+  <h6>Example Instances</h6>
+  <p>Adversary tries to block, manipulate, and steal communications in an attempt to achieve a desired negative technical impact.</p>
+  <h6>Mitigations</h6>
+  <p>Leverage encryption to encode the transmission of data thus making it accessible only to authorized parties.</p>
+  <h6>References</h6>
+  <p>https://capec.mitre.org/data/definitions/117.html, http://cwe.mitre.org/data/definitions/319.html, https://cwe.mitre.org/data/definitions/299.html</p>
+  &nbsp;
+  &nbsp;
+  &emsp;
+</details>
+
+<details>
+  <summary>   AC05   --   Content Spoofing</summary>
+  <h6> Targeted Element </h6>
+  <p> Return permission/role data </p>
+  <h6> Severity </h6>
+  <p>Medium</p>
+  <h6>Example Instances</h6>
+  <p>An attacker finds a site which is vulnerable to HTML Injection. He sends a URL with malicious code injected in the URL to the user of the website(victim) via email or some other social networking site. User visits the page because the page is located within trusted domain. When the victim accesses the page, the injected HTML code is rendered and presented to the user asking for username and password. The username and password are both sent to the attacker&#x27;s server.</p>
+  <h6>Mitigations</h6>
+  <p>Validation of user input for type, length, data-range, format, etc. Encoding any user input that will be output by the web application.</p>
+  <h6>References</h6>
+  <p>https://capec.mitre.org/data/definitions/148.html, http://cwe.mitre.org/data/definitions/345.html, https://cwe.mitre.org/data/definitions/299.html</p>
+  &nbsp;
+  &nbsp;
+  &emsp;
+</details>
+
+<details>
+  <summary>   DE03   --   Sniffing Attacks</summary>
+  <h6> Targeted Element </h6>
+  <p> Return permission/role data </p>
+  <h6> Severity </h6>
+  <p>Medium</p>
+  <h6>Example Instances</h6>
+  <p>Attacker knows that the computer/OS/application can request new applications to install, or it periodically checks for an available update. The attacker loads the sniffer set up during Explore phase, and extracts the application code from subsequent communication. The attacker then proceeds to reverse engineer the captured code.</p>
+  <h6>Mitigations</h6>
+  <p>Encrypt sensitive information when transmitted on insecure mediums to prevent interception.</p>
+  <h6>References</h6>
+  <p>https://capec.mitre.org/data/definitions/157.html, http://cwe.mitre.org/data/definitions/311.html</p>
+  &nbsp;
+  &nbsp;
+  &emsp;
+</details>
+
+<details>
+  <summary>   CR06   --   Communication Channel Manipulation</summary>
+  <h6> Targeted Element </h6>
+  <p> Return permission/role data </p>
+  <h6> Severity </h6>
+  <p>High</p>
+  <h6>Example Instances</h6>
+  <p>Using MITM techniques, an attacker launches a blockwise chosen-boundary attack to obtain plaintext HTTP headers by taking advantage of an SSL session using an encryption protocol in CBC mode with chained initialization vectors (IV). This allows the attacker to recover session IDs, authentication cookies, and possibly other valuable data that can be used for further exploitation. Additionally this could allow for the insertion of data into the stream, allowing for additional attacks (CSRF, SQL inject, etc) to occur.</p>
+  <h6>Mitigations</h6>
+  <p>Encrypt all sensitive communications using properly-configured cryptography.Design the communication system such that it associates proper authentication/authorization with each channel/message.</p>
+  <h6>References</h6>
+  <p>https://capec.mitre.org/data/definitions/216.html</p>
+  &nbsp;
+  &nbsp;
+  &emsp;
+</details>
+
+<details>
+  <summary>   CR08   --   Client-Server Protocol Manipulation</summary>
+  <h6> Targeted Element </h6>
+  <p> Return permission/role data </p>
+  <h6> Severity </h6>
+  <p>Medium</p>
+  <h6>Example Instances</h6>
+  <p>An adversary could exploit existing communication protocol vulnerabilities and can launch MITM attacks and gain sensitive information or spoof client/server identities.</p>
+  <h6>Mitigations</h6>
+  <p>Use strong authentication protocols.</p>
+  <h6>References</h6>
+  <p>https://capec.mitre.org/data/definitions/220.html, http://cwe.mitre.org/data/definitions/757.html</p>
+  &nbsp;
+  &nbsp;
+  &emsp;
+</details>
+
+<details>
+  <summary>   DE01   --   Interception</summary>
+  <h6> Targeted Element </h6>
+  <p> Send operation confirmation or results </p>
+  <h6> Severity </h6>
+  <p>Medium</p>
+  <h6>Example Instances</h6>
+  <p>Adversary tries to block, manipulate, and steal communications in an attempt to achieve a desired negative technical impact.</p>
+  <h6>Mitigations</h6>
+  <p>Leverage encryption to encode the transmission of data thus making it accessible only to authorized parties.</p>
+  <h6>References</h6>
+  <p>https://capec.mitre.org/data/definitions/117.html, http://cwe.mitre.org/data/definitions/319.html, https://cwe.mitre.org/data/definitions/299.html</p>
+  &nbsp;
+  &nbsp;
+  &emsp;
+</details>
+
+<details>
+  <summary>   AC05   --   Content Spoofing</summary>
+  <h6> Targeted Element </h6>
+  <p> Send operation confirmation or results </p>
+  <h6> Severity </h6>
+  <p>Medium</p>
+  <h6>Example Instances</h6>
+  <p>An attacker finds a site which is vulnerable to HTML Injection. He sends a URL with malicious code injected in the URL to the user of the website(victim) via email or some other social networking site. User visits the page because the page is located within trusted domain. When the victim accesses the page, the injected HTML code is rendered and presented to the user asking for username and password. The username and password are both sent to the attacker&#x27;s server.</p>
+  <h6>Mitigations</h6>
+  <p>Validation of user input for type, length, data-range, format, etc. Encoding any user input that will be output by the web application.</p>
+  <h6>References</h6>
+  <p>https://capec.mitre.org/data/definitions/148.html, http://cwe.mitre.org/data/definitions/345.html, https://cwe.mitre.org/data/definitions/299.html</p>
+  &nbsp;
+  &nbsp;
+  &emsp;
+</details>
+
+<details>
+  <summary>   DE03   --   Sniffing Attacks</summary>
+  <h6> Targeted Element </h6>
+  <p> Send operation confirmation or results </p>
+  <h6> Severity </h6>
+  <p>Medium</p>
+  <h6>Example Instances</h6>
+  <p>Attacker knows that the computer/OS/application can request new applications to install, or it periodically checks for an available update. The attacker loads the sniffer set up during Explore phase, and extracts the application code from subsequent communication. The attacker then proceeds to reverse engineer the captured code.</p>
+  <h6>Mitigations</h6>
+  <p>Encrypt sensitive information when transmitted on insecure mediums to prevent interception.</p>
+  <h6>References</h6>
+  <p>https://capec.mitre.org/data/definitions/157.html, http://cwe.mitre.org/data/definitions/311.html</p>
+  &nbsp;
+  &nbsp;
+  &emsp;
+</details>
+
+<details>
+  <summary>   CR06   --   Communication Channel Manipulation</summary>
+  <h6> Targeted Element </h6>
+  <p> Send operation confirmation or results </p>
+  <h6> Severity </h6>
+  <p>High</p>
+  <h6>Example Instances</h6>
+  <p>Using MITM techniques, an attacker launches a blockwise chosen-boundary attack to obtain plaintext HTTP headers by taking advantage of an SSL session using an encryption protocol in CBC mode with chained initialization vectors (IV). This allows the attacker to recover session IDs, authentication cookies, and possibly other valuable data that can be used for further exploitation. Additionally this could allow for the insertion of data into the stream, allowing for additional attacks (CSRF, SQL inject, etc) to occur.</p>
+  <h6>Mitigations</h6>
+  <p>Encrypt all sensitive communications using properly-configured cryptography.Design the communication system such that it associates proper authentication/authorization with each channel/message.</p>
+  <h6>References</h6>
+  <p>https://capec.mitre.org/data/definitions/216.html</p>
+  &nbsp;
+  &nbsp;
+  &emsp;
+</details>
+
+<details>
+  <summary>   CR08   --   Client-Server Protocol Manipulation</summary>
+  <h6> Targeted Element </h6>
+  <p> Send operation confirmation or results </p>
   <h6> Severity </h6>
   <p>Medium</p>
   <h6>Example Instances</h6>

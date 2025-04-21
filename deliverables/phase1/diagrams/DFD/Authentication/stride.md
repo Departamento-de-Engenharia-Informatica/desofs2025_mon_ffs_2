@@ -1,0 +1,10 @@
+**STRIDE Data Flow Diagram Nível 1 - Authentication**
+
+| Threat Category | Property Violated | Description | Example in AMAPP (DFD) | Mitigation |
+| --- | --- | --- | --- | --- |
+| **Spoofing** | Authentication | Pretending to be someone or something other than yourself. | An attacker submits fake login credentials or impersonates the AMAPP API to capture data. *Phishing* to steal user credentials | Enforce strong JWT signing and validation; Use HTTPS/TLS; Validate server certificates. |
+| **Tampering** | Integrity | Modifying something on disk, network, memory, or elsewhere. | Manipulating the login JSON payload or altering the authentication token. | Input validation; Use HTTPS/TLS; Verify JWT token integrity on each request. |
+| **Repudiation** | Non-repudiation | Claiming that you did not do something or denying responsibility, honestly or falsely. | A user denies having logged in, and no secure audit logs are available. | Centralized secure logging; Include timestamps and user identifiers; Make logs tamper-proof. |
+| **Information Disclosure** | Confidentiality | Providing information to someone not authorized to access it. | Intercepting the authentication JWT token or user data over unsecured connections. | Encrypt all communication with TLS; Avoid exposing stack traces; Encrypt sensitive data in the database. |
+| **Denial of Service** | Availability | Exhausting resources needed to provide service. | Massive fake login requests overwhelming the AMAPP API and database. | Implement Rate Limiting and IP throttling; Use CAPTCHA on login; Deploy WAF (Web Application Firewall). |
+| **Elevation of Privilege** | Authorization | Allowing someone to do something that they are not authorized to do. | Modifying a JWT token to escalate privileges (e.g., setting role=Admin). | Use strong claims validation; Validate roles and permissions server-side; Sign JWTs securely. |
