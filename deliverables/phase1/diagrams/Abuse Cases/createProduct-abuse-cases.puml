@@ -1,0 +1,60 @@
+@startuml
+left to right direction
+skinparam usecase {
+    BackgroundColor<<Threat>> #FFCCCC
+    BorderColor<<Threat>> #FF0000
+    FontColor<<Threat>> #FF0000
+
+    BackgroundColor<<Countermeasure>> #CCFFCC
+    BorderColor<<Countermeasure>> #008000
+    FontColor<<Countermeasure>> #008000
+}
+
+rectangle "System: Product Creation Process" {
+    usecase "Submit Product" as UC1
+    usecase "Validate Input" as UC2
+    usecase "Store Product" as UC3
+    usecase "Send Response" as UC4
+
+    usecase "Submit Malicious Product Data" as AC1 <<Threat>>
+    usecase "Exploit Validation Loopholes" as AC2 <<Threat>>
+    usecase "Inject Malicious Code into Product Data" as AC3 <<Threat>>
+    usecase "Tamper with Stored Product Data" as AC4 <<Threat>>
+    usecase "Flood API with Product Submissions" as AC5 <<Threat>>
+
+    usecase "Input Validation and Sanitization" as CM1 <<Countermeasure>>
+    usecase "Rate Limiting and Throttling" as CM2 <<Countermeasure>>
+    usecase "Secure Coding Practices" as CM3 <<Countermeasure>>
+    usecase "Database Access Controls" as CM4 <<Countermeasure>>
+    usecase "Monitoring and Alerts" as CM5 <<Countermeasure>>
+}
+
+actor Attacker as A
+actor Producer as P
+
+P --> UC1 : "Submit Product"
+UC1 --> UC2 : "Validate Input"
+UC2 --> UC3 : "Store Product"
+UC3 --> UC4 : "Send Response"
+
+A --> AC1 : "Submit Malicious Data"
+AC1 --> UC1 : "Bypass Input Validation"
+AC1 --> CM1 : "Mitigated by"
+
+A --> AC2 : "Exploit Validation Loopholes"
+AC2 --> UC2 : "Inject Invalid Data"
+AC2 --> CM1 : "Mitigated by"
+
+A --> AC3 : "Inject Malicious Code"
+AC3 --> UC2 : "Exploit Weak Validation"
+AC3 --> CM3 : "Mitigated by"
+
+A --> AC4 : "Tamper with Stored Data"
+AC4 --> UC3 : "Modify Product Records"
+AC4 --> CM4 : "Mitigated by"
+
+A --> AC5 : "Flood API"
+AC5 --> UC1 : "Overload System"
+AC5 --> CM2 : "Mitigated by"
+AC5 --> CM5 : "Monitored by"
+@enduml
