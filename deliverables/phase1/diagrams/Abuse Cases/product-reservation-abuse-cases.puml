@@ -1,0 +1,97 @@
+@startuml
+!define THREAT_COLOR #FFAAAA
+!define COUNTERMEASURE_COLOR #AAFFAA
+
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+skinparam usecaseBackgroundColor white
+skinparam usecaseBorderColor black
+
+'Define actors
+actor "Co-Producer" as consumer
+actor "Malicious User" as attacker THREAT_COLOR
+
+'Define boundary
+rectangle "AMAP System" {
+  'Normal use cases
+  usecase "Browse Product Catalog" as UC1
+  usecase "Search for Products" as UC1_1
+  usecase "View Product Details" as UC1_2
+  
+  usecase "Place Order" as UC2
+  usecase "Select Products" as UC2_1
+  usecase "Reserve Products" as UC2_2
+  usecase "Provide Delivery Information" as UC2_3
+  
+  usecase "Receive Order Confirmation" as UC3
+  usecase "Receive Delivery Notification" as UC5
+  
+  'Security threats
+  usecase "Manipulate Product Prices" as T1 THREAT_COLOR
+  usecase "Intercept User Credentials" as T2 THREAT_COLOR
+  usecase "Perform SQL Injection" as T3 THREAT_COLOR
+  usecase "Submit Fraudulent Orders" as T4 THREAT_COLOR
+  
+  'Integrated countermeasures
+  usecase "Authenticate with 2FA" as CM1 COUNTERMEASURE_COLOR
+  usecase "Verify Order Details" as CM2 COUNTERMEASURE_COLOR
+  usecase "Use Secure Connection" as CM3 COUNTERMEASURE_COLOR
+}
+
+'Normal flow relationships
+consumer --> UC1
+UC1 <|-- UC1_1
+UC1 <|-- UC1_2
+
+'Authentication happens before ordering
+consumer --> CM1
+CM1 --> UC2 : precedes
+
+'Order process
+UC2 <|-- UC2_1
+UC2 <|-- UC2_2
+UC2 <|-- UC2_3
+
+'Secure connection used for all interactions
+consumer --> CM3
+CM3 ...> UC1 : secures
+CM3 ...> UC2 : secures
+CM3 ...> UC3 : secures
+CM3 ...> UC5 : secures
+
+'Order verification process
+UC2 --> CM2 : includes
+CM2 --> UC3 : precedes
+
+consumer --> UC3
+consumer --> UC5
+
+'Threat relationships
+attacker --> T1
+attacker --> T2
+attacker --> T3
+attacker --> T4
+
+T1 --> UC2 : threatens
+T2 --> CM1 : threatens
+T3 ..> UC1_1 : threatens
+T4 ..> UC2 : threatens
+
+'Countermeasure relationships
+CM1 ..> T2 : mitigates
+CM1 ..> T4 : mitigates
+CM2 ..> T1 : mitigates
+CM3 ..> T2 : mitigates
+CM3 ..> T3 : mitigates
+
+'Explanatory notes
+note right of CM1
+  Two-factor authentication
+  prevents account takeover
+end note
+
+note right of CM2
+  Server validates all prices
+  and quantities against database
+end note
+@enduml
