@@ -1,0 +1,66 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor User
+actor Attacker
+
+package "AMAPP System" {
+    ' --- Use Cases normais ---
+    usecase "Register" as UC_Register
+    usecase "Log in" as UC_Login
+    usecase "Change Password" as UC_ChangePassword
+    usecase "Recover Password" as UC_RecoverPassword
+
+    ' --- Abuse Cases ---
+    usecase "Register Multiple Accounts" as Abuse_Register #darksalmon
+    usecase "Brute Force Login Attack" as Abuse_Login #darksalmon
+    usecase "Unauthorized Password Change" as Abuse_ChangePassword #darksalmon
+    usecase "Password Recovery Abuse" as Abuse_Recovery #darksalmon
+    usecase "Authentication Bypass" as Abuse_AuthBypass #darksalmon
+    usecase "Privilege Escalation" as Abuse_PrivEscalation #darksalmon
+
+    ' --- Mitigações (implementadas pelo AMAPP System) ---
+    usecase "Apply Rate Limiting" as Mitigate_RateLimiting #palegreen
+    usecase "Enforce Strong Authentication" as Mitigate_StrongAuth #palegreen
+    usecase "Session Verification on Password Change" as Mitigate_SessionVerify #palegreen
+    usecase "Secure Password Recovery Workflow" as Mitigate_SecureRecovery #palegreen
+    usecase "Validate JWT Signature and Claims" as Mitigate_JWTValidation #palegreen
+    usecase "Enforce Authorization per Resource" as Mitigate_AuthorizationCheck #palegreen
+
+    ' --- Fluxos normais de User ---
+    User --> UC_Register
+    User --> UC_Login
+    User --> UC_ChangePassword
+    User --> UC_RecoverPassword
+
+    ' --- Includes normais entre casos de uso ---
+    UC_Register .[#green].> UC_Login : includes
+    UC_Login .[#green].> UC_ChangePassword : includes
+    UC_Login .[#green].> UC_RecoverPassword : includes
+
+    ' --- Ataques do Attacker ---
+    Attacker --> Abuse_Register
+    Attacker --> Abuse_Login
+    Attacker --> Abuse_ChangePassword
+    Attacker --> Abuse_Recovery
+    Attacker --> Abuse_AuthBypass
+    Attacker --> Abuse_PrivEscalation
+
+    ' --- Threatens (Ameaças) ---
+    UC_Register -[#red,bold]-> Abuse_Register : threatens
+    UC_Login -[#red,bold]-> Abuse_Login : threatens
+    UC_ChangePassword -[#red,bold]-> Abuse_ChangePassword : threatens
+    UC_RecoverPassword -[#red,bold]-> Abuse_Recovery : threatens
+    UC_Login -[#red,bold]-> Abuse_AuthBypass : threatens
+    UC_ChangePassword -[#red,bold]-> Abuse_PrivEscalation : threatens
+
+    ' --- Mitigações para os Abuse Cases ---
+    Mitigate_RateLimiting -[#green,dashed]-> Abuse_Register : mitigates
+    Mitigate_StrongAuth -[#green,dashed]-> Abuse_Login : mitigates
+    Mitigate_SessionVerify -[#green,dashed]-> Abuse_ChangePassword : mitigates
+    Mitigate_SecureRecovery -[#green,dashed]-> Abuse_Recovery : mitigates
+    Mitigate_JWTValidation -[#green,dashed]-> Abuse_AuthBypass : mitigates
+    Mitigate_AuthorizationCheck -[#green,dashed]-> Abuse_PrivEscalation : mitigates
+}
+@enduml

@@ -1,0 +1,119 @@
+@startuml Use_Case_Diagram
+left to right direction
+
+' Cores para ameaças (tons de vermelho)
+skinparam usecase<<threat>> {
+  BackgroundColor #FFC0C0
+  BorderColor #CC0000
+  FontColor #990000
+}
+
+' Cores para remediações (tons de verde)
+skinparam usecase<<remediation>> {
+  BackgroundColor #C0FFC0
+  BorderColor #00CC00
+  FontColor #006600
+}
+
+' Nota de ameaça
+skinparam note {
+  BackgroundColor #FFF0F0
+  BorderColor #CC0000
+  FontColor #990000
+}
+
+' Nota de remediação
+skinparam note<<remediation>> {
+  BackgroundColor #F0FFF0
+  BorderColor #00CC00
+  FontColor #006600
+}
+
+actor "CoProducer" as CoProducer
+actor "AMAPP Administrator" as Admin
+
+rectangle "AMAPP Payment & Delivery Report System" {
+    usecase "Request Own Report" as UC1
+    usecase "View Own Report" as UC2
+    usecase "Request Report for Specific CoProducer" as UC3
+    usecase "View Selected CoProducer Report" as UC4
+    usecase "Generate Report" as UC5
+    usecase "Query Database" as UC6
+
+    ' Security Use Cases
+    usecase "Authenticate User"<<remediation>> as UC7
+    usecase "Authorize Access"<<remediation>> as UC8
+    usecase "Secure Communication Channel"<<remediation>> as SEC1
+    usecase "Validate Input Parameters"<<remediation>> as SEC2
+    usecase "Maintain Audit Logs"<<remediation>> as SEC3
+    usecase "Implement Session Protection"<<remediation>> as SEC4
+    usecase "Enforce Access Control"<<remediation>> as SEC5
+
+    ' Threat Use Cases
+    usecase "Session Hijacking"<<threat>> as T1
+    usecase "Data Sniffing"<<threat>> as T2
+    usecase "Communication Manipulation"<<threat>> as T3
+    usecase "Protocol Manipulation"<<threat>> as T4
+    usecase "Argument Injection"<<threat>> as T5
+}
+
+' Actor relationships
+CoProducer --> UC1
+CoProducer --> UC2
+Admin --> UC3
+Admin --> UC4
+
+' Use case relationships
+UC1 ..> UC7 : <<include>>
+UC1 ..> UC8 : <<include>>
+UC3 ..> UC7 : <<include>>
+UC3 ..> UC8 : <<include>>
+
+UC1 ..> UC5 : <<include>>
+UC3 ..> UC5 : <<include>>
+UC5 ..> UC6 : <<include>>
+
+' Security relationships
+UC1 ..> SEC1 : <<include>>
+UC2 ..> SEC1 : <<include>>
+UC3 ..> SEC1 : <<include>>
+UC4 ..> SEC1 : <<include>>
+UC5 ..> SEC2 : <<include>>
+UC5 ..> SEC3 : <<include>>
+UC7 ..> SEC4 : <<include>>
+UC8 ..> SEC5 : <<include>>
+
+' Threat mitigations
+T1 ..> SEC4 : <<mitigated by>>
+T2 ..> SEC1 : <<mitigated by>>
+T3 ..> SEC1 : <<mitigated by>>
+T4 ..> SEC1 : <<mitigated by>>
+T4 ..> SEC2 : <<mitigated by>>
+T5 ..> SEC2 : <<mitigated by>>
+
+' Notes
+note right of SEC1 <<remediation>>
+  HTTPS with TLS 1.3
+  encryption
+end note
+
+note right of SEC2 <<remediation>>
+  Strict input validation and
+  parameterized queries
+end note
+
+note right of SEC3 <<remediation>>
+  Append-only logs with
+  tamper detection
+end note
+
+note right of SEC4 <<remediation>>
+  High-entropy tokens and
+  secure cookies
+end note
+
+note right of SEC5 <<remediation>>
+  Least privilege principle
+  and access verification
+end note
+@enduml
