@@ -1,4 +1,4 @@
-| ![Logo ISEP](figs/logoISEP.png) | ![Logo DEI](figs/logo_DEI_big_transparente.png) |
+| ![Logo ISEP](figs/logoisep.png) | ![Logo DEI](figs/logo_DEI_big_transparente.png) |
 |:------------------------------:|:----------------------------------------------:|
 
 
