@@ -273,13 +273,48 @@ a payment date is due.
 
 ![DFD Generic Representation Level 0](diagrams/DFD/Generic%20Representation/amapp_dfd_generic_0.png)
 
-*_[Blablabla]_*
+The Level 0 Data Flow Diagram (DFD) provides a high-level overview of the AMAP/CSA agricultural system. This context diagram illustrates the core interactions between the system's main components and external entities.
+
+At the center of the diagram is the AMAP API, which serves as the core processing unit handling all business logic and operations. The system interacts with three primary user types:
+
+Consumers (Co-Producers) who browse products, place orders, and manage their subscriptions. The system responds by providing product information, order confirmations, and various notifications.
+
+Producers who manage their product listings, update inventory, and process incoming orders. The system provides them with order notifications and delivery schedules.
+
+AMAP Administrators who manage users, organize deliveries, and configure system settings. They receive system status updates, user data, and various reports.
+
+All data persistence is handled through the external AMAP Database, where the API performs read and write operations for user data, orders, products, and inventory information. The database returns the requested data records to the API.
+
+This Level 0 DFD effectively captures the fundamental data exchanges within the sustainable agriculture platform, showing how information flows between the system and its stakeholders without delving into the internal processing details.
 
 #### Level 1
 
 ![DFD Generic Representation Level 1](diagrams/DFD/Generic%20Representation/amapp_dfd_generic_1.png)
 
-*_[Blablabla]_*
+The Level 1 Data Flow Diagram (DFD) provides a more detailed view of the AMAP/CSA agricultural system architecture, expanding on the context diagram by revealing the internal components and their interactions.
+
+The diagram is structured with nested boundaries:
+
+Localhost serves as the outer boundary
+AMAP System operates within the Localhost boundary
+Database Server represents a separate boundary for data storage
+Within the AMAP System boundary, two main components are identified:
+
+AMAP API - The core processing component handling business logic, user authentication, and orchestrating the system's operations. It directly interfaces with all external actors and coordinates data operations.
+
+AmapDB_API - A dedicated server component that serves as an intermediary layer between the main API and the database, providing abstraction and security for database operations.
+
+Outside the system boundary, the AMAP Database exists as an external datastore where all system information is persistently stored.
+
+The diagram illustrates several key data flows:
+
+External Actor Communications: The three user types (Consumers, Producers, and Administrators) send API requests to and receive responses from the AMAP API.
+
+Internal Data Processing: The AMAP API sends database requests to the AmapDB_API, which translates these into structured database queries.
+
+Data Exchange: The database communication flow shows how CRUD operations are transformed into SQL queries, with result sets being returned and processed back into application-level data.
+
+This Level 1 DFD demonstrates the system's layered architecture approach, with clear separation between the user interface logic, business processing, and data persistence layers. This architecture enhances security by ensuring database operations are properly abstracted and controlled through dedicated interfaces.
 
 ---
 
