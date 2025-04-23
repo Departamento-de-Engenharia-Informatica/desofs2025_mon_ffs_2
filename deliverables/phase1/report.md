@@ -273,13 +273,48 @@ a payment date is due.
 
 ![DFD Generic Representation Level 0](diagrams/DFD/Generic%20Representation/amapp_dfd_generic_0.png)
 
-*_[Blablabla]_*
+The Level 0 Data Flow Diagram (DFD) provides a high-level overview of the AMAP/CSA agricultural system. This context diagram illustrates the core interactions between the system's main components and external entities.
+
+At the center of the diagram is the AMAP API, which serves as the core processing unit handling all business logic and operations. The system interacts with three primary user types:
+
+- Consumers (Co-Producers) who browse products, place orders, and manage their subscriptions. The system responds by providing product information, order confirmations, and various notifications.
+
+- Producers who manage their product listings, update inventory, and process incoming orders. The system provides them with order notifications and delivery schedules.
+
+- AMAP Administrators who manage users, organize deliveries, and configure system settings. They receive system status updates, user data, and various reports.
+
+All data persistence is handled through the external AMAP Database, where the API performs read and write operations for user data, orders, products, and inventory information. The database returns the requested data records to the API.
+
+This Level 0 DFD effectively captures the fundamental data exchanges within the sustainable agriculture platform, showing how information flows between the system and its stakeholders without delving into the internal processing details.
 
 #### Level 1
 
 ![DFD Generic Representation Level 1](diagrams/DFD/Generic%20Representation/amapp_dfd_generic_1.png)
 
-*_[Blablabla]_*
+The Level 1 Data Flow Diagram (DFD) provides a more detailed view of the AMAP/CSA agricultural system architecture, expanding on the context diagram by revealing the internal components and their interactions.
+
+The diagram is structured with nested boundaries:
+
+Localhost serves as the outer boundary
+AMAP System operates within the Localhost boundary
+Database Server represents a separate boundary for data storage
+Within the AMAP System boundary, two main components are identified:
+
+- AMAP API - The core processing component handling business logic, user authentication, and orchestrating the system's operations. It directly interfaces with all external actors and coordinates data operations.
+
+- AmapDB_API - A dedicated server component that serves as an intermediary layer between the main API and the database, providing abstraction and security for database operations.
+
+Outside the system boundary, the AMAP Database exists as an external datastore where all system information is persistently stored.
+
+The diagram illustrates several key data flows:
+
+- External Actor Communications: The three user types (Consumers, Producers, and Administrators) send API requests to and receive responses from the AMAP API.
+
+- Internal Data Processing: The AMAP API sends database requests to the AmapDB_API, which translates these into structured database queries.
+
+- Data Exchange: The database communication flow shows how CRUD operations are transformed into SQL queries, with result sets being returned and processed back into application-level data.
+
+This Level 1 DFD demonstrates the system's layered architecture approach, with clear separation between the user interface logic, business processing, and data persistence layers. This architecture enhances security by ensuring database operations are properly abstracted and controlled through dedicated interfaces.
 
 ---
 
@@ -305,13 +340,57 @@ a payment date is due.
 
 ![DFD Product Reservation Level 0](diagrams/DFD/Product%20Reservation/amapp_dfd_productReservation_0.png)
 
-*_[Blablabla]_*
+The Level 0 Data Flow Diagram (DFD) for the AMAP/CSA product purchase flow provides a high-level overview of how consumers interact with the system to browse and reserve agricultural products.
+
+This simplified context diagram focuses specifically on the purchase/reservation process from the consumer perspective. At its core is the AMAP API, which serves as the central processing component that handles all product purchase operations. Unlike the general system overview, this diagram isolates the specific functionality related to product transactions.
+
+The diagram shows a single external actor, the Consumer (Co-Producer), who interacts with the system to browse available products and place orders. This focused view highlights the consumer's journey through the purchase process without the complexity of other system interactions.
+
+The data flows are presented in a logical sequence that follows the typical purchase process:
+
+The consumer initiates the process by sending a Purchase Request to the system, which includes product selections, order details, and payment information.
+
+The AMAP API communicates with the external AMAP Database through Data Operations to store and retrieve purchase-related data, including product queries, order storage, and inventory updates.
+
+The database responds with Data Results containing product data, order confirmations, and current inventory status.
+
+Finally, the AMAP API sends a Purchase Response back to the consumer with product listings, order confirmations, and payment receipts.
+
+This Level 0 DFD effectively captures the fundamental flow of the purchase process, showing how information moves between the consumer, the system, and the database in a complete transaction cycle. This representation allows stakeholders to understand the high-level purchase flow without being overwhelmed by implementation details.
 
 #### Level 1
 
 ![DFD Product Reservation Level 1](diagrams/DFD/Product%20Reservation/amapp_dfd_productReservation_1.png)
 
-*_[Blablabla]_*
+The Level 1 Data Flow Diagram (DFD) for the AMAP/CSA product reservation process provides a detailed view of the system components involved in the consumer product reservation journey. Unlike the Level 0 diagram which presented a high-level overview, this diagram breaks down the internal processes and data flows that facilitate the reservation experience.
+
+The diagram defines two main boundaries:
+
+AMAP System containing the application processes
+Database Server containing the data persistence layer
+Within the AMAP System boundary, four distinct processes work together to handle the product reservation workflow:
+
+- Product Catalog - Manages product listings and inventory information, serving as the entry point for consumers browsing available products.
+
+- Order Management - Handles order creation and processing, coordinating the overall reservation workflow.
+
+- Reservation Processing - Specifically manages product reservation requests, ensuring products are properly reserved for consumers.
+
+- Delivery Management - Handles product delivery coordination after reservation.
+
+The diagram shows a single external actor, the Co-Producer (consumer), who interacts with the system to browse products and make reservations.
+
+The data flows illustrate a comprehensive reservation process:
+
+The consumer begins by browsing products, with product information flowing from the catalog.
+Once products are selected, the consumer places an order that is processed by Order Management.
+Order Management checks product availability through the Product Catalog.
+The reservation is processed by the Reservation Processing component.
+Delivery details are managed by the Delivery Management component.
+Throughout the process, data is stored and retrieved from the external AMAP Database.
+This Level 1 DFD reveals how the system's modular architecture separates concerns into distinct processing components, each handling a specific part of the reservation workflow. The diagram shows not only the consumer-facing interactions but also the important internal communications between components that ensure the reservation process functions correctly.
+
+By breaking down the process into these components, the system achieves better maintainability and security through separation of responsibilities while providing a seamless experience for consumers reserving agricultural products.
 
 ---
 
