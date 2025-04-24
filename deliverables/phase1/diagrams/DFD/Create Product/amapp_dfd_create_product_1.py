@@ -22,7 +22,7 @@ result = Data("Operation Result")
 
 # Trust Boundaries
 producer_zone = Boundary("User Zone")
-app_zone = Boundary("System Zone")
+app_zone = Boundary("AMAP API Zone")
 db_zone = Boundary("Database Zone")
 
 # Assigning elements to boundaries

@@ -257,13 +257,50 @@ a payment date is due.
 
 ![DFD Create Product Level 0](diagrams/DFD/Create%20Product/amapp_dfd_create_product_0.png)
 
-*_[Blablabla]_*
+The Level 0 DFD represents a high-level view of the product creation system, focusing on the interaction between the external actor (producer) and the AMAP API system.
+
+- **External Actor:**
+  - `Producer`: The user who intends to create a product.
+
+- **Main Process:**
+  - `AMAP API`: Interface responsible for receiving product creation requests, processing them, and returning feedback to the producer.
+
+- **Data Flows:**
+  - `Send Product Info`: The producer sends product data (name, description, price, etc.) to the API via HTTPS.
+  - `Send Feedback`: After processing, the API returns a response (success, error, or validation messages) to the producer.
+
+This diagram simply shows who interacts with the system and what data is exchanged, without yet detailing the internal processes.
 
 #### Level 1
 
 ![DFD Create Product Level 1](diagrams/DFD/Create%20Product/amapp_dfd_create_product_1.png)
 
-*_[Blablabla]_*
+The Level 1 DFD deepens the details of the product creation process by breaking down the API into internal subprocesses and introducing data storage and trust boundaries.
+
+- **External Actors:**
+  - `Producer`: Remains the user who initiates the process.
+
+- **Subprocesses:**
+  - `Validate Input`: Validates the data received from the producer (checks required fields, formats, etc.).
+  - `Store Product`: Stores the validated product in the database.
+  - `Send Response`: Generates and sends a response with the operation result.
+
+- **Data Storage:**
+  - `Product DB`: The database where validated products are stored.
+
+- **Data Flows:**
+  - `Submit Product`: The producer sends product data for validation.
+  - `Validated Data`: Verified data is passed to the storage process.
+  - `Save to DB`: The product is saved into the database.
+  - `Operation Outcome`: The result of the storage operation is passed to the response process.
+  - `Return Result`: The response is sent back to the producer.
+
+- **Trust Boundaries:**
+  - `User Zone`: Where the producer resides (external environment).
+  - `AMAP API Zone`: Where internal API processes occur.
+  - `Database Zone`: Where the database resides, typically with stricter access controls.
+
+This level shows in greater detail how the system processes and stores data, helping to identify potential security threats and ensure proper handling of information across different trust zones.
 
 ---
 
