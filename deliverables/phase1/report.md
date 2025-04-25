@@ -286,7 +286,63 @@ The functional requirements listed below are organized by use case and describe 
 
 ### Non-Functional Requirements
 
-*_[Blablabla]_*
+The non-functional requirements define quality attributes and technical constraints that the AMAPP system must meet, ensuring robustness, performance, and ease of use and maintenance.
+
+### 1. Performance
+
+- The system must respond to user requests in under 1 second under normal operating conditions.
+- The API must be capable of processing at least 100 requests per second in a production environment, ensuring low latency and high throughput.
+- Page load times in the frontend should not exceed 2 seconds in 95% of accesses.
+
+### 2. Availability
+
+- The application must be available to users 24/7, except during scheduled maintenance periods.
+- The infrastructure must ensure **fault tolerance**, maintaining functionality of at least one critical component (API, database, frontend) in case of partial failure.
+- The system must achieve a **minimum availability of 99%** during regular operating hours (08:00–22:00).
+
+### 3. Scalability
+
+- The system architecture must support **horizontal scalability**, allowing backend services to run in multiple instances.
+- The system must handle up to **3 times the average number of active users** without noticeable performance degradation.
+- Storage and processing capacity should be adjustable dynamically according to demand.
+
+### 4. Security
+
+- All communication between client and server must be encrypted via **HTTPS/TLS**.
+- Authentication must be implemented using **secure, expiring tokens (e.g., JWT)**, with support for refresh tokens.
+- The system must enforce **role-based access control** (e.g., AMAP manager, producer, co-producer).
+- Measures must be in place to protect against common attacks such as **SQL Injection, XSS, CSRF, and brute-force login attempts**.
+- Passwords must be securely stored using strong hashing algorithms (e.g., bcrypt or Argon2).
+
+### 5. Reliability and Integrity
+
+- Critical operations (e.g., orders and payments) must guarantee **persistence and atomicity**, even in the event of partial failures.
+- There must be **error and event logging** for **auditability** and recovery.
+- The system must follow the **ACID principle** for relational database operations, and eventual consistency for MongoDB operations.
+
+### 6. Usability
+
+- The interface must be **intuitive, responsive, and accessible**, compatible with both mobile and desktop devices.
+- The application must provide **clear and helpful feedback** to users in case of errors (e.g., failed authentication, invalid form fields).
+- Navigation should be smooth, and user flows must minimize the number of steps required to complete common tasks.
+
+### 7. Maintainability
+
+- The code must follow **software engineering best practices**, such as separation of concerns, design patterns, and documentation.
+- The system must allow for **modular updates**, enabling new features to be added without requiring full downtime.
+- There should be **test coverage above 80%** for critical features, including unit, integration, and acceptance tests.
+
+### 8. Portability
+
+- The application must be **compatible with Linux environments**, preferably via **Docker containers** orchestrated with **Kubernetes**.
+- The API must follow **RESTful standards**, enabling future integration with other systems and external services.
+- The system should be easily deployable in both local and cloud environments.
+
+### 9. Monitoring and Alerts
+
+- The system must expose **technical metrics** (CPU, memory, latency, throughput, etc.) compatible with tools like **Prometheus and Grafana**.
+- There must be **automatic alerts** for critical errors, service failures, or performance degradation, ensuring rapid response to incidents.
+- Logs must be centralized and analyzable with tools such as the **ELK Stack** or **Grafana Loki**.
 
 ---
 
