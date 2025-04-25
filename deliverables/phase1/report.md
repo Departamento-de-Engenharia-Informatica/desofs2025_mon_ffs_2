@@ -1,7 +1,6 @@
 | ![Logo ISEP](figs/logoisep.png) | ![Logo DEI](figs/logo_DEI_big_transparente.png) |
 | :-----------------------------: | :---------------------------------------------: |
 
-
 # Phase 1: Threat Modeling
 
 **_Group desofs2025_mon_ffs_2_**
@@ -156,7 +155,6 @@ Paulo Abreu - 1240481 <br>
 
 ![Domain Model](diagrams/Domain%20Model/domain_model_diagram.png)
 
-
 This class diagram represents the **core data structure** of the AMAPP platform, outlining the main entities involved in the management of orders between co-producers and producers.
 
 - The base class `User` is extended by three user types: `Producer`, `AMAPAdministrator`, and `CoProducer`, each with specific roles.
@@ -166,41 +164,16 @@ This class diagram represents the **core data structure** of the AMAPP platform,
 - The `AMAPAdministrator` manages delivery dates and logistics.
 - Inventory updates are reflected based on `OrderItem` activity.
 
-This model supports **data consistency, business rules enforcement, and clear responsibility distribution** among system actors.
-
-#### User Hierarchy
-- **User**: base entity with `UserID`, `Name`, `Email`.  
-- **Producer**, **AMAPAdministrator**, **CoProducer**: specialized users inheriting from **User**.
-
-#### Products & Inventory
-- **Product**: has `ProductID`, `Name`, `Description`, `Price`, `AvailableQty`, `AvailabilityDate`.  
-- **Inventory**: tracks `AvailableQty` for each `ProductID`.
-
-#### Orders & Order Items
-- **Order**: placed by a **CoProducer**, with `OrderID`, `OrderDate`, delivery requirements and status.  
-- **OrderItem**: links an **Order** to one **Product** with a `Quantity`; updates the **Inventory**.
-
-#### Payments & Delivery
-- **Payment**: records payment for an **Order** (`PaymentID`, `Amount`, `Date`, `Status`).  
-- **Delivery**: records shipment details for an **Order** (`DeliveryID`, `DeliveryDate`, `Location`, `Status`), scheduled by the **AMAPAdministrator**.
-
-#### Key Relationships
-- A **Producer** creates many **Products**.  
-- A **CoProducer** places many **Orders**, each containing multiple **OrderItems**.  
-- Each **Order** may have one **Payment** and one **Delivery**.  
-- Creating or updating an **OrderItem** adjusts the corresponding **Inventory**.
-
-
 ---
 
 ### Component Diagram
 
 ![Component Diagram](diagrams/Component%20Diagram/Amap-component-diagram.png)
 
-
 This diagram shows the main components of the AMAPP system and how they interact.
 
 #### Components:
+
 - **AMAP System**: The main container for all modules.
 - **AMAP BackEnd**: Handles business logic.
 - **AMAP Database**: Stores the system's data.
@@ -208,50 +181,14 @@ This diagram shows the main components of the AMAPP system and how they interact
 - **AMAP API**: Allows the frontend or other systems to use backend services.
 
 #### Connections:
+
 - The **AMAP API** connects to the **BackEnd** to request operations or data.
 - The **BackEnd** uses the **AmapDB_API** to access the **Database**.
 
 #### Deployment:
+
 - The system runs locally (Localhost) with the backend and APIs.
-- The database is hosted on a remote server: `vsgate-s1.dei.isep.ipp.pt:10279`.
-
-This diagram provides a clear overview of how the components are organized and how they communicate to ensure system functionality.
-
-#### Deployment Nodes
-
-- **Localhost**  
-  - Hosts the **AMAP API** container, exposing the public API interface (`a`).
-
-- **vsgate-s1.dei.isep.ipp.pt:10279**  
-  - Hosts the **AMAP Database** component, reachable over the **AmapDB_API** interface.
-
-#### Containers & Components
-
-- **AMAP API**  
-  - Exposes interface `a` for external clients.  
-  - Contains the **AMAP System** component.
-
-- **AMAP System**  
-  - Top-level application component.  
-  - Coordinates requests from the API and delegates to the backend.
-
-- **AMAP BackEnd**  
-  - Core business-logic component.  
-  - Implements the API operations and issues database calls via **AmapDB_API**.
-
-- **AMAP Database**  
-  - Persistent data store component.  
-  - Provides data services over the **AmapDB_API** interface.
-
-#### Interfaces
-
-- **`a`** (AMAP API)  
-  - Public HTTP/REST interface for client requests.
-
-- **AmapDB_API**  
-  - Internal interface for database access between **AMAP BackEnd** and **AMAP Database**.
-
-
+- The database is hosted on a remote server
 
 ---
 
@@ -435,6 +372,7 @@ This report pulls together AMAPP’s security requirements by CIA (confidentiali
 #### Functional Security Requirements (CIA-Based)
 
 ##### Confidentiality
+
 - FS01: The system must authenticate all users (OAuth 2.0, JWT).
 - FS02: The system must enforce role-based access control (RBAC).
 - FS03: All communication must use HTTPS/TLS.
@@ -442,12 +380,14 @@ This report pulls together AMAPP’s security requirements by CIA (confidentiali
 - FS05: Authentication tokens must be unique per session and revocable.
 
 ##### Integrity
+
 - FS06: All input must be validated and sanitized (whitelisting, type, size).
 - FS07: Protection against injection attacks (SQL, XML, LDAP, etc.).
 - FS08: Audit logs must be tamper-proof and protected from modification.
 - FS09: Error messages must not expose internal system details.
 
 ##### Availability
+
 - FS10: The system must implement rate limiting and DoS protections (flooding, resource exhaustion).
 - FS11: Regular, automated backups must be supported and tested.
 - FS12: The system must support high availability (clustering, replication).
@@ -468,67 +408,75 @@ This report pulls together AMAPP’s security requirements by CIA (confidentiali
 
 ---
 
-####  Consolidated Security Checklist (Mapped)
+#### Consolidated Security Checklist (Mapped)
 
 ### 1. Authentication and Authorization
-- [x] OAuth 2.0 and JWT tokens → FS01
-- [ ] Multi-factor authentication (MFA) for admins → FS04
-- [x] Role-based access control (RBAC) → FS02
-- [ ] Token revocation on critical events → FS05
-- [ ] Login attempt limitation (CR03) → FS10
-- [ ] Misuse protection for exposed functions (AC09) → FS02/FS06
+
+- [X]  OAuth 2.0 and JWT tokens → FS01
+- [ ]  Multi-factor authentication (MFA) for admins → FS04
+- [X]  Role-based access control (RBAC) → FS02
+- [ ]  Token revocation on critical events → FS05
+- [ ]  Login attempt limitation (CR03) → FS10
+- [ ]  Misuse protection for exposed functions (AC09) → FS02/FS06
 
 ### 2. Session Management
-- [x] Token expiration and regeneration → FS05
-- [ ] Protection against session fixation/replay (AC20, AC11, AC16) → FS05
-- [ ] Session hijacking protection (AC17, AC18) → FS05
+
+- [X]  Token expiration and regeneration → FS05
+- [ ]  Protection against session fixation/replay (AC20, AC11, AC16) → FS05
+- [ ]  Session hijacking protection (AC17, AC18) → FS05
 
 ### 3. Input Validation and Sanitization
-- [x] Syntactic and semantic input validation → FS06
-- [x] Injection protection (SQL, LDAP, XPath, XML, SOAP) → FS07
-- [x] XSS and variants prevention (INP28, SC02, SC04) → FS06
-- [x] Buffer overflow mitigation (INP02, INP07, INP12) → FS06
-- [ ] Double Encoding, Alternate Encoding, Schema Poisoning → FS06
-- [ ] Remote Code / Argument Injection → FS07
+
+- [X]  Syntactic and semantic input validation → FS06
+- [X]  Injection protection (SQL, LDAP, XPath, XML, SOAP) → FS07
+- [X]  XSS and variants prevention (INP28, SC02, SC04) → FS06
+- [X]  Buffer overflow mitigation (INP02, INP07, INP12) → FS06
+- [ ]  Double Encoding, Alternate Encoding, Schema Poisoning → FS06
+- [ ]  Remote Code / Argument Injection → FS07
 
 ### 4. Access Control
-- [x] Role verification → FS02
-- [ ] Prevention of privilege escalation (AC12, AC13) → FS06
-- [ ] Exception management in privileged blocks (AC14) → FS06
+
+- [X]  Role verification → FS02
+- [ ]  Prevention of privilege escalation (AC12, AC13) → FS06
+- [ ]  Exception management in privileged blocks (AC14) → FS06
 
 ### 5. Encryption and Secure Communication
-- [x] HTTPS/TLS communication → FS03
-- [x] JWT tokens signed/encrypted → FS04
-- [ ] Data at rest encryption (e.g., IBAN, passwords) → FS04
-- [ ] Use of strong cryptographic algorithms (CR05) → NFS03
+
+- [X]  HTTPS/TLS communication → FS03
+- [X]  JWT tokens signed/encrypted → FS04
+- [ ]  Data at rest encryption (e.g., IBAN, passwords) → FS04
+- [ ]  Use of strong cryptographic algorithms (CR05) → NFS03
 
 ### 6. DoS and Resource Exhaustion Protection
-- [x] Flooding and excessive allocation protection → FS10
-- [ ] Rate limiting, quotas, circuit breakers → FS10, NFS01
-- [ ] XML Entity Expansion / Attribute Blowup mitigation → FS10
+
+- [X]  Flooding and excessive allocation protection → FS10
+- [ ]  Rate limiting, quotas, circuit breakers → FS10, NFS01
+- [ ]  XML Entity Expansion / Attribute Blowup mitigation → FS10
 
 ### 7. File and Remote Input
-- [ ] Path Traversal, File Inclusion, File Injection → FS07
-- [ ] Upload validation and sandboxing → FS07
+
+- [ ]  Path Traversal, File Inclusion, File Injection → FS07
+- [ ]  Upload validation and sandboxing → FS07
 
 ### 8. Logging and Monitoring
-- [ ] Secure and immutable logging → FS08, NFS03
-- [ ] Active monitoring with alerts → NFS04
-- [ ] SIEM integration → NFS04
+
+- [ ]  Secure and immutable logging → FS08, NFS03
+- [ ]  Active monitoring with alerts → NFS04
+- [ ]  SIEM integration → NFS04
 
 ### 9. Privacy and GDPR
-- [x] Informed consent → FS09
-- [ ] Right to be forgotten and data portability → FS09
-- [ ] Log data anonymization → NFS09
+
+- [X]  Informed consent → FS09
+- [ ]  Right to be forgotten and data portability → FS09
+- [ ]  Log data anonymization → NFS09
 
 ### 10. Incident Response and Recovery
-- [ ] Incident response plan → NFS08
-- [ ] Encrypted backups and disaster recovery → FS11, NFS07
-- [ ] Documented mitigation procedures → NFS08
 
+- [ ]  Incident response plan → NFS08
+- [ ]  Encrypted backups and disaster recovery → FS11, NFS07
+- [ ]  Documented mitigation procedures → NFS08
 
 ---
-
 
 ...
 
@@ -577,12 +525,13 @@ By using DFDs at different levels of abstraction, we ensure a structured approac
 The Level 0 Data Flow Diagram (DFD) provides a high-level overview of the **user authentication process** within the AMAPP application. This diagram illustrates the basic interaction between an external actor (the user) and the internal AMAPP authentication system.
 
 - **External Actor:**
+
   - `User`: Any actor (e.g., co-producer, producer, or AMAPP admin) attempting to log in to the system.
-
 - **Main Process:**
-  - `AMAPP System`: The internal authentication service responsible for validating login credentials and issuing authentication tokens.
 
+  - `AMAPP System`: The internal authentication service responsible for validating login credentials and issuing authentication tokens.
 - **Data Flows:**
+
   - `Submit login credentials`: The user submits their login details (e.g., email and password) to the AMAPP system via a secure HTTPS connection.
   - `Authentication JWT Token`: Upon successful verification, the system responds with a JSON Web Token (JWT) which allows the user to access protected endpoints in future requests.
 
@@ -595,28 +544,28 @@ This context-level diagram defines the **boundary between the user and the syste
 The Level 1 Data Flow Diagram (DFD) refines the context-level view of the user authentication process by decomposing the **AMAPP API** into internal subprocesses and detailing how data flows through the system. It also introduces data storage components and defines clear **trust boundaries**.
 
 - **External Actor:**
-  - `User`: An individual (e.g., co-producer, producer, or administrator) attempting to authenticate and gain access to the AMAPP platform.
 
+  - `User`: An individual (e.g., co-producer, producer, or administrator) attempting to authenticate and gain access to the AMAPP platform.
 - **Subprocesses:**
+
   - `Receive Credentials`: Handles the initial reception of login credentials (username/email and password) from the user.
   - `Fetch User Record`: Queries the database to retrieve the stored user record corresponding to the submitted credentials.
   - `Validate Credentials`: Compares the submitted credentials with the stored hash (e.g., using password hashing functions).
   - `Generate Token`: If validation is successful, creates a signed JWT (JSON Web Token) to be used in subsequent authenticated requests.
   - `Return Token`: Sends the authentication token back to the user.
-
 - **Data Storage:**
-  - `AMAPP DB`: The internal database where user records are securely stored, including hashed passwords and roles.
 
-  
+  - `AMAPP DB`: The internal database where user records are securely stored, including hashed passwords and roles.
 - **Data Flows:**
+
   - `Submit login credentials`: The user submits their authentication details to the API.
   - `Request user record`: The API requests the corresponding user data from the database.
   - `Return user record`: The database sends the user’s stored information (e.g., hashed password) back to the API.
   - `Validated result`: The outcome of the credential validation is passed to the token generator.
   - `Generated JWT`: A secure token is created for the session.
   - `Authentication JWT Token`: The token is returned to the user as proof of successful authentication.
-  
 - **Trust Boundaries:**
+
   - `Internet Zone`: External environment where the user resides.
   - `AMAPP System Zone`: The internal API and authentication logic, trusted but must validate all inputs.
   - `Database Zone`: A protected area where sensitive user data is stored, with stricter access controls and security policies.
@@ -732,29 +681,58 @@ This Level 1 DFD demonstrates the system's layered architecture approach, with c
 
 ![DFD Payments Level 0](diagrams\DFD\Order%20Payments%20Deliveries%20Reports\amapp_dfd_pay_del_rep_0.png)
 
-*_[Blablabla]_*
+The Level 0 DFD represents a high-level view of the Order Payments & Deliveries Report API, focusing on the interaction between the external actors (CoProducer and AMAPP Administrator) and the AMAPP API system.
+
+- **External Actors:**
+
+  - `CoProducer`: The user who requests their own payment & delivery history report.
+  - `AMAPP Administrator`: The user who requests a report for a specific CoProducer.
+- **Main Process:**
+
+  - `AMAPP.API`: Interface responsible for receiving report requests and returning the PDF report (binary stream) to the requester.
+- **Data Flows:**
+
+  - `Own Report Request`: CoProducer → AMAPP.API (requests PDF history of payments & deliveries via HTTPS)
+  - `Report Request for Specific CoProducer`: AMAPP Administrator → AMAPP.API (requests a specific CoProducer’s report via HTTPS)
+  - `PDF Report`: AMAPP.API → CoProducer (returns the requested PDF report as a binary stream)
+  - `PDF Report`: AMAPP.API → AMAPP Administrator (returns the requested PDF report as a binary stream)
+
+This diagram simply shows who interacts with the system and what data is exchanged, without detailing the internal processes.
+
+---
 
 #### Level 1
 
 ![DFD Payments Level 1](diagrams\DFD\Order%20Payments%20Deliveries%20Reports\amapp_dfd_pay_del_rep_1.png)
 
-*_[Blablabla]_*
+The Level 1 Data Flow Diagram (DFD) provides a more detailed view of the Order Payments & Deliveries Report API, expanding on the context diagram by revealing the internal components and their interactions.
 
-### Stride
+- **Boundaries**
 
+  - **Internet**: outer boundary for external actors
+  - **AMAPP System**: hosts the API Endpoint and Report Generation Engine
+  - **DB Server**: hosts the Report Data DB
+- **External Actors**
 
-| **Threat**                                 | **Targeted Element**                   | **STRIDE Category**    | **Description**                                                                                                                                              | **Mitigation**                                                                                                                           |
-| ------------------------------------------ | -------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| INP02 – Overflow Buffers                  | Request Own Report                     | Tampering              | Buffer overflows in the request handler could allow an attacker to crash or take over the report-generation endpoint.                                        | Use languages/compilers with automatic bounds checking; prefer safe APIs; run static analysis to catch overflow risks.                   |
-| AA01 – Authentication Abuse/ByPass        | View Own Report                        | Spoofing               | An attacker who bypasses or steals credentials could view another producer’s report, compromising confidentiality.                                          | Enforce strong authentication (e.g. OAuth 2.0), session timeouts, and multi-factor authentication.                                       |
-| INP07 – Buffer Manipulation               | Request Report for Specific CoProducer | Tampering              | Maliciously crafted request parameters could manipulate internal buffers, leading to malformed queries or code execution in the report engine.               | Validate and bound-check all inputs; use compiler-based canaries (StackGuard/ProPolice); adopt secure coding guidelines.                 |
-| AA02 – Principal Spoof                    | View Selected CoProducer Report        | Spoofing               | An attacker may spoof another user’s identity or stolen token to retrieve reports they’re not authorized to see.                                           | Enforce strict authorization checks per request; implement token binding and rotate credentials regularly.                               |
-| CR06 – Communication Channel Manipulation | Generate Report                        | Information Disclosure | A man-in-the-middle on the API↔engine channel could intercept the raw report stream and extract sensitive data.                                             | Encrypt all in-transit data (TLS with strong ciphers); mutually authenticate endpoints; pin certificates.                                |
-| DE03 – Sniffing Attacks                   | Query Database                         | Information Disclosure | If the database link isn’t encrypted, an attacker sniffing the network can capture query results containing privileged report data.                         | Use encrypted database connections (e.g. TLS); isolate the database network; enforce least-privilege network policies.                   |
-| AC21 – Cross Site Request Forgery (CSRF)  | Request Report                         | Spoofing               | A forged request (e.g. via hidden form or link) could trick a logged-in user into submitting a report action they didn’t intend, exposing or altering data. | Implement anti-CSRF tokens for each form/action; validate Referer/Origin headers; require re-authentication for sensitive operations.    |
-| INP41 – Argument Injection                | Request Report                         | Tampering              | Injection of unexpected arguments into the report-request parameters could cause unintended behavior, data leakage or code execution in the report engine.   | Whitelist and sanitize all parameter values; enforce strict length/type checks; use parameterized APIs rather than string concatenation. |
+  - `CoProducer` (in Internet)
+  - `AMAPP Administrator` (in Internet)
+- **Internal Components**
 
-*_[Blablabla]
+  - `AMAPP API Endpoint` (Process): receives and authorizes report requests
+  - `Report Generation Engine` (Process): builds the PDF by querying and formatting data
+  - `Report Data DB` (Datastore, SQL): stores payments & deliveries records for reporting
+- **Data Flows**
+
+  1. **Request own report**: CoProducer → AMAPP API Endpoint
+  2. **Request report for specific CoProducer**: AMAPP Administrator → AMAPP API Endpoint
+  3. **Forward authorized request**: AMAPP API Endpoint → Report Generation Engine
+  4. **Query data (filtered by role)**: Report Generation Engine → Report Data DB
+  5. **Return report data**: Report Data DB → Report Generation Engine
+  6. **Generated PDF (binary stream)**: Report Generation Engine → AMAPP API Endpoint
+  7. **PDF Report (own data only)**: AMAPP API Endpoint → CoProducer
+  8. **PDF Report (selected CoProducer data)**: AMAPP API Endpoint → AMAPP Administrator
+
+This Level 1 DFD illustrates the layered architecture—separating request handling, report generation, and data persistence—to ensure clear responsibilities and secure data access.
 
 ---
 
@@ -824,27 +802,26 @@ By breaking down the process into these components, the system achieves better m
 The Level 0 Data Flow Diagram (DFD) provides a high-level view of the **user registration process** within the AMAPP platform. It outlines the main interactions between the external actors (`User` and `AMAPP Admin`) and the internal `AMAPP System`, focusing on the exchange of registration and approval data.
 
 - **External Actors:**
+
   - `User`: An individual who wishes to register in the AMAPP platform (e.g., co-producer or producer).
   - `AMAPP Admin`: The administrator responsible for approving or rejecting registration requests.
-
-
 - **Main Process:**
+
   - `AMAPP System`: The central component that receives registration requests, communicates with the administrator, and notifies the user of the final decision.
-
-
 - **Data Flows:**
+
   - `Submit registration request`: The user submits a request to register on the platform.
   - `Send approval request`: The system forwards the registration data to the administrator for review.
   - `Approval decision`: The administrator sends their decision (approve or reject) back to the system.
   - `Notify decision`: The system communicates the result of the registration process to the user.
 - **Data Flows:**
+
   - `Submit registration request`: The user submits a request to register on the platform.
   - `Send approval request`: The system forwards the registration data to the administrator for review.
   - `Approval decision`: The administrator sends their decision (approve or reject) back to the system.
   - `Notify decision`: The system communicates the result of the registration process to the user.
-
-
 - **Trust Boundaries:**
+
   - `Internet Zone`: The untrusted external zone where users reside and submit their requests.
   - `AMAPP System Zone`: The internal, trusted environment where the API and backend logic are executed.
 
@@ -857,28 +834,29 @@ This context-level DFD clearly defines the boundaries of the user registration p
 The Level 1 Data Flow Diagram (DFD) expands the context-level view of the user registration process in the AMAPP platform. It decomposes the internal system into subprocesses, introduces data storage, and clearly defines trust boundaries and specific data flows.
 
 - **External Actors:**
+
   - `User`: A new user (e.g., co-producer or producer) attempting to register on the platform.
   - `AMAPP Admin`: The administrator responsible for reviewing and approving or rejecting registration requests.
-
 - **Internal Components:**
+
   - `AMAPP API`: The backend process that handles user registration, stores user data, communicates with the admin, and notifies users of the result.
   - `AMAPP DB`: The database that stores user information, including credentials and approval status.
-
 - **Data Flows:**
+
   - `Submit registration data`: The `User` submits personal details (`Registration Info`) to the `AMAPP API` over HTTPS.
   - `Store user data`: The `AMAPP API` stores the user's account info (`User Data`) in the `AMAPP DB` via secure SQL.
   - `Review registration requests`: The `AMAPP Admin` sends their review action (`Registration Review Action`) to the `AMAPP API`.
   - `Update approval status`: The system updates the approval decision (`Approval Status`) in the `AMAPP DB`.
   - `Notify approval decision`: The `User` is notified of the final result (`Approval Notification`) via HTTPS.
-
 - **Data Objects:**
+
   - `Registration Info`: User's submitted data (e.g., name, email, password).
   - `User Data`: Stored account information (e.g., hashed password, email).
   - `Registration Review Action`: Admin’s decision regarding pending registration.
   - `Approval Status`: Approval or rejection flag stored in the database.
   - `Approval Notification`: Message sent to the user with the outcome.
-
 - **Trust Boundaries:**
+
   - `Internet`: Where external actors (`User`, `AMAPP Admin`) reside.
   - `AMAPP System`: Internal zone that runs the application logic and processes data.
   - `DB Server`: A protected database zone with stricter access control where sensitive information is stored.
@@ -896,12 +874,13 @@ This level of detail helps to understand how registration data is validated, sto
 The Level 0 Data Flow Diagram (DFD) provides a high-level overview of how the AMAPP system handles user account and permission management. It captures the interaction between the administrative actor and the internal system responsible for executing user and role operations.
 
 - **External Actor:**
+
   - `Administrator`: A privileged user (typically part of the AMAPP team) responsible for managing user accounts and defining roles and permissions.
-
 - **Main Process:**
-  - `AMAPP System`: The backend module that processes requests to create, update, or delete users, and manage their associated roles and permissions.
 
+  - `AMAPP System`: The backend module that processes requests to create, update, or delete users, and manage their associated roles and permissions.
 - **Data Flows:**
+
   - `Send request to manage users or roles`: The `Administrator` sends commands to the `AMAPP System` to perform management actions.
   - `Send operation result or data`: The `AMAPP System` returns feedback to the `Administrator`, such as confirmation of changes or relevant user/role data.
 
@@ -914,28 +893,29 @@ This context-level diagram outlines the scope of the user and permission managem
 The Level 1 Data Flow Diagram (DFD) provides a more detailed view of how the AMAPP system handles the management of user accounts and their associated roles and permissions. This diagram decomposes the main system into internal components and shows how data flows between the administrator, the system, and the database.
 
 - **External Actor:**
-  - `Administrator`: A privileged user who initiates user management operations (e.g., create/update/delete users, assign roles).
 
+  - `Administrator`: A privileged user who initiates user management operations (e.g., create/update/delete users, assign roles).
 - **Internal Components:**
+
   - `AMAPP API`: The internal component responsible for processing requests related to user and permission management.
   - `AMAPP DB`: The database where user accounts and role/permission data are stored.
-
 - **Data Flows:**
+
   - `Submit user or permission management request`: The `Administrator` sends a management request (`User Management Request` or `Role/Permission Management Request`) to the `AMAPP API` via HTTPS.
   - `Create/update/delete user account`: The `AMAPP API` performs operations on the user account in the `AMAPP DB` using secure SQL.
   - `Assign/update/retrieve roles and permissions`: The `AMAPP API` handles role and permission data in the `AMAPP DB`.
   - `Return user data`: The `AMAPP DB` returns relevant user information (`User Data Response`) to the `AMAPP API`.
   - `Return permission/role data`: The `AMAPP DB` returns role and permission information (`Role/Permission Data Response`) to the `AMAPP API`.
   - `Send operation confirmation or results`: The `AMAPP API` returns the result (`Operation Confirmation or Result`) to the `Administrator`.
-
 - **Data Objects:**
+
   - `User Management Request`: Instructions for creating, updating, or deleting a user account.
   - `Role/Permission Management Request`: Instructions to assign or modify a user’s roles and permissions.
   - `User Data Response`: Information about user accounts.
   - `Role/Permission Data Response`: Information about user roles and assigned permissions.
   - `Operation Confirmation or Result`: Feedback on the success or failure of the requested operation.
-
 - **Trust Boundaries:**
+
   - `Internet`: Where the `Administrator` submits requests.
   - `AMAPP System`: The internal environment where requests are processed and business logic is applied.
   - `DB Server`: The secure database zone responsible for storing and retrieving sensitive account and permission data.
@@ -970,17 +950,17 @@ To determine the most important threats included in each STRIDE table, the follo
 
 ### Authentication
 
-| **Threat**                         | **Targeted Element**           | **STRIDE Category**    | **Description**                                                                                                                                       | **Mitigation**                                                                                                         |
-|-----------------------------------|--------------------------------|------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
-| **AA01 – Authentication Bypass**  | AMAPP API                      | Spoofing               | Attackers try to bypass login logic (e.g., reusing expired tokens, skipping auth headers).                                                           | Enforce strong JWT validation; validate token expiration and audience; use HTTPS.                                     |
-| **AC20 – Session Replay**         | AMAPP API                      | Tampering              | Reuse of valid JWT tokens captured via network sniffing or exposed endpoints.                                                                         | Short token lifetimes, one-time tokens, token rotation, and HTTPS enforcement.                                        |
-| **CR03 – Password Brute Force**   | AMAPP API                      | Denial of Service      | Repeated login attempts using dictionaries or brute force degrade availability and risk account compromise.                                          | Rate limiting, CAPTCHA, account lockout mechanisms, and logging failed attempts.                                       |
-| **INP09 – LDAP Injection**        | AMAPP API, AMAPP DB            | Tampering              | Malformed input could be used in login queries (if LDAP used), allowing access or privilege escalation.                                              | Use parameterized queries; sanitize all inputs; validate schema and types.                                             |
-| **INP02 – Buffer Overflow**       | AMAPP API                      | Tampering              | Poorly validated login fields could trigger buffer overflows (unlikely in .NET but still a concern in native components).                           | Use safe string handling, input size limits, memory-safe languages.                                                   |
-| **DS01 – Excavation**             | AMAPP API                      | Information Disclosure | Error messages or verbose logs during login may reveal implementation details (e.g., username exists, stack traces).                                 | Standardize error messages, suppress stack traces, sanitize logs.                                                     |
-| **AC01 – Privilege Abuse**        | AMAPP API                      | Elevation of Privilege | JWT manually modified to elevate role to admin (e.g., modifying payload manually).                                                                   | Validate JWT signature and claims server-side; use asymmetric signing (RS256); never trust client-provided roles.     |
-| **DE04 – Audit Log Manipulation** | AMAPP DB                       | Repudiation            | If logs are not secured, a user might deny having authenticated or erase traces of login events.                                                     | Use append-only log structures; timestamp and sign logs; store logs in secure datastore with restricted write access. |
 
+| **Threat**                         | **Targeted Element** | **STRIDE Category**    | **Description**                                                                                                           | **Mitigation**                                                                                                        |
+| ---------------------------------- | -------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **AA01 – Authentication Bypass**  | AMAPP API            | Spoofing               | Attackers try to bypass login logic (e.g., reusing expired tokens, skipping auth headers).                                | Enforce strong JWT validation; validate token expiration and audience; use HTTPS.                                     |
+| **AC20 – Session Replay**         | AMAPP API            | Tampering              | Reuse of valid JWT tokens captured via network sniffing or exposed endpoints.                                             | Short token lifetimes, one-time tokens, token rotation, and HTTPS enforcement.                                        |
+| **CR03 – Password Brute Force**   | AMAPP API            | Denial of Service      | Repeated login attempts using dictionaries or brute force degrade availability and risk account compromise.               | Rate limiting, CAPTCHA, account lockout mechanisms, and logging failed attempts.                                      |
+| **INP09 – LDAP Injection**        | AMAPP API, AMAPP DB  | Tampering              | Malformed input could be used in login queries (if LDAP used), allowing access or privilege escalation.                   | Use parameterized queries; sanitize all inputs; validate schema and types.                                            |
+| **INP02 – Buffer Overflow**       | AMAPP API            | Tampering              | Poorly validated login fields could trigger buffer overflows (unlikely in .NET but still a concern in native components). | Use safe string handling, input size limits, memory-safe languages.                                                   |
+| **DS01 – Excavation**             | AMAPP API            | Information Disclosure | Error messages or verbose logs during login may reveal implementation details (e.g., username exists, stack traces).      | Standardize error messages, suppress stack traces, sanitize logs.                                                     |
+| **AC01 – Privilege Abuse**        | AMAPP API            | Elevation of Privilege | JWT manually modified to elevate role to admin (e.g., modifying payload manually).                                        | Validate JWT signature and claims server-side; use asymmetric signing (RS256); never trust client-provided roles.     |
+| **DE04 – Audit Log Manipulation** | AMAPP DB             | Repudiation            | If logs are not secured, a user might deny having authenticated or erase traces of login events.                          | Use append-only log structures; timestamp and sign logs; store logs in secure datastore with restricted write access. |
 
 ---
 
@@ -1006,9 +986,19 @@ To determine the most important threats included in each STRIDE table, the follo
 
 ---
 
-### Payments
+### Order Payments Deliveries Reports
 
-*_[Blablabla]_*
+
+| **Threat**                                 | **Targeted Element**                   | **STRIDE Category**    | **Description**                                                                                                                                              | **Mitigation**                                                                                                                           |
+| ------------------------------------------ | -------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| INP02 – Overflow Buffers                  | Request Own Report                     | Tampering              | Buffer overflows in the request handler could allow an attacker to crash or take over the report-generation endpoint.                                        | Use languages/compilers with automatic bounds checking; prefer safe APIs; run static analysis to catch overflow risks.                   |
+| AA01 – Authentication Abuse/ByPass        | View Own Report                        | Spoofing               | An attacker who bypasses or steals credentials could view another producer’s report, compromising confidentiality.                                          | Enforce strong authentication (e.g. OAuth 2.0), session timeouts, and multi-factor authentication.                                       |
+| INP07 – Buffer Manipulation               | Request Report for Specific CoProducer | Tampering              | Maliciously crafted request parameters could manipulate internal buffers, leading to malformed queries or code execution in the report engine.               | Validate and bound-check all inputs; use compiler-based canaries (StackGuard/ProPolice); adopt secure coding guidelines.                 |
+| AA02 – Principal Spoof                    | View Selected CoProducer Report        | Spoofing               | An attacker may spoof another user’s identity or stolen token to retrieve reports they’re not authorized to see.                                           | Enforce strict authorization checks per request; implement token binding and rotate credentials regularly.                               |
+| CR06 – Communication Channel Manipulation | Generate Report                        | Information Disclosure | A man-in-the-middle on the API↔engine channel could intercept the raw report stream and extract sensitive data.                                             | Encrypt all in-transit data (TLS with strong ciphers); mutually authenticate endpoints; pin certificates.                                |
+| DE03 – Sniffing Attacks                   | Query Database                         | Information Disclosure | If the database link isn’t encrypted, an attacker sniffing the network can capture query results containing privileged report data.                         | Use encrypted database connections (e.g. TLS); isolate the database network; enforce least-privilege network policies.                   |
+| AC21 – Cross Site Request Forgery (CSRF)  | Request Report                         | Spoofing               | A forged request (e.g. via hidden form or link) could trick a logged-in user into submitting a report action they didn’t intend, exposing or altering data. | Implement anti-CSRF tokens for each form/action; validate Referer/Origin headers; require re-authentication for sensitive operations.    |
+| INP41 – Argument Injection                | Request Report                         | Tampering              | Injection of unexpected arguments into the report-request parameters could cause unintended behavior, data leakage or code execution in the report engine.   | Whitelist and sanitize all parameter values; enforce strict length/type checks; use parameterized APIs rather than string concatenation. |
 
 ---
 
@@ -1036,27 +1026,29 @@ The following table outlines the most significant security vulnerabilities requi
 
 ### Registration
 
-| **Threat**                         | **Targeted Element**            | **STRIDE Category**    | **Description**                                                                                                                         | **Mitigation**                                                                                                                       |
-|-----------------------------------|----------------------------------|------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
-| **Spoofing – Fake Registration**  | Registration API, Admin Portal   | Spoofing               | Attackers attempt to impersonate legitimate users or admins during registration.                                                       | Strong admin authentication; Validate client sessions; Use certificate pinning for internal interfaces.                            |
-| **Tampering – Data Manipulation** | Registration Dataflows, DB       | Tampering              | Submitted registration data or approval status is modified before reaching the destination.                                            | Input validation; End-to-end encryption via HTTPS/TLS; Critical path validation on server side.                                      |
-| **Repudiation – Denial of Action**| AMAPP API, Admin UI, User DB     | Repudiation            | Users or admins deny registration/approval actions if no audit trail is in place.                                                      | Secure audit logging; Timestamps and user ID tagging in log entries; Logs stored securely with append-only settings.                |
-| **Information Disclosure**        | Registration Forms, DB Records   | Information Disclosure | Sensitive data (e.g., emails, phone numbers) leaked due to weak encryption or unsecured channels.                                     | Encrypt data in transit and at rest; Strict RBAC on user records; Use TLS across all communication layers.                          |
-| **Denial of Service – Fake Entries** | Registration Endpoint, API DB   | Denial of Service      | Flood of fake registration requests overwhelms the backend, preventing valid user onboarding.                                          | CAPTCHA implementation; API throttling and rate limits; IP filtering; Detection of anomalous behavior at the gateway.               |
-| **Elevation of Privilege**        | Approval Workflow, User Roles    | Elevation of Privilege | User manipulates approval flow or backend parameters to escalate to privileged roles like admin.                                       | Enforce server-side validation of roles; Block manual override from client; Multi-step approval processes with role separation.     |
+
+| **Threat**                            | **Targeted Element**           | **STRIDE Category**    | **Description**                                                                                   | **Mitigation**                                                                                                                  |
+| ------------------------------------- | ------------------------------ | ---------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| **Spoofing – Fake Registration**     | Registration API, Admin Portal | Spoofing               | Attackers attempt to impersonate legitimate users or admins during registration.                  | Strong admin authentication; Validate client sessions; Use certificate pinning for internal interfaces.                         |
+| **Tampering – Data Manipulation**    | Registration Dataflows, DB     | Tampering              | Submitted registration data or approval status is modified before reaching the destination.       | Input validation; End-to-end encryption via HTTPS/TLS; Critical path validation on server side.                                 |
+| **Repudiation – Denial of Action**   | AMAPP API, Admin UI, User DB   | Repudiation            | Users or admins deny registration/approval actions if no audit trail is in place.                 | Secure audit logging; Timestamps and user ID tagging in log entries; Logs stored securely with append-only settings.            |
+| **Information Disclosure**            | Registration Forms, DB Records | Information Disclosure | Sensitive data (e.g., emails, phone numbers) leaked due to weak encryption or unsecured channels. | Encrypt data in transit and at rest; Strict RBAC on user records; Use TLS across all communication layers.                      |
+| **Denial of Service – Fake Entries** | Registration Endpoint, API DB  | Denial of Service      | Flood of fake registration requests overwhelms the backend, preventing valid user onboarding.     | CAPTCHA implementation; API throttling and rate limits; IP filtering; Detection of anomalous behavior at the gateway.           |
+| **Elevation of Privilege**            | Approval Workflow, User Roles  | Elevation of Privilege | User manipulates approval flow or backend parameters to escalate to privileged roles like admin.  | Enforce server-side validation of roles; Block manual override from client; Multi-step approval processes with role separation. |
 
 ---
 
 ### User Management
 
-| **Threat**                         | **Targeted Element**              | **STRIDE Category**    | **Description**                                                                                                                              | **Mitigation**                                                                                                                            |
-|-----------------------------------|-----------------------------------|------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------|
-| **Spoofing – Admin Impersonation**| User Management API               | Spoofing               | An attacker impersonates an administrator to perform unauthorized role or user management actions.                                          | Enforce multi-factor authentication for admins; Validate session tokens and origins; Mutual TLS authentication between services.         |
-| **Tampering – Role Modification** | Role Assignment Requests, DB      | Tampering              | Malicious modification of role assignments or user attributes via intercepted or forged requests.                                           | Validate and sanitize all input; Use signed requests or JWTs; Apply strict server-side role validation.                                   |
-| **Repudiation – Denial of Actions**| Management Interface, Logs        | Repudiation            | Admin denies having made changes to user accounts or roles if no tamper-proof audit trail exists.                                           | Implement immutable audit logs with timestamps and identifiers; Use append-only log storage.                                              |
-| **Information Disclosure**        | Role Data, User Profiles, APIs    | Information Disclosure | Unauthorized access to user-role mappings or user data due to exposed APIs or insufficient response filtering.                             | Enforce TLS across all services; Limit response data to minimum necessary; Apply least privilege and RBAC controls.                       |
-| **Denial of Service – API Flood** | User Management API               | Denial of Service      | Flood of fake user or role change requests exhausts server capacity, preventing legitimate administrative operations.                      | Rate limiting; CAPTCHA on sensitive endpoints; WAF/API Gateway throttling; Logging and alerting for abnormal patterns.                   |
-| **Elevation of Privilege**        | Role Assignment Flow              | Elevation of Privilege | A regular user manipulates requests or claims to grant themselves unauthorized roles, such as admin access.                                | Strict server-side role enforcement; Secure claims validation; Never trust client input; Segregate duties across APIs and workflows.     |
+
+| **Threat**                           | **Targeted Element**           | **STRIDE Category**    | **Description**                                                                                                       | **Mitigation**                                                                                                                       |
+| ------------------------------------ | ------------------------------ | ---------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **Spoofing – Admin Impersonation**  | User Management API            | Spoofing               | An attacker impersonates an administrator to perform unauthorized role or user management actions.                    | Enforce multi-factor authentication for admins; Validate session tokens and origins; Mutual TLS authentication between services.     |
+| **Tampering – Role Modification**   | Role Assignment Requests, DB   | Tampering              | Malicious modification of role assignments or user attributes via intercepted or forged requests.                     | Validate and sanitize all input; Use signed requests or JWTs; Apply strict server-side role validation.                              |
+| **Repudiation – Denial of Actions** | Management Interface, Logs     | Repudiation            | Admin denies having made changes to user accounts or roles if no tamper-proof audit trail exists.                     | Implement immutable audit logs with timestamps and identifiers; Use append-only log storage.                                         |
+| **Information Disclosure**           | Role Data, User Profiles, APIs | Information Disclosure | Unauthorized access to user-role mappings or user data due to exposed APIs or insufficient response filtering.        | Enforce TLS across all services; Limit response data to minimum necessary; Apply least privilege and RBAC controls.                  |
+| **Denial of Service – API Flood**   | User Management API            | Denial of Service      | Flood of fake user or role change requests exhausts server capacity, preventing legitimate administrative operations. | Rate limiting; CAPTCHA on sensitive endpoints; WAF/API Gateway throttling; Logging and alerting for abnormal patterns.               |
+| **Elevation of Privilege**           | Role Assignment Flow           | Elevation of Privilege | A regular user manipulates requests or claims to grant themselves unauthorized roles, such as admin access.           | Strict server-side role enforcement; Secure claims validation; Never trust client input; Segregate duties across APIs and workflows. |
 
 ---
 
@@ -1118,12 +1110,45 @@ This diagram represents a security-focused approach using both **Use Cases** and
 This model provides a clear foundation for threat analysis, illustrating how the system could be exploited and what preventive measures are in place.
 
 ---
-
-### Payments
+### Order Payments Deliveries Reports
 
 ![Use and Abuse Cases - Payments](diagrams/Abuse%20Cases/pay-del-rep-abuse-case.png)
 
-*_[Blablabla]_*
+This diagram represents a security-focused approach using both **Use Cases** and **Abuse Cases** within the AMAPP Payment & Delivery Report System (feature). The main goal is to identify potential threats to the report request and generation process and link them with appropriate countermeasures.
+
+#### **Use Cases**
+
+- **Request Own Report**: CoProducer submits a request for their payment & delivery history.
+- **View Own Report**: CoProducer retrieves and views their PDF report.
+- **Request Report for Specific CoProducer**: AMAPP Administrator requests another CoProducer's report.
+- **View Selected CoProducer Report**: Administrator retrieves and views the selected report.
+- **Generate Report**: Backend process that builds the PDF from data.
+- **Query Database**: Backend retrieves filtered payment & delivery data for report generation.
+
+#### **Abuse Cases**
+
+- **Session Hijacking**: Attacker takes over a valid user session.
+- **Data Sniffing**: Attacker intercepts sensitive report data in transit.
+- **Communication Manipulation**: Attacker alters or injects messages between components.
+- **Protocol Manipulation**: Attacker exploits weaknesses in communication protocols.
+- **Argument Injection (covers INP41)**: Attacker injects malicious parameters into report requests.
+- **Unauthorized Report Access**: Attacker gains access to reports they shouldn’t view.
+- **Privilege Escalation**: Attacker elevates privileges to request or view other users’ reports.
+- **Cross-Site Request Forgery**: Attacker tricks a user’s browser into making unwanted report requests.
+
+#### **Countermeasures**
+
+- **Authenticate User**: Verify identity before processing any report request.
+- **Authorize Access**: Enforce role-based checks on report requests.
+- **Secure Communication Channel**: Use HTTPS/TLS to protect data in transit.
+- **Validate Input Parameters**: Sanitize and verify all request inputs.
+- **Maintain Audit Logs**: Record all report requests and views for accountability.
+- **Implement Session Protection**: Use secure cookies and anti-CSRF tokens.
+- **Enforce Access Control**: Apply strict permissions at every component.
+
+This model provides a clear foundation for threat analysis, illustrating how the AMAPP Payment & Delivery Report System could be exploited and what preventive measures are in place.
+
+---
 
 ---
 
