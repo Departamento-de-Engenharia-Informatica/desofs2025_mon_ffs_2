@@ -26,16 +26,19 @@ Paulo Abreu - 1240481 <br>
   - [Project Analysis](#project-analysis)
     - [Project description](#project-description)
     - [Domain Model](#domain-model)
-      - [User Hierarchy](#user-hierarchy)
-      - [Products \& Inventory](#products--inventory)
-      - [Orders \& Order Items](#orders--order-items)
-      - [Payments \& Delivery](#payments--delivery)
-      - [Key Relationships](#key-relationships)
     - [Component Diagram](#component-diagram)
-      - [Deployment Nodes](#deployment-nodes)
-      - [Containers \& Components](#containers--components)
-      - [Interfaces](#interfaces)
+      - [Components:](#components)
+      - [Connections:](#connections)
+      - [Deployment:](#deployment)
     - [Threat Model Information](#threat-model-information)
+      - [Methodology](#methodology)
+      - [Supplementary Methodologies](#supplementary-methodologies)
+      - [Scope](#scope)
+    - [Assumptions](#assumptions)
+    - [Key Assets to Protect](#key-assets-to-protect)
+  - [Entry Points and Exit Points](#entry-points-and-exit-points)
+    - [Entry Points](#entry-points)
+    - [Exit Points](#exit-points)
     - [Application Users](#application-users)
       - [Producer](#producer)
       - [Co-Producer](#co-producer)
@@ -84,8 +87,8 @@ Paulo Abreu - 1240481 <br>
     - [9. Privacy and GDPR](#9-privacy-and-gdpr)
     - [10. Incident Response and Recovery](#10-incident-response-and-recovery)
     - [External Dependencies](#external-dependencies)
-    - [Entry Points](#entry-points)
-    - [Exit Points](#exit-points)
+    - [Entry Points](#entry-points-1)
+    - [Exit Points](#exit-points-1)
     - [Assets](#assets)
     - [Trust Levels](#trust-levels)
   - [Data Flow Diagrams](#data-flow-diagrams)
@@ -101,7 +104,6 @@ Paulo Abreu - 1240481 <br>
     - [Order Payments Deliveries Reports](#order-payments-deliveries-reports)
       - [Level 0](#level-0-3)
       - [Level 1](#level-1-3)
-    - [Stride](#stride)
     - [Product Reservation](#product-reservation)
       - [Level 0](#level-0-4)
       - [Level 1](#level-1-4)
@@ -111,11 +113,11 @@ Paulo Abreu - 1240481 <br>
     - [User Management](#user-management)
       - [Level 0](#level-0-6)
       - [Level 1](#level-1-6)
-  - [Stride](#stride-1)
+  - [Stride](#stride)
     - [Authentication](#authentication-1)
     - [Create Product](#create-product-1)
     - [Generic Representation](#generic-representation-1)
-    - [Payments](#payments)
+    - [Order Payments Deliveries Reports](#order-payments-deliveries-reports-1)
     - [Product Reservation](#product-reservation-1)
     - [Registration](#registration-1)
     - [User Management](#user-management-1)
@@ -125,7 +127,10 @@ Paulo Abreu - 1240481 <br>
       - [**Use Cases**](#use-cases-1)
       - [**Abuse Cases**](#abuse-cases)
       - [**Countermeasures**](#countermeasures)
-    - [Payments](#payments-1)
+    - [Order Payments Deliveries Reports](#order-payments-deliveries-reports-2)
+      - [**Use Cases**](#use-cases-2)
+      - [**Abuse Cases**](#abuse-cases-1)
+      - [**Countermeasures**](#countermeasures-1)
     - [Product Reservation](#product-reservation-2)
     - [Registration](#registration-2)
     - [User Management](#user-management-2)
@@ -194,7 +199,111 @@ This diagram shows the main components of the AMAPP system and how they interact
 
 ### Threat Model Information
 
-*_[Blablabla]_*
+The threat modeling for the AMAP system follows a **Software-Centric** approach to identify and evaluate potential security risks within the platform. This section outlines our methodology, scope for the threat modeling process.
+
+#### Methodology
+
+Our threat modeling process is based on PyTM (Python Threat Modeling), an open-source framework that provides a code-driven approach to threat modeling. While we leverage the STRIDE threat categorization concepts, our implementation is done through PyTM, which allows us to:
+
+- Programmatically define the system architecture
+- Generate Data Flow Diagrams (DFDs) automatically
+-Identify threats using predefined rules and templates
+- Document potential attacks and mitigations systematically
+
+The STRIDE approach helps us identify threats across six key categories:
+
+- **Spoofing**  
+  Impersonation of users or system components  
+- **Tampering**  
+  Unauthorized modification of data  
+- **Repudiation**  
+  Denial of performing actions without others being able to prove otherwise  
+- **Information Disclosure**  
+  Exposure of sensitive information  
+- **Denial of Service**  
+  Making the system unavailable to legitimate users  
+- **Elevation of Privilege**  
+  Gaining unauthorized access to restricted functionality  
+
+#### Supplementary Methodologies  
+To bolster our threat modeling, we also employed:
+
+- **Data Flow Diagrams (DFDs)**  
+  Visualize system components and their interactions  
+- **Abuse Cases**  
+  Model potential attack scenarios  
+
+#### Scope  
+The threat model encompasses all key components of the AMAP system:
+
+- **User Authentication and Authorization**  
+- **User Registration and Management**  
+- **Product Catalog Management**  
+- **Order Processing and Reservation System**   
+- **Delivery Management**  
+- **Reporting Functionality** 
+
+### Assumptions
+- The database is hosted on a separate server as specified in the system architecture
+
+### Key Assets to Protect
+Based on our analysis, we identified the following critical assets requiring protection:
+
+- **User Authentication Credentials**: Passwords and session tokens that could be used to impersonate legitimate users
+
+- **Personal User Information**: Names, addresses, contact information, and other PII protected under privacy regulations
+
+- **Product Information**: Details about products, inventory, and pricing that must maintain integrity
+
+- **System Configuration**: Settings that control the behavior of the application and could be misused if compromised
+
+## Entry Points and Exit Points
+
+### Entry Points
+
+Entry points represent the interfaces through which data enters the AMAPP system from external sources:
+
+**1 - API Endpoints**
+
+- Authentication endpoints for user login
+- Registration endpoints for new user creation
+- Product management endpoints (create, update, list)
+- Order submission endpoints
+- Report generation endpoints
+- User management endpoints for administrators
+  
+**2- File Upload Interfaces**
+
+- Product image upload API endpoints
+- Document submission API endpoints (e.g., certifications)
+  
+**3 - Database Connection**
+
+- Connection strings to the database server
+- Database authentication credentials used by the API
+
+### Exit Points
+
+Exit points represent interfaces through which data leaves the AMAPP system:
+
+**1 - API Responses**
+
+- JSON data responses to client requests
+- Authentication tokens issued to authenticated clients
+- Error messages and validation results
+- Success/failure status codes for operations
+- PDF file downloads returned to clients when reports are requested
+
+**2 - Database Operations**
+
+- SQL queries to store, retrieve, or modify data
+- Database backup operations
+
+**3 - System Logs**
+
+- API access logs with operation details
+- Security event logs
+- Error and exception logs
 
 ---
 
