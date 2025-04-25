@@ -1,6 +1,6 @@
 | ![Logo ISEP](figs/logoisep.png) | ![Logo DEI](figs/logo_DEI_big_transparente.png) |
-| :------------------------------: | :----------------------------------------------: |
-| :------------------------------: | :----------------------------------------------: |
+| :-----------------------------: | :---------------------------------------------: |
+
 
 # Phase 1: Threat Modeling
 
@@ -27,19 +27,63 @@ Paulo Abreu - 1240481 <br>
   - [Project Analysis](#project-analysis)
     - [Project description](#project-description)
     - [Domain Model](#domain-model)
+      - [User Hierarchy](#user-hierarchy)
+      - [Products \& Inventory](#products--inventory)
+      - [Orders \& Order Items](#orders--order-items)
+      - [Payments \& Delivery](#payments--delivery)
+      - [Key Relationships](#key-relationships)
     - [Component Diagram](#component-diagram)
+      - [Deployment Nodes](#deployment-nodes)
+      - [Containers \& Components](#containers--components)
+      - [Interfaces](#interfaces)
     - [Threat Model Information](#threat-model-information)
     - [Application Users](#application-users)
       - [Producer](#producer)
-      - [Co-Producer (Consumer)](#co-producer-consumer)
+      - [Co-Producer](#co-producer)
       - [AMAP Administrators](#amap-administrators)
-      - [System Admin](#system-admin)
       - [Non-Authenticated User](#non-authenticated-user)
-      - [System](#system)
     - [Use Cases](#use-cases)
     - [Functional Requirements](#functional-requirements)
+    - [UC01 - Manage Users/Roles](#uc01---manage-usersroles)
+    - [UC02 - Manage Delivery Settings](#uc02---manage-delivery-settings)
+    - [UC03 - Manage Products](#uc03---manage-products)
+    - [UC04 - View Orders](#uc04---view-orders)
+    - [UC05 - Manage AMAP Details](#uc05---manage-amap-details)
+    - [UC06 - Login](#uc06---login)
+    - [UC07 - Register](#uc07---register)
+    - [UC08 - View/Search Products](#uc08---viewsearch-products)
+    - [UC09 - Manage Orders](#uc09---manage-orders)
+    - [UC10 - View Order History](#uc10---view-order-history)
+    - [UC11 - View Delivery](#uc11---view-delivery)
+    - [UC12 - View Order Payments](#uc12---view-order-payments)
+    - [UC13 - Manage Profile](#uc13---manage-profile)
     - [Non-Functional Requirements](#non-functional-requirements)
+    - [1. Performance](#1-performance)
+    - [2. Availability](#2-availability)
+    - [3. Scalability](#3-scalability)
+    - [4. Security](#4-security)
+    - [5. Reliability and Integrity](#5-reliability-and-integrity)
+    - [6. Usability](#6-usability)
+    - [7. Maintainability](#7-maintainability)
+    - [8. Portability](#8-portability)
+    - [9. Monitoring and Alerts](#9-monitoring-and-alerts)
     - [Security Requirements](#security-requirements)
+      - [Functional Security Requirements (CIA-Based)](#functional-security-requirements-cia-based)
+        - [Confidentiality](#confidentiality)
+        - [Integrity](#integrity)
+        - [Availability](#availability)
+      - [Non-Functional Security Requirements](#non-functional-security-requirements)
+      - [Consolidated Security Checklist (Mapped)](#consolidated-security-checklist-mapped)
+    - [1. Authentication and Authorization](#1-authentication-and-authorization)
+    - [2. Session Management](#2-session-management)
+    - [3. Input Validation and Sanitization](#3-input-validation-and-sanitization)
+    - [4. Access Control](#4-access-control)
+    - [5. Encryption and Secure Communication](#5-encryption-and-secure-communication)
+    - [6. DoS and Resource Exhaustion Protection](#6-dos-and-resource-exhaustion-protection)
+    - [7. File and Remote Input](#7-file-and-remote-input)
+    - [8. Logging and Monitoring](#8-logging-and-monitoring)
+    - [9. Privacy and GDPR](#9-privacy-and-gdpr)
+    - [10. Incident Response and Recovery](#10-incident-response-and-recovery)
     - [External Dependencies](#external-dependencies)
     - [Entry Points](#entry-points)
     - [Exit Points](#exit-points)
@@ -48,15 +92,7 @@ Paulo Abreu - 1240481 <br>
   - [Data Flow Diagrams](#data-flow-diagrams)
     - [Authentication](#authentication)
       - [Level 0](#level-0)
-      - [External Actor:](#external-actor)
-      - [Main Process:](#main-process)
-      - [Data Flows:](#data-flows)
       - [Level 1](#level-1)
-      - [**External Actor:**](#external-actor-1)
-      - [**Subprocesses:**](#subprocesses)
-      - [**Data Storage:**](#data-storage)
-      - [**Data Flows:**](#data-flows-1)
-      - [**Trust Boundaries:**](#trust-boundaries)
     - [Create Product](#create-product)
       - [Level 0](#level-0-1)
       - [Level 1](#level-1-1)
@@ -72,34 +108,16 @@ Paulo Abreu - 1240481 <br>
       - [Level 1](#level-1-4)
     - [Registration](#registration)
       - [Level 0](#level-0-5)
-      - [**External Actors:**](#external-actors)
-      - [**Main Process:**](#main-process-1)
-      - [**Data Flows:**](#data-flows-2)
-      - [**Trust Boundaries:**](#trust-boundaries-1)
       - [Level 1](#level-1-5)
-      - [**External Actors:**](#external-actors-1)
-      - [**Internal Components:**](#internal-components)
-      - [**Data Flows:**](#data-flows-3)
-      - [**Data Objects:**](#data-objects)
-      - [**Trust Boundaries:**](#trust-boundaries-2)
     - [User Management](#user-management)
       - [Level 0](#level-0-6)
-      - [**External Actor:**](#external-actor-2)
-      - [**Main Process:**](#main-process-2)
-      - [**Data Flows:**](#data-flows-4)
       - [Level 1](#level-1-6)
-      - [**External Actor:**](#external-actor-3)
-      - [**Internal Components:**](#internal-components-1)
-      - [**Data Flows:**](#data-flows-5)
-      - [**Data Objects:**](#data-objects-1)
-      - [**Trust Boundaries:**](#trust-boundaries-3)
   - [Stride](#stride-1)
     - [Authentication](#authentication-1)
     - [Create Product](#create-product-1)
     - [Generic Representation](#generic-representation-1)
     - [Payments](#payments)
     - [Product Reservation](#product-reservation-1)
-  - [| INP32 - XML Injection | Reservation Processing | Tampering, Information Disclosure | Attackers inject malicious XML code to manipulate application logic, potentially allowing authentication bypass, data exposure, or system compromise. | • Implement strong input validation for XML content• Filter illegal characters and XML structures• Use custom error pages to prevent information leakage• Implement proper XML parsing with schema validation |](#-inp32---xml-injection--reservation-processing--tampering-information-disclosure--attackers-inject-malicious-xml-code-to-manipulate-application-logic-potentially-allowing-authentication-bypass-data-exposure-or-system-compromise---implement-strong-input-validation-for-xml-content-filter-illegal-characters-and-xml-structures-use-custom-error-pages-to-prevent-information-leakage-implement-proper-xml-parsing-with-schema-validation-)
     - [Registration](#registration-1)
     - [User Management](#user-management-1)
   - [Use Cases and Abuse Cases](#use-cases-and-abuse-cases)
@@ -138,6 +156,18 @@ Paulo Abreu - 1240481 <br>
 
 ![Domain Model](diagrams/Domain%20Model/domain_model_diagram.png)
 
+
+This class diagram represents the **core data structure** of the AMAPP platform, outlining the main entities involved in the management of orders between co-producers and producers.
+
+- The base class `User` is extended by three user types: `Producer`, `AMAPAdministrator`, and `CoProducer`, each with specific roles.
+- Producers can **create products**, which are tracked in an associated `Inventory` component.
+- Co-producers can **place orders** (`Order`), which consist of multiple `OrderItem` elements, each linked to a specific product.
+- Orders can be linked to **payments** and **deliveries**, managed by the `Payment` and `Delivery` classes respectively.
+- The `AMAPAdministrator` manages delivery dates and logistics.
+- Inventory updates are reflected based on `OrderItem` activity.
+
+This model supports **data consistency, business rules enforcement, and clear responsibility distribution** among system actors.
+
 #### User Hierarchy
 - **User**: base entity with `UserID`, `Name`, `Email`.  
 - **Producer**, **AMAPAdministrator**, **CoProducer**: specialized users inheriting from **User**.
@@ -160,11 +190,32 @@ Paulo Abreu - 1240481 <br>
 - Each **Order** may have one **Payment** and one **Delivery**.  
 - Creating or updating an **OrderItem** adjusts the corresponding **Inventory**.
 
+
 ---
 
 ### Component Diagram
 
 ![Component Diagram](diagrams/Component%20Diagram/Amap-component-diagram.png)
+
+
+This diagram shows the main components of the AMAPP system and how they interact.
+
+#### Components:
+- **AMAP System**: The main container for all modules.
+- **AMAP BackEnd**: Handles business logic.
+- **AMAP Database**: Stores the system's data.
+- **AmapDB_API**: Connects the backend to the database.
+- **AMAP API**: Allows the frontend or other systems to use backend services.
+
+#### Connections:
+- The **AMAP API** connects to the **BackEnd** to request operations or data.
+- The **BackEnd** uses the **AmapDB_API** to access the **Database**.
+
+#### Deployment:
+- The system runs locally (Localhost) with the backend and APIs.
+- The database is hosted on a remote server: `vsgate-s1.dei.isep.ipp.pt:10279`.
+
+This diagram provides a clear overview of how the components are organized and how they communicate to ensure system functionality.
 
 #### Deployment Nodes
 
@@ -199,6 +250,7 @@ Paulo Abreu - 1240481 <br>
 
 - **AmapDB_API**  
   - Internal interface for database access between **AMAP BackEnd** and **AMAP Database**.
+
 
 
 ---
@@ -524,22 +576,12 @@ By using DFDs at different levels of abstraction, we ensure a structured approac
 
 The Level 0 Data Flow Diagram (DFD) provides a high-level overview of the **user authentication process** within the AMAPP application. This diagram illustrates the basic interaction between an external actor (the user) and the internal AMAPP authentication system.
 
-#### External Actor:
-
-- `User`: Any actor (e.g., co-producer, producer, or AMAPP admin) attempting to log in to the system.
 - **External Actor:**
   - `User`: Any actor (e.g., co-producer, producer, or AMAPP admin) attempting to log in to the system.
 
-#### Main Process:
-
-- `AMAPP System`: The internal authentication service responsible for validating login credentials and issuing authentication tokens.
 - **Main Process:**
   - `AMAPP System`: The internal authentication service responsible for validating login credentials and issuing authentication tokens.
 
-#### Data Flows:
-
-- `Submit login credentials`: The user submits their login details (e.g., email and password) to the AMAPP system via a secure HTTPS connection.
-- `Authentication JWT Token`: Upon successful verification, the system responds with a JSON Web Token (JWT) which allows the user to access protected endpoints in future requests.
 - **Data Flows:**
   - `Submit login credentials`: The user submits their login details (e.g., email and password) to the AMAPP system via a secure HTTPS connection.
   - `Authentication JWT Token`: Upon successful verification, the system responds with a JSON Web Token (JWT) which allows the user to access protected endpoints in future requests.
@@ -552,19 +594,9 @@ This context-level diagram defines the **boundary between the user and the syste
 
 The Level 1 Data Flow Diagram (DFD) refines the context-level view of the user authentication process by decomposing the **AMAPP API** into internal subprocesses and detailing how data flows through the system. It also introduces data storage components and defines clear **trust boundaries**.
 
-#### **External Actor:**
-
-- `User`: An individual (e.g., co-producer, producer, or administrator) attempting to authenticate and gain access to the AMAPP platform.
 - **External Actor:**
   - `User`: An individual (e.g., co-producer, producer, or administrator) attempting to authenticate and gain access to the AMAPP platform.
 
-#### **Subprocesses:**
-
-- `Receive Credentials`: Handles the initial reception of login credentials (username/email and password) from the user.
-- `Fetch User Record`: Queries the database to retrieve the stored user record corresponding to the submitted credentials.
-- `Validate Credentials`: Compares the submitted credentials with the stored hash (e.g., using password hashing functions).
-- `Generate Token`: If validation is successful, creates a signed JWT (JSON Web Token) to be used in subsequent authenticated requests.
-- `Return Token`: Sends the authentication token back to the user.
 - **Subprocesses:**
   - `Receive Credentials`: Handles the initial reception of login credentials (username/email and password) from the user.
   - `Fetch User Record`: Queries the database to retrieve the stored user record corresponding to the submitted credentials.
@@ -572,20 +604,10 @@ The Level 1 Data Flow Diagram (DFD) refines the context-level view of the user a
   - `Generate Token`: If validation is successful, creates a signed JWT (JSON Web Token) to be used in subsequent authenticated requests.
   - `Return Token`: Sends the authentication token back to the user.
 
-#### **Data Storage:**
-
-- `AMAPP DB`: The internal database where user records are securely stored, including hashed passwords and roles.
 - **Data Storage:**
   - `AMAPP DB`: The internal database where user records are securely stored, including hashed passwords and roles.
 
-#### **Data Flows:**
-
-- `Submit login credentials`: The user submits their authentication details to the API.
-- `Request user record`: The API requests the corresponding user data from the database.
-- `Return user record`: The database sends the user’s stored information (e.g., hashed password) back to the API.
-- `Validated result`: The outcome of the credential validation is passed to the token generator.
-- `Generated JWT`: A secure token is created for the session.
-- `Authentication JWT Token`: The token is returned to the user as proof of successful authentication.
+  
 - **Data Flows:**
   - `Submit login credentials`: The user submits their authentication details to the API.
   - `Request user record`: The API requests the corresponding user data from the database.
@@ -593,12 +615,7 @@ The Level 1 Data Flow Diagram (DFD) refines the context-level view of the user a
   - `Validated result`: The outcome of the credential validation is passed to the token generator.
   - `Generated JWT`: A secure token is created for the session.
   - `Authentication JWT Token`: The token is returned to the user as proof of successful authentication.
-
-#### **Trust Boundaries:**
-
-- `Internet Zone`: External environment where the user resides.
-- `AMAPP System Zone`: The internal API and authentication logic, trusted but must validate all inputs.
-- `Database Zone`: A protected area where sensitive user data is stored, with stricter access controls and security policies.
+  
 - **Trust Boundaries:**
   - `Internet Zone`: External environment where the user resides.
   - `AMAPP System Zone`: The internal API and authentication logic, trusted but must validate all inputs.
@@ -832,36 +849,27 @@ By breaking down the process into these components, the system achieves better m
 
 The Level 0 Data Flow Diagram (DFD) provides a high-level view of the **user registration process** within the AMAPP platform. It outlines the main interactions between the external actors (`User` and `AMAPP Admin`) and the internal `AMAPP System`, focusing on the exchange of registration and approval data.
 
-#### **External Actors:**
-
-- `User`: An individual who wishes to register in the AMAPP platform (e.g., co-producer or producer).
-- `AMAPP Admin`: The administrator responsible for approving or rejecting registration requests.
 - **External Actors:**
   - `User`: An individual who wishes to register in the AMAPP platform (e.g., co-producer or producer).
   - `AMAPP Admin`: The administrator responsible for approving or rejecting registration requests.
 
-#### **Main Process:**
 
-- `AMAPP System`: The central component that receives registration requests, communicates with the administrator, and notifies the user of the final decision.
 - **Main Process:**
   - `AMAPP System`: The central component that receives registration requests, communicates with the administrator, and notifies the user of the final decision.
 
-#### **Data Flows:**
 
-- `Submit registration request`: The user submits a request to register on the platform.
-- `Send approval request`: The system forwards the registration data to the administrator for review.
-- `Approval decision`: The administrator sends their decision (approve or reject) back to the system.
-- `Notify decision`: The system communicates the result of the registration process to the user.
+- **Data Flows:**
+  - `Submit registration request`: The user submits a request to register on the platform.
+  - `Send approval request`: The system forwards the registration data to the administrator for review.
+  - `Approval decision`: The administrator sends their decision (approve or reject) back to the system.
+  - `Notify decision`: The system communicates the result of the registration process to the user.
 - **Data Flows:**
   - `Submit registration request`: The user submits a request to register on the platform.
   - `Send approval request`: The system forwards the registration data to the administrator for review.
   - `Approval decision`: The administrator sends their decision (approve or reject) back to the system.
   - `Notify decision`: The system communicates the result of the registration process to the user.
 
-#### **Trust Boundaries:**
 
-- `Internet Zone`: The untrusted external zone where users reside and submit their requests.
-- `AMAPP System Zone`: The internal, trusted environment where the API and backend logic are executed.
 - **Trust Boundaries:**
   - `Internet Zone`: The untrusted external zone where users reside and submit their requests.
   - `AMAPP System Zone`: The internal, trusted environment where the API and backend logic are executed.
@@ -874,29 +882,14 @@ This context-level DFD clearly defines the boundaries of the user registration p
 
 The Level 1 Data Flow Diagram (DFD) expands the context-level view of the user registration process in the AMAPP platform. It decomposes the internal system into subprocesses, introduces data storage, and clearly defines trust boundaries and specific data flows.
 
-#### **External Actors:**
-
-- `User`: A new user (e.g., co-producer or producer) attempting to register on the platform.
-- `AMAPP Admin`: The administrator responsible for reviewing and approving or rejecting registration requests.
 - **External Actors:**
   - `User`: A new user (e.g., co-producer or producer) attempting to register on the platform.
   - `AMAPP Admin`: The administrator responsible for reviewing and approving or rejecting registration requests.
 
-#### **Internal Components:**
-
-- `AMAPP API`: The backend process that handles user registration, stores user data, communicates with the admin, and notifies users of the result.
-- `AMAPP DB`: The database that stores user information, including credentials and approval status.
 - **Internal Components:**
   - `AMAPP API`: The backend process that handles user registration, stores user data, communicates with the admin, and notifies users of the result.
   - `AMAPP DB`: The database that stores user information, including credentials and approval status.
 
-#### **Data Flows:**
-
-- `Submit registration data`: The `User` submits personal details (`Registration Info`) to the `AMAPP API` over HTTPS.
-- `Store user data`: The `AMAPP API` stores the user's account info (`User Data`) in the `AMAPP DB` via secure SQL.
-- `Review registration requests`: The `AMAPP Admin` sends their review action (`Registration Review Action`) to the `AMAPP API`.
-- `Update approval status`: The system updates the approval decision (`Approval Status`) in the `AMAPP DB`.
-- `Notify approval decision`: The `User` is notified of the final result (`Approval Notification`) via HTTPS.
 - **Data Flows:**
   - `Submit registration data`: The `User` submits personal details (`Registration Info`) to the `AMAPP API` over HTTPS.
   - `Store user data`: The `AMAPP API` stores the user's account info (`User Data`) in the `AMAPP DB` via secure SQL.
@@ -904,13 +897,6 @@ The Level 1 Data Flow Diagram (DFD) expands the context-level view of the user r
   - `Update approval status`: The system updates the approval decision (`Approval Status`) in the `AMAPP DB`.
   - `Notify approval decision`: The `User` is notified of the final result (`Approval Notification`) via HTTPS.
 
-#### **Data Objects:**
-
-- `Registration Info`: User's submitted data (e.g., name, email, password).
-- `User Data`: Stored account information (e.g., hashed password, email).
-- `Registration Review Action`: Admin’s decision regarding pending registration.
-- `Approval Status`: Approval or rejection flag stored in the database.
-- `Approval Notification`: Message sent to the user with the outcome.
 - **Data Objects:**
   - `Registration Info`: User's submitted data (e.g., name, email, password).
   - `User Data`: Stored account information (e.g., hashed password, email).
@@ -918,11 +904,6 @@ The Level 1 Data Flow Diagram (DFD) expands the context-level view of the user r
   - `Approval Status`: Approval or rejection flag stored in the database.
   - `Approval Notification`: Message sent to the user with the outcome.
 
-#### **Trust Boundaries:**
-
-- `Internet`: Where external actors (`User`, `AMAPP Admin`) reside.
-- `AMAPP System`: Internal zone that runs the application logic and processes data.
-- `DB Server`: A protected database zone with stricter access control where sensitive information is stored.
 - **Trust Boundaries:**
   - `Internet`: Where external actors (`User`, `AMAPP Admin`) reside.
   - `AMAPP System`: Internal zone that runs the application logic and processes data.
@@ -940,22 +921,12 @@ This level of detail helps to understand how registration data is validated, sto
 
 The Level 0 Data Flow Diagram (DFD) provides a high-level overview of how the AMAPP system handles user account and permission management. It captures the interaction between the administrative actor and the internal system responsible for executing user and role operations.
 
-#### **External Actor:**
-
-- `Administrator`: A privileged user (typically part of the AMAPP team) responsible for managing user accounts and defining roles and permissions.
 - **External Actor:**
   - `Administrator`: A privileged user (typically part of the AMAPP team) responsible for managing user accounts and defining roles and permissions.
 
-#### **Main Process:**
-
-- `AMAPP System`: The backend module that processes requests to create, update, or delete users, and manage their associated roles and permissions.
 - **Main Process:**
   - `AMAPP System`: The backend module that processes requests to create, update, or delete users, and manage their associated roles and permissions.
 
-#### **Data Flows:**
-
-- `Send request to manage users or roles`: The `Administrator` sends commands to the `AMAPP System` to perform management actions.
-- `Send operation result or data`: The `AMAPP System` returns feedback to the `Administrator`, such as confirmation of changes or relevant user/role data.
 - **Data Flows:**
   - `Send request to manage users or roles`: The `Administrator` sends commands to the `AMAPP System` to perform management actions.
   - `Send operation result or data`: The `AMAPP System` returns feedback to the `Administrator`, such as confirmation of changes or relevant user/role data.
@@ -968,28 +939,13 @@ This context-level diagram outlines the scope of the user and permission managem
 
 The Level 1 Data Flow Diagram (DFD) provides a more detailed view of how the AMAPP system handles the management of user accounts and their associated roles and permissions. This diagram decomposes the main system into internal components and shows how data flows between the administrator, the system, and the database.
 
-#### **External Actor:**
-
-- `Administrator`: A privileged user who initiates user management operations (e.g., create/update/delete users, assign roles).
 - **External Actor:**
   - `Administrator`: A privileged user who initiates user management operations (e.g., create/update/delete users, assign roles).
 
-#### **Internal Components:**
-
-- `AMAPP API`: The internal component responsible for processing requests related to user and permission management.
-- `AMAPP DB`: The database where user accounts and role/permission data are stored.
 - **Internal Components:**
   - `AMAPP API`: The internal component responsible for processing requests related to user and permission management.
   - `AMAPP DB`: The database where user accounts and role/permission data are stored.
 
-#### **Data Flows:**
-
-- `Submit user or permission management request`: The `Administrator` sends a management request (`User Management Request` or `Role/Permission Management Request`) to the `AMAPP API` via HTTPS.
-- `Create/update/delete user account`: The `AMAPP API` performs operations on the user account in the `AMAPP DB` using secure SQL.
-- `Assign/update/retrieve roles and permissions`: The `AMAPP API` handles role and permission data in the `AMAPP DB`.
-- `Return user data`: The `AMAPP DB` returns relevant user information (`User Data Response`) to the `AMAPP API`.
-- `Return permission/role data`: The `AMAPP DB` returns role and permission information (`Role/Permission Data Response`) to the `AMAPP API`.
-- `Send operation confirmation or results`: The `AMAPP API` returns the result (`Operation Confirmation or Result`) to the `Administrator`.
 - **Data Flows:**
   - `Submit user or permission management request`: The `Administrator` sends a management request (`User Management Request` or `Role/Permission Management Request`) to the `AMAPP API` via HTTPS.
   - `Create/update/delete user account`: The `AMAPP API` performs operations on the user account in the `AMAPP DB` using secure SQL.
@@ -998,13 +954,6 @@ The Level 1 Data Flow Diagram (DFD) provides a more detailed view of how the AMA
   - `Return permission/role data`: The `AMAPP DB` returns role and permission information (`Role/Permission Data Response`) to the `AMAPP API`.
   - `Send operation confirmation or results`: The `AMAPP API` returns the result (`Operation Confirmation or Result`) to the `Administrator`.
 
-#### **Data Objects:**
-
-- `User Management Request`: Instructions for creating, updating, or deleting a user account.
-- `Role/Permission Management Request`: Instructions to assign or modify a user’s roles and permissions.
-- `User Data Response`: Information about user accounts.
-- `Role/Permission Data Response`: Information about user roles and assigned permissions.
-- `Operation Confirmation or Result`: Feedback on the success or failure of the requested operation.
 - **Data Objects:**
   - `User Management Request`: Instructions for creating, updating, or deleting a user account.
   - `Role/Permission Management Request`: Instructions to assign or modify a user’s roles and permissions.
@@ -1012,11 +961,6 @@ The Level 1 Data Flow Diagram (DFD) provides a more detailed view of how the AMA
   - `Role/Permission Data Response`: Information about user roles and assigned permissions.
   - `Operation Confirmation or Result`: Feedback on the success or failure of the requested operation.
 
-#### **Trust Boundaries:**
-
-- `Internet`: Where the `Administrator` submits requests.
-- `AMAPP System`: The internal environment where requests are processed and business logic is applied.
-- `DB Server`: The secure database zone responsible for storing and retrieving sensitive account and permission data.
 - **Trust Boundaries:**
   - `Internet`: Where the `Administrator` submits requests.
   - `AMAPP System`: The internal environment where requests are processed and business logic is applied.
@@ -1039,22 +983,34 @@ The STRIDE acronym stands for:
 - **D – Denial of Service (DoS)**: Making a system or service unavailable to legitimate users by overwhelming or disrupting it.
 - **E – Elevation of Privilege**: Gaining higher access rights than initially authorized, often used to escalate attacks.
 
+The most relevant potential threats identified in each module of the AMAPP system were selected based on their significance and potential impact. These threats were derived from Level 1 Data Flow Diagrams (DFDs) and accompanying threat modeling reports. The **STRIDE methodology** was applied to analyze and categorize the risks associated with each subsystem, including authentication, user registration, role management, product creation, and others.
+
+To determine the most important threats included in each STRIDE table, the following criteria were used:
+
+1. **High or Critical Severity**: Threats with the greatest potential to compromise security or stability.
+2. **Critical Targets**: Threats affecting key components such as authentication, input validation, data storage, or communication channels.
+3. **Likelihood of Exploitation**: Threats that are more likely to be encountered or easier for attackers to exploit.
+4. **Business Impact**: Threats that could lead to data breaches, service outages, privilege abuse, or reputational damage to the organization.
+
+---
+
 ### Authentication
 
-*_[Blablabla]_*
+| **Threat**                         | **Targeted Element**           | **STRIDE Category**    | **Description**                                                                                                                                       | **Mitigation**                                                                                                         |
+|-----------------------------------|--------------------------------|------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| **AA01 – Authentication Bypass**  | AMAPP API                      | Spoofing               | Attackers try to bypass login logic (e.g., reusing expired tokens, skipping auth headers).                                                           | Enforce strong JWT validation; validate token expiration and audience; use HTTPS.                                     |
+| **AC20 – Session Replay**         | AMAPP API                      | Tampering              | Reuse of valid JWT tokens captured via network sniffing or exposed endpoints.                                                                         | Short token lifetimes, one-time tokens, token rotation, and HTTPS enforcement.                                        |
+| **CR03 – Password Brute Force**   | AMAPP API                      | Denial of Service      | Repeated login attempts using dictionaries or brute force degrade availability and risk account compromise.                                          | Rate limiting, CAPTCHA, account lockout mechanisms, and logging failed attempts.                                       |
+| **INP09 – LDAP Injection**        | AMAPP API, AMAPP DB            | Tampering              | Malformed input could be used in login queries (if LDAP used), allowing access or privilege escalation.                                              | Use parameterized queries; sanitize all inputs; validate schema and types.                                             |
+| **INP02 – Buffer Overflow**       | AMAPP API                      | Tampering              | Poorly validated login fields could trigger buffer overflows (unlikely in .NET but still a concern in native components).                           | Use safe string handling, input size limits, memory-safe languages.                                                   |
+| **DS01 – Excavation**             | AMAPP API                      | Information Disclosure | Error messages or verbose logs during login may reveal implementation details (e.g., username exists, stack traces).                                 | Standardize error messages, suppress stack traces, sanitize logs.                                                     |
+| **AC01 – Privilege Abuse**        | AMAPP API                      | Elevation of Privilege | JWT manually modified to elevate role to admin (e.g., modifying payload manually).                                                                   | Validate JWT signature and claims server-side; use asymmetric signing (RS256); never trust client-provided roles.     |
+| **DE04 – Audit Log Manipulation** | AMAPP DB                       | Repudiation            | If logs are not secured, a user might deny having authenticated or erase traces of login events.                                                     | Use append-only log structures; timestamp and sign logs; store logs in secure datastore with restricted write access. |
+
 
 ---
 
 ### Create Product
-
-The most relevant potential threats identified in the document [amapp_dfd_create_product_report.md](diagrams/DFD/Create%20Product/amapp_dfd_create_product_report.md), generated from the Level 1 DFD of the product creation process, were selected based on their significance and potential impact. The STRIDE methodology was then applied to these threats to support the analysis and categorization of risks associated with the system.
-
-To select the most important threats listed in the report, the following criteria were used:
-
-1. **High or Critical Severity**: Threats with the greatest potential impact on the system.
-2. **Critical Target**: Threats affecting essential components such as input validation, data storage, or communication.
-3. **Likelihood of Exploitation**: Threats that are more common or easier to exploit.
-4. **Business Impact**: Threats that could compromise sensitive data, cause service disruption, or damage the organization's reputation.
 
 
 | **Threat**                                    | **Targeted Element**                                      | **STRIDE Category**    | **Description**                                                                                                                                                                                                        | **Mitigation**                                                                                                                                                             |
@@ -1115,13 +1071,27 @@ The following table outlines the most significant security vulnerabilities requi
 
 ### Registration
 
-*_[Blablabla]_*
+| **Threat**                         | **Targeted Element**            | **STRIDE Category**    | **Description**                                                                                                                         | **Mitigation**                                                                                                                       |
+|-----------------------------------|----------------------------------|------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
+| **Spoofing – Fake Registration**  | Registration API, Admin Portal   | Spoofing               | Attackers attempt to impersonate legitimate users or admins during registration.                                                       | Strong admin authentication; Validate client sessions; Use certificate pinning for internal interfaces.                            |
+| **Tampering – Data Manipulation** | Registration Dataflows, DB       | Tampering              | Submitted registration data or approval status is modified before reaching the destination.                                            | Input validation; End-to-end encryption via HTTPS/TLS; Critical path validation on server side.                                      |
+| **Repudiation – Denial of Action**| AMAPP API, Admin UI, User DB     | Repudiation            | Users or admins deny registration/approval actions if no audit trail is in place.                                                      | Secure audit logging; Timestamps and user ID tagging in log entries; Logs stored securely with append-only settings.                |
+| **Information Disclosure**        | Registration Forms, DB Records   | Information Disclosure | Sensitive data (e.g., emails, phone numbers) leaked due to weak encryption or unsecured channels.                                     | Encrypt data in transit and at rest; Strict RBAC on user records; Use TLS across all communication layers.                          |
+| **Denial of Service – Fake Entries** | Registration Endpoint, API DB   | Denial of Service      | Flood of fake registration requests overwhelms the backend, preventing valid user onboarding.                                          | CAPTCHA implementation; API throttling and rate limits; IP filtering; Detection of anomalous behavior at the gateway.               |
+| **Elevation of Privilege**        | Approval Workflow, User Roles    | Elevation of Privilege | User manipulates approval flow or backend parameters to escalate to privileged roles like admin.                                       | Enforce server-side validation of roles; Block manual override from client; Multi-step approval processes with role separation.     |
 
 ---
 
 ### User Management
 
-*_[Blablabla]_*
+| **Threat**                         | **Targeted Element**              | **STRIDE Category**    | **Description**                                                                                                                              | **Mitigation**                                                                                                                            |
+|-----------------------------------|-----------------------------------|------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------|
+| **Spoofing – Admin Impersonation**| User Management API               | Spoofing               | An attacker impersonates an administrator to perform unauthorized role or user management actions.                                          | Enforce multi-factor authentication for admins; Validate session tokens and origins; Mutual TLS authentication between services.         |
+| **Tampering – Role Modification** | Role Assignment Requests, DB      | Tampering              | Malicious modification of role assignments or user attributes via intercepted or forged requests.                                           | Validate and sanitize all input; Use signed requests or JWTs; Apply strict server-side role validation.                                   |
+| **Repudiation – Denial of Actions**| Management Interface, Logs        | Repudiation            | Admin denies having made changes to user accounts or roles if no tamper-proof audit trail exists.                                           | Implement immutable audit logs with timestamps and identifiers; Use append-only log storage.                                              |
+| **Information Disclosure**        | Role Data, User Profiles, APIs    | Information Disclosure | Unauthorized access to user-role mappings or user data due to exposed APIs or insufficient response filtering.                             | Enforce TLS across all services; Limit response data to minimum necessary; Apply least privilege and RBAC controls.                       |
+| **Denial of Service – API Flood** | User Management API               | Denial of Service      | Flood of fake user or role change requests exhausts server capacity, preventing legitimate administrative operations.                      | Rate limiting; CAPTCHA on sensitive endpoints; WAF/API Gateway throttling; Logging and alerting for abnormal patterns.                   |
+| **Elevation of Privilege**        | Role Assignment Flow              | Elevation of Privilege | A regular user manipulates requests or claims to grant themselves unauthorized roles, such as admin access.                                | Strict server-side role enforcement; Secure claims validation; Never trust client input; Segregate duties across APIs and workflows.     |
 
 ---
 
