@@ -31,14 +31,34 @@ Paulo Abreu - 1240481 <br>
     - [Threat Model Information](#threat-model-information)
     - [Application Users](#application-users)
       - [Producer](#producer)
-      - [Co-Producer (Consumer)](#co-producer-consumer)
+      - [Co-Producer](#co-producer)
       - [AMAP Administrators](#amap-administrators)
-      - [System Admin](#system-admin)
       - [Non-Authenticated User](#non-authenticated-user)
-      - [System](#system)
     - [Use Cases](#use-cases)
     - [Functional Requirements](#functional-requirements)
+    - [UC01 - Manage Users/Roles](#uc01---manage-usersroles)
+    - [UC02 - Manage Delivery Settings](#uc02---manage-delivery-settings)
+    - [UC03 - Manage Products](#uc03---manage-products)
+    - [UC04 - View Orders](#uc04---view-orders)
+    - [UC05 - Manage AMAP Details](#uc05---manage-amap-details)
+    - [UC06 - Login](#uc06---login)
+    - [UC07 - Register](#uc07---register)
+    - [UC08 - View/Search Products](#uc08---viewsearch-products)
+    - [UC09 - Manage Orders](#uc09---manage-orders)
+    - [UC10 - View Order History](#uc10---view-order-history)
+    - [UC11 - View Delivery](#uc11---view-delivery)
+    - [UC12 - View Order Payments](#uc12---view-order-payments)
+    - [UC13 - Manage Profile](#uc13---manage-profile)
     - [Non-Functional Requirements](#non-functional-requirements)
+    - [1. Performance](#1-performance)
+    - [2. Availability](#2-availability)
+    - [3. Scalability](#3-scalability)
+    - [4. Security](#4-security)
+    - [5. Reliability and Integrity](#5-reliability-and-integrity)
+    - [6. Usability](#6-usability)
+    - [7. Maintainability](#7-maintainability)
+    - [8. Portability](#8-portability)
+    - [9. Monitoring and Alerts](#9-monitoring-and-alerts)
     - [Security Requirements](#security-requirements)
     - [External Dependencies](#external-dependencies)
     - [Entry Points](#entry-points)
@@ -81,6 +101,7 @@ Paulo Abreu - 1240481 <br>
     - [Generic Representation](#generic-representation-1)
     - [Payments](#payments)
     - [Product Reservation](#product-reservation-1)
+  - [| INP32 - XML Injection | Reservation Processing | Tampering, Information Disclosure | Attackers inject malicious XML code to manipulate application logic, potentially allowing authentication bypass, data exposure, or system compromise. | • Implement strong input validation for XML content• Filter illegal characters and XML structures• Use custom error pages to prevent information leakage• Implement proper XML parsing with schema validation |](#-inp32---xml-injection--reservation-processing--tampering-information-disclosure--attackers-inject-malicious-xml-code-to-manipulate-application-logic-potentially-allowing-authentication-bypass-data-exposure-or-system-compromise---implement-strong-input-validation-for-xml-content-filter-illegal-characters-and-xml-structures-use-custom-error-pages-to-prevent-information-leakage-implement-proper-xml-parsing-with-schema-validation-)
     - [Registration](#registration-1)
     - [User Management](#user-management-1)
   - [Use Cases and Abuse Cases](#use-cases-and-abuse-cases)
@@ -149,7 +170,7 @@ production aligns with the orders placed beforehand, minimizing waste and maximi
 sustainability. This user class has permissions to manage and adjust production data, keeping
 operations synchronized with consumer orders.
 
-#### Co-Producer (Consumer)
+#### Co-Producer
 
 Also known as co-producers, consumers play an active role in AMAP’s sustainable model by
 ordering products directly from producers. These users engage in a long-term commitment,
@@ -169,15 +190,6 @@ facilitate updates or changes in practices, and ensure that digital operations a
 organizational objectives. They also handle user support issues and facilitate communication
 among the different stakeholders.
 
-#### System Admin
-
-With high-level permissions, the technical administrator is responsible for the overall
-configuration and maintenance of the system. They ensure the security, functionality, and
-stability of the platform, managing user permissions, updates, backups, and routine
-maintenance. This role is accountable for resolving complex issues and advanced settings,
-ensuring that the system runs efficiently, data is secure, and compliance and data protection
-practices are met.
-
 #### Non-Authenticated User
 
 Representing new visitors or those interested in AMAP, these users can browse the
@@ -186,31 +198,152 @@ mission, values, and available products. However, they cannot place orders or ac
 exclusive to authenticated users. This class enables visitors to learn more about AMAP’s
 purpose, encouraging engagement and fostering a path to becoming co-producers.
 
-#### System
-
-The System itself is responsible for sending automating notifications between users,
-such as notifying a Co-Producer that new product is available for delivery or is available or
-a payment date is due.
-
 ---
 
 ### Use Cases
 
-![Use Cases Diagram]()
+![Use Cases Diagram](diagrams/UseCases/UseCases.png)
 
-*_[Blablabla]_*
+The use case diagram above illustrates the interactions between the main actors of the AMAP system and its functionalities. The identified actors are: Unauthenticated User, Co-Producer, Producer, and AMAP Administrator. Each actor interacts with the system through specific use cases that reflect their roles and responsibilities within the platform. This diagram provides a high-level view of the system's functional scope and user access paths.
 
 ---
 
 ### Functional Requirements
 
-*_[Blablabla]_*
+The functional requirements listed below are organized by use case and describe the essential system functionalities expected to be implemented. Each requirement corresponds to an action or capability that the system must support to fulfill user needs, aligned with their roles and privileges. These requirements serve as the foundation for the system’s behavior and guide the development and testing phases.
+
+### UC01 - Manage Users/Roles
+
+- **REQ-01**: Add a role to a user.
+- **REQ-02**: Change user role.
+- **REQ-03**: View current role configurations.
+- **REQ-04**: Modify criteria and role permissions.
+
+### UC02 - Manage Delivery Settings
+
+- **REQ-05**: Create the delivery settings.
+- **REQ-06**: Update the delivery settings.
+
+### UC03 - Manage Products
+
+- **REQ-07**: Add new products to the catalog.
+- **REQ-08**: Update existing product information.
+- **REQ-09**: Deactivate products from the catalog.
+
+### UC04 - View Orders
+
+- **REQ-10**: Display all active and completed orders.
+- **REQ-11**: Provide detailed information for each order.
+- **REQ-12**: Allow filtering and sorting orders by date, status, product, co-producer or producer.
+- **REQ-13**: Provide detailed information for each order.
+
+### UC05 - Manage AMAP Details
+
+- **REQ-14**: View current AMAP information.
+- **REQ-15**: Update location details and contact information.
+
+### UC06 - Login
+
+- **REQ-16**: Authenticate users based on entered credentials and role privileges.
+- **REQ-17**: Recover user account password via a recovery link or code sent to a registered email or phone number.
+
+### UC07 - Register
+
+- **REQ-18**: Create a new user account.
+
+### UC08 - View/Search Products
+
+- **REQ-19**: View list of products from the AMAP, with filtering options for product type, producer, and availability.
+- **REQ-20**: View detailed information about a product, including information about the producer, type, and availability.
+
+### UC09 - Manage Orders
+
+- **REQ-21**: Co-producer can make new order.
+- **REQ-22**: Co-producer can see the details of their orders.
+- **REQ-23**: Co-producer can update their orders.
+- **REQ-24**: Producer can see the list of orders for their products.
+- **REQ-25**: Producer can update orders that contain their products.
+
+### UC10 - View Order History
+
+- **REQ-26**: Provides access to a comprehensive history of all past orders within the AMAP, including key details such as requested products and order status. It also allows the actor to filter the history by parameters like product, date, or status to easily locate specific orders.
+
+### UC11 - View Delivery
+
+- **REQ-27**: Access detailed information about scheduled deliveries, including date, address, and delivered products, and can filter deliveries by criteria such as date or delivery status.
+- **REQ-28**: View detailed information about the status of each delivery, such as "pending", "in progress", or "completed".
+
+### UC12 - View Order Payments
+
+- **REQ-29**: Co-producer has access to the history of all payments made within the system, displaying relevant details such as date, amount paid, and payment status, and allow filtering of the payment history by date, amount, and payment status.
+- **REQ-30**: AMAP Admin can access the payment history of each co-producer.
+
+### UC13 - Manage Profile
+
+- **REQ-31**: The actor is capable of viewing and editing profile details, including address, contact information, and other personal data.
+- **REQ-32**: The actor can upload important documents, such as organic certification or other credentials, to verify their qualifications.
 
 ---
 
 ### Non-Functional Requirements
 
-*_[Blablabla]_*
+The non-functional requirements define quality attributes and technical constraints that the AMAPP system must meet, ensuring robustness, performance, and ease of use and maintenance.
+
+### 1. Performance
+
+- The system must respond to user requests in under 1 second under normal operating conditions.
+- The API must be capable of processing at least 100 requests per second in a production environment, ensuring low latency and high throughput.
+- Page load times in the frontend should not exceed 2 seconds in 95% of accesses.
+
+### 2. Availability
+
+- The application must be available to users 24/7, except during scheduled maintenance periods.
+- The infrastructure must ensure **fault tolerance**, maintaining functionality of at least one critical component (API, database, frontend) in case of partial failure.
+- The system must achieve a **minimum availability of 99%** during regular operating hours (08:00–22:00).
+
+### 3. Scalability
+
+- The system architecture must support **horizontal scalability**, allowing backend services to run in multiple instances.
+- The system must handle up to **3 times the average number of active users** without noticeable performance degradation.
+- Storage and processing capacity should be adjustable dynamically according to demand.
+
+### 4. Security
+
+- All communication between client and server must be encrypted via **HTTPS/TLS**.
+- Authentication must be implemented using **secure, expiring tokens (e.g., JWT)**, with support for refresh tokens.
+- The system must enforce **role-based access control** (e.g., AMAP manager, producer, co-producer).
+- Measures must be in place to protect against common attacks such as **SQL Injection, XSS, CSRF, and brute-force login attempts**.
+- Passwords must be securely stored using strong hashing algorithms (e.g., bcrypt or Argon2).
+
+### 5. Reliability and Integrity
+
+- Critical operations (e.g., orders and payments) must guarantee **persistence and atomicity**, even in the event of partial failures.
+- There must be **error and event logging** for **auditability** and recovery.
+- The system must follow the **ACID principle** for relational database operations, and eventual consistency for MongoDB operations.
+
+### 6. Usability
+
+- The interface must be **intuitive, responsive, and accessible**, compatible with both mobile and desktop devices.
+- The application must provide **clear and helpful feedback** to users in case of errors (e.g., failed authentication, invalid form fields).
+- Navigation should be smooth, and user flows must minimize the number of steps required to complete common tasks.
+
+### 7. Maintainability
+
+- The code must follow **software engineering best practices**, such as separation of concerns, design patterns, and documentation.
+- The system must allow for **modular updates**, enabling new features to be added without requiring full downtime.
+- There should be **test coverage above 80%** for critical features, including unit, integration, and acceptance tests.
+
+### 8. Portability
+
+- The application must be **compatible with Linux environments**, preferably via **Docker containers** orchestrated with **Kubernetes**.
+- The API must follow **RESTful standards**, enabling future integration with other systems and external services.
+- The system should be easily deployable in both local and cloud environments.
+
+### 9. Monitoring and Alerts
+
+- The system must expose **technical metrics** (CPU, memory, latency, throughput, etc.) compatible with tools like **Prometheus and Grafana**.
+- There must be **automatic alerts** for critical errors, service failures, or performance degradation, ensuring rapid response to incidents.
+- Logs must be centralized and analyzable with tools such as the **ELK Stack** or **Grafana Loki**.
 
 ---
 
@@ -726,7 +859,21 @@ To select the most important threats listed in the report, the following criteri
 
 ### Product Reservation
 
-*_[Blablabla]_*
+The most relevant potential threats identified for the AMAPP Product Reservation System were selected based on their significance and potential impact. The STRIDE methodology was applied to these threats to support the analysis and categorization of risks associated with the system.
+
+The following table outlines the most significant security vulnerabilities requiring immediate attention, along with detailed mitigation strategies for each threat. These recommendations should form the foundation of our security hardening plan to protect customer data, maintain system integrity, and ensure business continuity.
+
+| **Threat** | **Targeted Element** | **STRIDE Category** | **Description** | **Mitigation** |
+|------------|---------------------|---------------------|-----------------|----------------|
+| INP23 - File Content Injection | Product Catalog | Tampering | Allows attackers to upload malicious files that can be executed through a browser, potentially enabling remote code execution and system compromise. PHP applications with global variables are particularly vulnerable. | • Enforce principle of least privilege<br>• Validate all file content and metadata<br>• Place uploaded files in sandboxed locations<br>• Execute programs with constrained privileges<br>• Use proxy communication to sanitize requests<br>• Implement virus scanning and host integrity monitoring |
+| INP07 - Buffer Manipulation | Order Management | Spoofing, Tampering, Elevation of Privilege | Attackers exploit vulnerable code (especially in C/C++) to manipulate buffer contents, potentially allowing arbitrary code execution with the application's privileges. | • Use memory-safe languages (Java, etc.)<br>• Implement secure functions resistant to buffer manipulation<br>• Perform proper boundary checking<br>• Use compiler protections like StackGuard<br>• Apply OS-level preventative functionality |
+| AC18 - Session Hijacking | Order Management | Spoofing, Information Disclosure | Attackers capture user session IDs (often via XSS) to impersonate legitimate users and gain unauthorized access to accounts and sensitive data. | • Encrypt and sign identity tokens in transit<br>• Use industry standard session key generation with high entropy<br>• Implement session timeouts<br>• Generate new session keys after login<br>• Use HTTPS for all communications |
+| AC21 - Cross Site Request Forgery | Reservation Processing | Spoofing, Tampering | Tricks authenticated users into executing unwanted actions on the application, potentially allowing attackers to modify data or perform unauthorized operations using the victim's identity. | • Implement anti-CSRF tokens for all state-changing operations<br>• Regenerate tokens with each request<br>• Validate Referrer headers<br>• Require confirmation for sensitive actions<br>• Implement proper session handling |
+| AC14 - Catching Exception from Privileged Block | Reservation Processing | Elevation of Privilege | Exploits poorly designed error handling to retain elevated privileges when exceptions occur, allowing attackers to perform unauthorized privileged operations. | • Design callback/signal handlers to shed excess privilege before calling untrusted code<br>• Ensure privileged code blocks properly drop privileges on any return path (success, failure, or exception)<br>• Implement proper privilege boundary enforcement |
+| CR06 - Communication Channel Manipulation | Browse Products, Place Order | Information Disclosure, Tampering | Attackers perform man-in-the-middle attacks to intercept communications, potentially allowing them to steal sensitive information or inject malicious data into the communication stream. | • Encrypt all sensitive communications with properly-configured cryptography<br>• Implement proper authentication for all communication channels<br>• Use secure protocols and cipher suites<br>• Verify certificate validity |
+| INP13 - Command Delimiters | Order Management | Tampering, Elevation of Privilege | Attackers inject special characters into inputs to execute unauthorized commands, potentially allowing SQL injection, LDAP injection, or shell command execution. | • Implement whitelist validation for command parameters<br>• Limit program privileges<br>• Perform thorough input validation<br>• Use parameterized queries (e.g., JDBC prepared statements)<br>• Encode user input properly |
+| INP32 - XML Injection | Reservation Processing | Tampering, Information Disclosure | Attackers inject malicious XML code to manipulate application logic, potentially allowing authentication bypass, data exposure, or system compromise. | • Implement strong input validation for XML content<br>• Filter illegal characters and XML structures<br>• Use custom error pages to prevent information leakage<br>• Implement proper XML parsing with schema validation |
+---
 
 ---
 
@@ -813,7 +960,25 @@ This model provides a clear foundation for threat analysis, illustrating how the
 
 ![Use and Abuse Cases - Product Reservation](diagrams/Abuse%20Cases/product-reservation-abuse-cases.png)
 
-*_[Blablabla]_*
+The diagram illustrates the **Use Cases**, **Abuse Cases**, and **Countermeasures** for the AMAP System. 
+
+Legitimate actors, like the Co-Producer, interact with the system to:
+- **Browse product catalogs**
+- **Select products**
+- **Place orders**
+
+However, potential threats arise from malicious users attempting abuse cases such as:
+- **Submitting fraudulent orders**
+- **Performing SQL injections**
+- **Intercepting user credentials**
+- **Manipulating product prices**
+
+To mitigate these threats, the system implements strong countermeasures:
+- **Using secure connections** prevents interception of sensitive data.
+- **Two-factor authentication (2FA)** protects user accounts against unauthorized access.
+- The server **verifies order details**, validating prices and quantities against the database to prevent price manipulation.
+
+This model ensures a balanced view of normal functionality and security needs, aligning protective mechanisms with potential vulnerabilities to maintain the system’s integrity.
 
 ---
 
