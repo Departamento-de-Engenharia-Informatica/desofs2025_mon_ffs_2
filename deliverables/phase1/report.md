@@ -382,7 +382,7 @@ This report pulls together AMAPP’s security requirements by CIA (confidentiali
 
 #### Functional Security Requirements (CIA-Based)
 
-#####🔒 Confidentiality
+##### Confidentiality
 - FS01: The system must authenticate all users (OAuth 2.0, JWT).
 - FS02: The system must enforce role-based access control (RBAC).
 - FS03: All communication must use HTTPS/TLS.
@@ -395,7 +395,7 @@ This report pulls together AMAPP’s security requirements by CIA (confidentiali
 - FS08: Audit logs must be tamper-proof and protected from modification.
 - FS09: Error messages must not expose internal system details.
 
-#####️ Availability
+##### Availability
 - FS10: The system must implement rate limiting and DoS protections (flooding, resource exhaustion).
 - FS11: Regular, automated backups must be supported and tested.
 - FS12: The system must support high availability (clustering, replication).
@@ -714,35 +714,59 @@ This Level 1 DFD demonstrates the system's layered architecture approach, with c
 #### Level 0
 
 ![DFD Payments Level 0](diagrams\DFD\Order%20Payments%20Deliveries%20Reports\amapp_dfd_pay_del_rep_0.png)
-![DFD Payments Level 0](diagrams\DFD\Order%20Payments%20Deliveries%20Reports\amapp_dfd_pay_del_rep_0.png)
 
-*_[Blablabla]_*
+The Level 0 DFD represents a high-level view of the Order Payments & Deliveries Report API, focusing on the interaction between the external actors (CoProducer and AMAPP Administrator) and the AMAPP API system.
+
+- **External Actors:**
+  - `CoProducer`: The user who requests their own payment & delivery history report.
+  - `AMAPP Administrator`: The user who requests a report for a specific CoProducer.
+
+- **Main Process:**
+  - `AMAPP.API`: Interface responsible for receiving report requests and returning the PDF report (binary stream) to the requester.
+
+- **Data Flows:**
+  - `Own Report Request`: CoProducer → AMAPP.API (requests PDF history of payments & deliveries via HTTPS)
+  - `Report Request for Specific CoProducer`: AMAPP Administrator → AMAPP.API (requests a specific CoProducer’s report via HTTPS)
+  - `PDF Report`: AMAPP.API → CoProducer (returns the requested PDF report as a binary stream)
+  - `PDF Report`: AMAPP.API → AMAPP Administrator (returns the requested PDF report as a binary stream)
+
+This diagram simply shows who interacts with the system and what data is exchanged, without detailing the internal processes.
+
+---
 
 #### Level 1
 
 ![DFD Payments Level 1](diagrams\DFD\Order%20Payments%20Deliveries%20Reports\amapp_dfd_pay_del_rep_1.png)
-![DFD Payments Level 1](diagrams\DFD\Order%20Payments%20Deliveries%20Reports\amapp_dfd_pay_del_rep_1.png)
 
-*_[Blablabla]_*
+The Level 1 Data Flow Diagram (DFD) provides a more detailed view of the Order Payments & Deliveries Report API, expanding on the context diagram by revealing the internal components and their interactions.
 
-### Stride
+- **Boundaries**
+  - **Internet**: outer boundary for external actors  
+  - **AMAPP System**: hosts the API Endpoint and Report Generation Engine  
+  - **DB Server**: hosts the Report Data DB  
 
+- **External Actors**
+  - `CoProducer` (in Internet)  
+  - `AMAPP Administrator` (in Internet)  
 
-| **Threat**                                 | **Targeted Element**                   | **STRIDE Category**    | **Description**                                                                                                                                              | **Mitigation**                                                                                                                           |
-| ------------------------------------------ | -------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| INP02 – Overflow Buffers                  | Request Own Report                     | Tampering              | Buffer overflows in the request handler could allow an attacker to crash or take over the report-generation endpoint.                                        | Use languages/compilers with automatic bounds checking; prefer safe APIs; run static analysis to catch overflow risks.                   |
-| AA01 – Authentication Abuse/ByPass        | View Own Report                        | Spoofing               | An attacker who bypasses or steals credentials could view another producer’s report, compromising confidentiality.                                          | Enforce strong authentication (e.g. OAuth 2.0), session timeouts, and multi-factor authentication.                                       |
-| INP07 – Buffer Manipulation               | Request Report for Specific CoProducer | Tampering              | Maliciously crafted request parameters could manipulate internal buffers, leading to malformed queries or code execution in the report engine.               | Validate and bound-check all inputs; use compiler-based canaries (StackGuard/ProPolice); adopt secure coding guidelines.                 |
-| AA02 – Principal Spoof                    | View Selected CoProducer Report        | Spoofing               | An attacker may spoof another user’s identity or stolen token to retrieve reports they’re not authorized to see.                                           | Enforce strict authorization checks per request; implement token binding and rotate credentials regularly.                               |
-| CR06 – Communication Channel Manipulation | Generate Report                        | Information Disclosure | A man-in-the-middle on the API↔engine channel could intercept the raw report stream and extract sensitive data.                                             | Encrypt all in-transit data (TLS with strong ciphers); mutually authenticate endpoints; pin certificates.                                |
-| DE03 – Sniffing Attacks                   | Query Database                         | Information Disclosure | If the database link isn’t encrypted, an attacker sniffing the network can capture query results containing privileged report data.                         | Use encrypted database connections (e.g. TLS); isolate the database network; enforce least-privilege network policies.                   |
-| AC21 – Cross Site Request Forgery (CSRF)  | Request Report                         | Spoofing               | A forged request (e.g. via hidden form or link) could trick a logged-in user into submitting a report action they didn’t intend, exposing or altering data. | Implement anti-CSRF tokens for each form/action; validate Referer/Origin headers; require re-authentication for sensitive operations.    |
-| INP41 – Argument Injection                | Request Report                         | Tampering              | Injection of unexpected arguments into the report-request parameters could cause unintended behavior, data leakage or code execution in the report engine.   | Whitelist and sanitize all parameter values; enforce strict length/type checks; use parameterized APIs rather than string concatenation. |
+- **Internal Components**
+  - `AMAPP API Endpoint` (Process): receives and authorizes report requests  
+  - `Report Generation Engine` (Process): builds the PDF by querying and formatting data  
+  - `Report Data DB` (Datastore, SQL): stores payments & deliveries records for reporting  
 
-*_[Blablabla]
+- **Data Flows**
+  1. **Request own report**: CoProducer → AMAPP API Endpoint  
+  2. **Request report for specific CoProducer**: AMAPP Administrator → AMAPP API Endpoint  
+  3. **Forward authorized request**: AMAPP API Endpoint → Report Generation Engine  
+  4. **Query data (filtered by role)**: Report Generation Engine → Report Data DB  
+  5. **Return report data**: Report Data DB → Report Generation Engine  
+  6. **Generated PDF (binary stream)**: Report Generation Engine → AMAPP API Endpoint  
+  7. **PDF Report (own data only)**: AMAPP API Endpoint → CoProducer  
+  8. **PDF Report (selected CoProducer data)**: AMAPP API Endpoint → AMAPP Administrator  
+
+This Level 1 DFD illustrates the layered architecture—separating request handling, report generation, and data persistence—to ensure clear responsibilities and secure data access.
 
 ---
-
 ### Product Reservation
 
 #### Level 0
@@ -1052,9 +1076,18 @@ To select the most important threats listed in the report, the following criteri
 
 ---
 
-### Payments
+### Order Payments Deliveries Reports
 
-*_[Blablabla]_*
+| **Threat**                                 | **Targeted Element**                   | **STRIDE Category**    | **Description**                                                                                                                                              | **Mitigation**                                                                                                                           |
+| ------------------------------------------ | -------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| INP02 – Overflow Buffers                  | Request Own Report                     | Tampering              | Buffer overflows in the request handler could allow an attacker to crash or take over the report-generation endpoint.                                        | Use languages/compilers with automatic bounds checking; prefer safe APIs; run static analysis to catch overflow risks.                   |
+| AA01 – Authentication Abuse/ByPass        | View Own Report                        | Spoofing               | An attacker who bypasses or steals credentials could view another producer’s report, compromising confidentiality.                                          | Enforce strong authentication (e.g. OAuth 2.0), session timeouts, and multi-factor authentication.                                       |
+| INP07 – Buffer Manipulation               | Request Report for Specific CoProducer | Tampering              | Maliciously crafted request parameters could manipulate internal buffers, leading to malformed queries or code execution in the report engine.               | Validate and bound-check all inputs; use compiler-based canaries (StackGuard/ProPolice); adopt secure coding guidelines.                 |
+| AA02 – Principal Spoof                    | View Selected CoProducer Report        | Spoofing               | An attacker may spoof another user’s identity or stolen token to retrieve reports they’re not authorized to see.                                           | Enforce strict authorization checks per request; implement token binding and rotate credentials regularly.                               |
+| CR06 – Communication Channel Manipulation | Generate Report                        | Information Disclosure | A man-in-the-middle on the API↔engine channel could intercept the raw report stream and extract sensitive data.                                             | Encrypt all in-transit data (TLS with strong ciphers); mutually authenticate endpoints; pin certificates.                                |
+| DE03 – Sniffing Attacks                   | Query Database                         | Information Disclosure | If the database link isn’t encrypted, an attacker sniffing the network can capture query results containing privileged report data.                         | Use encrypted database connections (e.g. TLS); isolate the database network; enforce least-privilege network policies.                   |
+| AC21 – Cross Site Request Forgery (CSRF)  | Request Report                         | Spoofing               | A forged request (e.g. via hidden form or link) could trick a logged-in user into submitting a report action they didn’t intend, exposing or altering data. | Implement anti-CSRF tokens for each form/action; validate Referer/Origin headers; require re-authentication for sensitive operations.    |
+| INP41 – Argument Injection                | Request Report                         | Tampering              | Injection of unexpected arguments into the report-request parameters could cause unintended behavior, data leakage or code execution in the report engine.   | Whitelist and sanitize all parameter values; enforce strict length/type checks; use parameterized APIs rather than string concatenation. |
 
 ---
 
