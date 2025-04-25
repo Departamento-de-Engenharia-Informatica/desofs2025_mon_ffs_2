@@ -814,22 +814,34 @@ The STRIDE acronym stands for:
 - **D – Denial of Service (DoS)**: Making a system or service unavailable to legitimate users by overwhelming or disrupting it.
 - **E – Elevation of Privilege**: Gaining higher access rights than initially authorized, often used to escalate attacks.
 
+The most relevant potential threats identified in each module of the AMAPP system were selected based on their significance and potential impact. These threats were derived from Level 1 Data Flow Diagrams (DFDs) and accompanying threat modeling reports. The **STRIDE methodology** was applied to analyze and categorize the risks associated with each subsystem, including authentication, user registration, role management, product creation, and others.
+
+To determine the most important threats included in each STRIDE table, the following criteria were used:
+
+1. **High or Critical Severity**: Threats with the greatest potential to compromise security or stability.
+2. **Critical Targets**: Threats affecting key components such as authentication, input validation, data storage, or communication channels.
+3. **Likelihood of Exploitation**: Threats that are more likely to be encountered or easier for attackers to exploit.
+4. **Business Impact**: Threats that could lead to data breaches, service outages, privilege abuse, or reputational damage to the organization.
+
+---
+
 ### Authentication
 
-*_[Blablabla]_*
+| **Threat**                         | **Targeted Element**           | **STRIDE Category**    | **Description**                                                                                                                                       | **Mitigation**                                                                                                         |
+|-----------------------------------|--------------------------------|------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| **AA01 – Authentication Bypass**  | AMAPP API                      | Spoofing               | Attackers try to bypass login logic (e.g., reusing expired tokens, skipping auth headers).                                                           | Enforce strong JWT validation; validate token expiration and audience; use HTTPS.                                     |
+| **AC20 – Session Replay**         | AMAPP API                      | Tampering              | Reuse of valid JWT tokens captured via network sniffing or exposed endpoints.                                                                         | Short token lifetimes, one-time tokens, token rotation, and HTTPS enforcement.                                        |
+| **CR03 – Password Brute Force**   | AMAPP API                      | Denial of Service      | Repeated login attempts using dictionaries or brute force degrade availability and risk account compromise.                                          | Rate limiting, CAPTCHA, account lockout mechanisms, and logging failed attempts.                                       |
+| **INP09 – LDAP Injection**        | AMAPP API, AMAPP DB            | Tampering              | Malformed input could be used in login queries (if LDAP used), allowing access or privilege escalation.                                              | Use parameterized queries; sanitize all inputs; validate schema and types.                                             |
+| **INP02 – Buffer Overflow**       | AMAPP API                      | Tampering              | Poorly validated login fields could trigger buffer overflows (unlikely in .NET but still a concern in native components).                           | Use safe string handling, input size limits, memory-safe languages.                                                   |
+| **DS01 – Excavation**             | AMAPP API                      | Information Disclosure | Error messages or verbose logs during login may reveal implementation details (e.g., username exists, stack traces).                                 | Standardize error messages, suppress stack traces, sanitize logs.                                                     |
+| **AC01 – Privilege Abuse**        | AMAPP API                      | Elevation of Privilege | JWT manually modified to elevate role to admin (e.g., modifying payload manually).                                                                   | Validate JWT signature and claims server-side; use asymmetric signing (RS256); never trust client-provided roles.     |
+| **DE04 – Audit Log Manipulation** | AMAPP DB                       | Repudiation            | If logs are not secured, a user might deny having authenticated or erase traces of login events.                                                     | Use append-only log structures; timestamp and sign logs; store logs in secure datastore with restricted write access. |
+
 
 ---
 
 ### Create Product
-
-The most relevant potential threats identified in the document [amapp_dfd_create_product_report.md](diagrams/DFD/Create%20Product/amapp_dfd_create_product_report.md), generated from the Level 1 DFD of the product creation process, were selected based on their significance and potential impact. The STRIDE methodology was then applied to these threats to support the analysis and categorization of risks associated with the system.
-
-To select the most important threats listed in the report, the following criteria were used:
-
-1. **High or Critical Severity**: Threats with the greatest potential impact on the system.
-2. **Critical Target**: Threats affecting essential components such as input validation, data storage, or communication.
-3. **Likelihood of Exploitation**: Threats that are more common or easier to exploit.
-4. **Business Impact**: Threats that could compromise sensitive data, cause service disruption, or damage the organization's reputation.
 
 
 | **Threat**                                    | **Targeted Element**                                      | **STRIDE Category**    | **Description**                                                                                                                                                                                                        | **Mitigation**                                                                                                                                                             |
@@ -859,10 +871,6 @@ To select the most important threats listed in the report, the following criteri
 
 ### Product Reservation
 
-The most relevant potential threats identified for the AMAPP Product Reservation System were selected based on their significance and potential impact. The STRIDE methodology was applied to these threats to support the analysis and categorization of risks associated with the system.
-
-The following table outlines the most significant security vulnerabilities requiring immediate attention, along with detailed mitigation strategies for each threat. These recommendations should form the foundation of our security hardening plan to protect customer data, maintain system integrity, and ensure business continuity.
-
 | **Threat** | **Targeted Element** | **STRIDE Category** | **Description** | **Mitigation** |
 |------------|---------------------|---------------------|-----------------|----------------|
 | INP23 - File Content Injection | Product Catalog | Tampering | Allows attackers to upload malicious files that can be executed through a browser, potentially enabling remote code execution and system compromise. PHP applications with global variables are particularly vulnerable. | • Enforce principle of least privilege<br>• Validate all file content and metadata<br>• Place uploaded files in sandboxed locations<br>• Execute programs with constrained privileges<br>• Use proxy communication to sanitize requests<br>• Implement virus scanning and host integrity monitoring |
@@ -879,13 +887,27 @@ The following table outlines the most significant security vulnerabilities requi
 
 ### Registration
 
-*_[Blablabla]_*
+| **Threat**                         | **Targeted Element**            | **STRIDE Category**    | **Description**                                                                                                                         | **Mitigation**                                                                                                                       |
+|-----------------------------------|----------------------------------|------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
+| **Spoofing – Fake Registration**  | Registration API, Admin Portal   | Spoofing               | Attackers attempt to impersonate legitimate users or admins during registration.                                                       | Strong admin authentication; Validate client sessions; Use certificate pinning for internal interfaces.                            |
+| **Tampering – Data Manipulation** | Registration Dataflows, DB       | Tampering              | Submitted registration data or approval status is modified before reaching the destination.                                            | Input validation; End-to-end encryption via HTTPS/TLS; Critical path validation on server side.                                      |
+| **Repudiation – Denial of Action**| AMAPP API, Admin UI, User DB     | Repudiation            | Users or admins deny registration/approval actions if no audit trail is in place.                                                      | Secure audit logging; Timestamps and user ID tagging in log entries; Logs stored securely with append-only settings.                |
+| **Information Disclosure**        | Registration Forms, DB Records   | Information Disclosure | Sensitive data (e.g., emails, phone numbers) leaked due to weak encryption or unsecured channels.                                     | Encrypt data in transit and at rest; Strict RBAC on user records; Use TLS across all communication layers.                          |
+| **Denial of Service – Fake Entries** | Registration Endpoint, API DB   | Denial of Service      | Flood of fake registration requests overwhelms the backend, preventing valid user onboarding.                                          | CAPTCHA implementation; API throttling and rate limits; IP filtering; Detection of anomalous behavior at the gateway.               |
+| **Elevation of Privilege**        | Approval Workflow, User Roles    | Elevation of Privilege | User manipulates approval flow or backend parameters to escalate to privileged roles like admin.                                       | Enforce server-side validation of roles; Block manual override from client; Multi-step approval processes with role separation.     |
 
 ---
 
 ### User Management
 
-*_[Blablabla]_*
+| **Threat**                         | **Targeted Element**              | **STRIDE Category**    | **Description**                                                                                                                              | **Mitigation**                                                                                                                            |
+|-----------------------------------|-----------------------------------|------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------|
+| **Spoofing – Admin Impersonation**| User Management API               | Spoofing               | An attacker impersonates an administrator to perform unauthorized role or user management actions.                                          | Enforce multi-factor authentication for admins; Validate session tokens and origins; Mutual TLS authentication between services.         |
+| **Tampering – Role Modification** | Role Assignment Requests, DB      | Tampering              | Malicious modification of role assignments or user attributes via intercepted or forged requests.                                           | Validate and sanitize all input; Use signed requests or JWTs; Apply strict server-side role validation.                                   |
+| **Repudiation – Denial of Actions**| Management Interface, Logs        | Repudiation            | Admin denies having made changes to user accounts or roles if no tamper-proof audit trail exists.                                           | Implement immutable audit logs with timestamps and identifiers; Use append-only log storage.                                              |
+| **Information Disclosure**        | Role Data, User Profiles, APIs    | Information Disclosure | Unauthorized access to user-role mappings or user data due to exposed APIs or insufficient response filtering.                             | Enforce TLS across all services; Limit response data to minimum necessary; Apply least privilege and RBAC controls.                       |
+| **Denial of Service – API Flood** | User Management API               | Denial of Service      | Flood of fake user or role change requests exhausts server capacity, preventing legitimate administrative operations.                      | Rate limiting; CAPTCHA on sensitive endpoints; WAF/API Gateway throttling; Logging and alerting for abnormal patterns.                   |
+| **Elevation of Privilege**        | Role Assignment Flow              | Elevation of Privilege | A regular user manipulates requests or claims to grant themselves unauthorized roles, such as admin access.                                | Strict server-side role enforcement; Secure claims validation; Never trust client input; Segregate duties across APIs and workflows.     |
 
 ---
 
