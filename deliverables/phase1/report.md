@@ -2,7 +2,6 @@
 |:------------------------------:|:----------------------------------------------:|
 
 
-
 # Phase 1: Threat Modeling  
 **_Group desofs2025_mon_ffs_2_**  
 *DESOFS*
@@ -48,15 +47,7 @@ Paulo Abreu - 1240481 <br>
   - [Data Flow Diagrams](#data-flow-diagrams)
     - [Authentication](#authentication)
       - [Level 0](#level-0)
-      - [External Actor:](#external-actor)
-      - [Main Process:](#main-process)
-      - [Data Flows:](#data-flows)
       - [Level 1](#level-1)
-      - [**External Actor:**](#external-actor-1)
-      - [**Subprocesses:**](#subprocesses)
-      - [**Data Storage:**](#data-storage)
-      - [**Data Flows:**](#data-flows-1)
-      - [**Trust Boundaries:**](#trust-boundaries)
     - [Create Product](#create-product)
       - [Level 0](#level-0-1)
       - [Level 1](#level-1-1)
@@ -71,27 +62,18 @@ Paulo Abreu - 1240481 <br>
       - [Level 1](#level-1-4)
     - [Registration](#registration)
       - [Level 0](#level-0-5)
-      - [**External Actors:**](#external-actors)
-      - [**Main Process:**](#main-process-1)
-      - [**Data Flows:**](#data-flows-2)
-      - [**Trust Boundaries:**](#trust-boundaries-1)
       - [Level 1](#level-1-5)
-      - [**External Actors:**](#external-actors-1)
-      - [**Internal Components:**](#internal-components)
-      - [**Data Flows:**](#data-flows-3)
-      - [**Data Objects:**](#data-objects)
-      - [**Trust Boundaries:**](#trust-boundaries-2)
     - [User Management](#user-management)
       - [Level 0](#level-0-6)
-      - [**External Actor:**](#external-actor-2)
-      - [**Main Process:**](#main-process-2)
-      - [**Data Flows:**](#data-flows-4)
+      - [**External Actor:**](#external-actor)
+      - [**Main Process:**](#main-process)
+      - [**Data Flows:**](#data-flows)
       - [Level 1](#level-1-6)
-      - [**External Actor:**](#external-actor-3)
-      - [**Internal Components:**](#internal-components-1)
-      - [**Data Flows:**](#data-flows-5)
-      - [**Data Objects:**](#data-objects-1)
-      - [**Trust Boundaries:**](#trust-boundaries-3)
+      - [**External Actor:**](#external-actor-1)
+      - [**Internal Components:**](#internal-components)
+      - [**Data Flows:**](#data-flows-1)
+      - [**Data Objects:**](#data-objects)
+      - [**Trust Boundaries:**](#trust-boundaries)
   - [Stride](#stride)
     - [Authentication](#authentication-1)
     - [Create Product](#create-product-1)
@@ -277,15 +259,15 @@ By using DFDs at different levels of abstraction, we ensure a structured approac
 
 The Level 0 Data Flow Diagram (DFD) provides a high-level overview of the **user authentication process** within the AMAPP application. This diagram illustrates the basic interaction between an external actor (the user) and the internal AMAPP authentication system.
 
-#### External Actor:
-- `User`: Any actor (e.g., co-producer, producer, or AMAPP admin) attempting to log in to the system.
+- **External Actor:**
+  - `User`: Any actor (e.g., co-producer, producer, or AMAPP admin) attempting to log in to the system.
 
-#### Main Process:
-- `AMAPP System`: The internal authentication service responsible for validating login credentials and issuing authentication tokens.
+- **Main Process:**
+  - `AMAPP System`: The internal authentication service responsible for validating login credentials and issuing authentication tokens.
 
-#### Data Flows:
-- `Submit login credentials`: The user submits their login details (e.g., email and password) to the AMAPP system via a secure HTTPS connection.
-- `Authentication JWT Token`: Upon successful verification, the system responds with a JSON Web Token (JWT) which allows the user to access protected endpoints in future requests.
+- **Data Flows:**
+  - `Submit login credentials`: The user submits their login details (e.g., email and password) to the AMAPP system via a secure HTTPS connection.
+  - `Authentication JWT Token`: Upon successful verification, the system responds with a JSON Web Token (JWT) which allows the user to access protected endpoints in future requests.
 
 This context-level diagram defines the **boundary between the user and the system**, emphasizing what data is exchanged during the authentication process without yet detailing how the credentials are validated internally or how the JWT is generated and stored.
 
@@ -296,34 +278,34 @@ This context-level diagram defines the **boundary between the user and the syste
 
 The Level 1 Data Flow Diagram (DFD) refines the context-level view of the user authentication process by decomposing the **AMAPP API** into internal subprocesses and detailing how data flows through the system. It also introduces data storage components and defines clear **trust boundaries**.
 
-#### **External Actor:**
-- `User`: An individual (e.g., co-producer, producer, or administrator) attempting to authenticate and gain access to the AMAPP platform.
+- **External Actor:**
+  - `User`: An individual (e.g., co-producer, producer, or administrator) attempting to authenticate and gain access to the AMAPP platform.
 
 
-#### **Subprocesses:**
-- `Receive Credentials`: Handles the initial reception of login credentials (username/email and password) from the user.
-- `Fetch User Record`: Queries the database to retrieve the stored user record corresponding to the submitted credentials.
-- `Validate Credentials`: Compares the submitted credentials with the stored hash (e.g., using password hashing functions).
-- `Generate Token`: If validation is successful, creates a signed JWT (JSON Web Token) to be used in subsequent authenticated requests.
-- `Return Token`: Sends the authentication token back to the user.
+- **Subprocesses:**
+  - `Receive Credentials`: Handles the initial reception of login credentials (username/email and password) from the user.
+  - `Fetch User Record`: Queries the database to retrieve the stored user record corresponding to the submitted credentials.
+  - `Validate Credentials`: Compares the submitted credentials with the stored hash (e.g., using password hashing functions).
+  - `Generate Token`: If validation is successful, creates a signed JWT (JSON Web Token) to be used in subsequent authenticated requests.
+  - `Return Token`: Sends the authentication token back to the user.
 
-#### **Data Storage:**
-- `AMAPP DB`: The internal database where user records are securely stored, including hashed passwords and roles.
-
-
-#### **Data Flows:**
-- `Submit login credentials`: The user submits their authentication details to the API.
-- `Request user record`: The API requests the corresponding user data from the database.
-- `Return user record`: The database sends the user’s stored information (e.g., hashed password) back to the API.
-- `Validated result`: The outcome of the credential validation is passed to the token generator.
-- `Generated JWT`: A secure token is created for the session.
-- `Authentication JWT Token`: The token is returned to the user as proof of successful authentication.
+- **Data Storage:**
+  - `AMAPP DB`: The internal database where user records are securely stored, including hashed passwords and roles.
 
 
-#### **Trust Boundaries:**
-- `Internet Zone`: External environment where the user resides.
-- `AMAPP System Zone`: The internal API and authentication logic, trusted but must validate all inputs.
-- `Database Zone`: A protected area where sensitive user data is stored, with stricter access controls and security policies.
+- **Data Flows:**
+  - `Submit login credentials`: The user submits their authentication details to the API.
+  - `Request user record`: The API requests the corresponding user data from the database.
+  - `Return user record`: The database sends the user’s stored information (e.g., hashed password) back to the API.
+  - `Validated result`: The outcome of the credential validation is passed to the token generator.
+  - `Generated JWT`: A secure token is created for the session.
+  - `Authentication JWT Token`: The token is returned to the user as proof of successful authentication.
+
+
+- **Trust Boundaries:**
+  - `Internet Zone`: External environment where the user resides.
+  - `AMAPP System Zone`: The internal API and authentication logic, trusted but must validate all inputs.
+  - `Database Zone`: A protected area where sensitive user data is stored, with stricter access controls and security policies.
 
 
 This detailed diagram provides a more granular view of how the authentication workflow operates, highlighting not only the logical flow of data but also the interaction between components across different **trust zones**, which is crucial for identifying and mitigating potential security risks.
@@ -439,13 +421,13 @@ This Level 1 DFD demonstrates the system's layered architecture approach, with c
 
 #### Level 0
 
-![DFD Payments Level 0](F:\Documentos\Cursos\ISEP\MEI\aulas\disciplinas\2024_2025\DSOFS\repos\outro\desofs2025_mon_ffs_2\deliverables\phase1\diagrams\DFD\Order Payments Deliveries Reports\amapp_dfd_pay_del_rep_0.png)
+![DFD Payments Level 0](diagrams\DFD\Order%20Payments%20Deliveries%20Reports\amapp_dfd_pay_del_rep_0.png)
 
 *_[Blablabla]_*
 
 #### Level 1
 
-![DFD Payments Level 1](F:\Documentos\Cursos\ISEP\MEI\aulas\disciplinas\2024_2025\DSOFS\repos\outro\desofs2025_mon_ffs_2\deliverables\phase1\diagrams\DFD\Order Payments Deliveries Reports\amapp_dfd_pay_del_rep_1.png)
+![DFD Payments Level 1](diagrams\DFD\Order%20Payments%20Deliveries%20Reports\amapp_dfd_pay_del_rep_1.png)
 
 *_[Blablabla]_*
 
@@ -520,25 +502,25 @@ By breaking down the process into these components, the system achieves better m
 The Level 0 Data Flow Diagram (DFD) provides a high-level view of the **user registration process** within the AMAPP platform. It outlines the main interactions between the external actors (`User` and `AMAPP Admin`) and the internal `AMAPP System`, focusing on the exchange of registration and approval data.
 
 
-#### **External Actors:**
-- `User`: An individual who wishes to register in the AMAPP platform (e.g., co-producer or producer).
-- `AMAPP Admin`: The administrator responsible for approving or rejecting registration requests.
+- **External Actors:**
+  - `User`: An individual who wishes to register in the AMAPP platform (e.g., co-producer or producer).
+  - `AMAPP Admin`: The administrator responsible for approving or rejecting registration requests.
 
 
-#### **Main Process:**
-- `AMAPP System`: The central component that receives registration requests, communicates with the administrator, and notifies the user of the final decision.
+- **Main Process:**
+  - `AMAPP System`: The central component that receives registration requests, communicates with the administrator, and notifies the user of the final decision.
 
 
-#### **Data Flows:**
-- `Submit registration request`: The user submits a request to register on the platform.
-- `Send approval request`: The system forwards the registration data to the administrator for review.
-- `Approval decision`: The administrator sends their decision (approve or reject) back to the system.
-- `Notify decision`: The system communicates the result of the registration process to the user.
+- **Data Flows:**
+  - `Submit registration request`: The user submits a request to register on the platform.
+  - `Send approval request`: The system forwards the registration data to the administrator for review.
+  - `Approval decision`: The administrator sends their decision (approve or reject) back to the system.
+  - `Notify decision`: The system communicates the result of the registration process to the user.
 
 
-#### **Trust Boundaries:**
-- `Internet Zone`: The untrusted external zone where users reside and submit their requests.
-- `AMAPP System Zone`: The internal, trusted environment where the API and backend logic are executed.
+- **Trust Boundaries:**
+  - `Internet Zone`: The untrusted external zone where users reside and submit their requests.
+  - `AMAPP System Zone`: The internal, trusted environment where the API and backend logic are executed.
 
 
 This context-level DFD clearly defines the boundaries of the user registration process, focusing on who is involved, what data is exchanged, and how the approval workflow functions. It sets the stage for more detailed diagrams that may further decompose the internal decision logic or validation mechanisms.
@@ -552,36 +534,36 @@ This context-level DFD clearly defines the boundaries of the user registration p
 The Level 1 Data Flow Diagram (DFD) expands the context-level view of the user registration process in the AMAPP platform. It decomposes the internal system into subprocesses, introduces data storage, and clearly defines trust boundaries and specific data flows.
 
 
-#### **External Actors:**
-- `User`: A new user (e.g., co-producer or producer) attempting to register on the platform.
-- `AMAPP Admin`: The administrator responsible for reviewing and approving or rejecting registration requests.
+- **External Actors:**
+  - `User`: A new user (e.g., co-producer or producer) attempting to register on the platform.
+  - `AMAPP Admin`: The administrator responsible for reviewing and approving or rejecting registration requests.
 
 
-#### **Internal Components:**
-- `AMAPP API`: The backend process that handles user registration, stores user data, communicates with the admin, and notifies users of the result.
-- `AMAPP DB`: The database that stores user information, including credentials and approval status.
+- **Internal Components:**
+  - `AMAPP API`: The backend process that handles user registration, stores user data, communicates with the admin, and notifies users of the result.
+  - `AMAPP DB`: The database that stores user information, including credentials and approval status.
 
 
-#### **Data Flows:**
-- `Submit registration data`: The `User` submits personal details (`Registration Info`) to the `AMAPP API` over HTTPS.
-- `Store user data`: The `AMAPP API` stores the user's account info (`User Data`) in the `AMAPP DB` via secure SQL.
-- `Review registration requests`: The `AMAPP Admin` sends their review action (`Registration Review Action`) to the `AMAPP API`.
-- `Update approval status`: The system updates the approval decision (`Approval Status`) in the `AMAPP DB`.
-- `Notify approval decision`: The `User` is notified of the final result (`Approval Notification`) via HTTPS.
+- **Data Flows:**
+  - `Submit registration data`: The `User` submits personal details (`Registration Info`) to the `AMAPP API` over HTTPS.
+  - `Store user data`: The `AMAPP API` stores the user's account info (`User Data`) in the `AMAPP DB` via secure SQL.
+  - `Review registration requests`: The `AMAPP Admin` sends their review action (`Registration Review Action`) to the `AMAPP API`.
+  - `Update approval status`: The system updates the approval decision (`Approval Status`) in the `AMAPP DB`.
+  - `Notify approval decision`: The `User` is notified of the final result (`Approval Notification`) via HTTPS.
 
 
-#### **Data Objects:**
-- `Registration Info`: User's submitted data (e.g., name, email, password).
-- `User Data`: Stored account information (e.g., hashed password, email).
-- `Registration Review Action`: Admin’s decision regarding pending registration.
-- `Approval Status`: Approval or rejection flag stored in the database.
-- `Approval Notification`: Message sent to the user with the outcome.
+- **Data Objects:**
+  - `Registration Info`: User's submitted data (e.g., name, email, password).
+  - `User Data`: Stored account information (e.g., hashed password, email).
+  - `Registration Review Action`: Admin’s decision regarding pending registration.
+  - `Approval Status`: Approval or rejection flag stored in the database.
+  - `Approval Notification`: Message sent to the user with the outcome.
 
 
-#### **Trust Boundaries:**
-- `Internet`: Where external actors (`User`, `AMAPP Admin`) reside.
-- `AMAPP System`: Internal zone that runs the application logic and processes data.
-- `DB Server`: A protected database zone with stricter access control where sensitive information is stored.
+- **Trust Boundaries:**
+  - `Internet`: Where external actors (`User`, `AMAPP Admin`) reside.
+  - `AMAPP System`: Internal zone that runs the application logic and processes data.
+  - `DB Server`: A protected database zone with stricter access control where sensitive information is stored.
 
 
 This level of detail helps to understand how registration data is validated, stored, and processed, while also supporting security analysis by clarifying which zones handle sensitive operations and which protocols are used in data transmission.
@@ -597,17 +579,17 @@ This level of detail helps to understand how registration data is validated, sto
 
 The Level 0 Data Flow Diagram (DFD) provides a high-level overview of how the AMAPP system handles user account and permission management. It captures the interaction between the administrative actor and the internal system responsible for executing user and role operations.
 
-#### **External Actor:**
-- `Administrator`: A privileged user (typically part of the AMAPP team) responsible for managing user accounts and defining roles and permissions.
+- **External Actor:**
+  - `Administrator`: A privileged user (typically part of the AMAPP team) responsible for managing user accounts and defining roles and permissions.
 
 
-#### **Main Process:**
-- `AMAPP System`: The backend module that processes requests to create, update, or delete users, and manage their associated roles and permissions.
+- **Main Process:**
+  - `AMAPP System`: The backend module that processes requests to create, update, or delete users, and manage their associated roles and permissions.
 
 
-#### **Data Flows:**
-- `Send request to manage users or roles`: The `Administrator` sends commands to the `AMAPP System` to perform management actions.
-- `Send operation result or data`: The `AMAPP System` returns feedback to the `Administrator`, such as confirmation of changes or relevant user/role data.
+- **Data Flows:**
+  - `Send request to manage users or roles`: The `Administrator` sends commands to the `AMAPP System` to perform management actions.
+  - `Send operation result or data`: The `AMAPP System` returns feedback to the `Administrator`, such as confirmation of changes or relevant user/role data.
 
 
 This context-level diagram outlines the scope of the user and permission management functionality, focusing on who interacts with the system and what data is exchanged. It lays the groundwork for future refinements, where the internal logic (e.g., validation, auditing, access control checks) may be explored in more detail through Level 1 diagrams.
@@ -620,34 +602,34 @@ This context-level diagram outlines the scope of the user and permission managem
 The Level 1 Data Flow Diagram (DFD) provides a more detailed view of how the AMAPP system handles the management of user accounts and their associated roles and permissions. This diagram decomposes the main system into internal components and shows how data flows between the administrator, the system, and the database.
 
 
-#### **External Actor:**
-- `Administrator`: A privileged user who initiates user management operations (e.g., create/update/delete users, assign roles).
+- **External Actor:**
+  - `Administrator`: A privileged user who initiates user management operations (e.g., create/update/delete users, assign roles).
 
 
-#### **Internal Components:**
-- `AMAPP API`: The internal component responsible for processing requests related to user and permission management.
-- `AMAPP DB`: The database where user accounts and role/permission data are stored.
+- **Internal Components:**
+  - `AMAPP API`: The internal component responsible for processing requests related to user and permission management.
+  - `AMAPP DB`: The database where user accounts and role/permission data are stored.
 
-#### **Data Flows:**
-- `Submit user or permission management request`: The `Administrator` sends a management request (`User Management Request` or `Role/Permission Management Request`) to the `AMAPP API` via HTTPS.
-- `Create/update/delete user account`: The `AMAPP API` performs operations on the user account in the `AMAPP DB` using secure SQL.
-- `Assign/update/retrieve roles and permissions`: The `AMAPP API` handles role and permission data in the `AMAPP DB`.
-- `Return user data`: The `AMAPP DB` returns relevant user information (`User Data Response`) to the `AMAPP API`.
-- `Return permission/role data`: The `AMAPP DB` returns role and permission information (`Role/Permission Data Response`) to the `AMAPP API`.
-- `Send operation confirmation or results`: The `AMAPP API` returns the result (`Operation Confirmation or Result`) to the `Administrator`.
+- **Data Flows:**
+  - `Submit user or permission management request`: The `Administrator` sends a management request (`User Management Request` or `Role/Permission Management Request`) to the `AMAPP API` via HTTPS.
+  - `Create/update/delete user account`: The `AMAPP API` performs operations on the user account in the `AMAPP DB` using secure SQL.
+  - `Assign/update/retrieve roles and permissions`: The `AMAPP API` handles role and permission data in the `AMAPP DB`.
+  - `Return user data`: The `AMAPP DB` returns relevant user information (`User Data Response`) to the `AMAPP API`.
+  - `Return permission/role data`: The `AMAPP DB` returns role and permission information (`Role/Permission Data Response`) to the `AMAPP API`.
+  - `Send operation confirmation or results`: The `AMAPP API` returns the result (`Operation Confirmation or Result`) to the `Administrator`.
 
 
-#### **Data Objects:**
-- `User Management Request`: Instructions for creating, updating, or deleting a user account.
-- `Role/Permission Management Request`: Instructions to assign or modify a user’s roles and permissions.
-- `User Data Response`: Information about user accounts.
-- `Role/Permission Data Response`: Information about user roles and assigned permissions.
-- `Operation Confirmation or Result`: Feedback on the success or failure of the requested operation.
+- **Data Objects:**
+  - `User Management Request`: Instructions for creating, updating, or deleting a user account.
+  - `Role/Permission Management Request`: Instructions to assign or modify a user’s roles and permissions.
+  - `User Data Response`: Information about user accounts.
+  - `Role/Permission Data Response`: Information about user roles and assigned permissions.
+  - `Operation Confirmation or Result`: Feedback on the success or failure of the requested operation.
 
-#### **Trust Boundaries:**
-- `Internet`: Where the `Administrator` submits requests.
-- `AMAPP System`: The internal environment where requests are processed and business logic is applied.
-- `DB Server`: The secure database zone responsible for storing and retrieving sensitive account and permission data.
+- **Trust Boundaries:**
+  - `Internet`: Where the `Administrator` submits requests.
+  - `AMAPP System`: The internal environment where requests are processed and business logic is applied.
+  - `DB Server`: The secure database zone responsible for storing and retrieving sensitive account and permission data.
 
 This diagram exposes the internal flow of user and permission management in the AMAPP system, supporting both system design and security analysis by detailing protocol use, data handling, and boundary enforcement.
 
