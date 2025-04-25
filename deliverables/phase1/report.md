@@ -69,7 +69,9 @@ Paulo Abreu - 1240481 <br>
     - [9. Monitoring and Alerts](#9-monitoring-and-alerts)
     - [Security Requirements](#security-requirements)
       - [Functional Security Requirements (CIA-Based)](#functional-security-requirements-cia-based)
+        - [Confidentiality](#confidentiality)
         - [Integrity](#integrity)
+        - [Availability](#availability)
       - [Non-Functional Security Requirements](#non-functional-security-requirements)
       - [Consolidated Security Checklist (Mapped)](#consolidated-security-checklist-mapped)
     - [1. Authentication and Authorization](#1-authentication-and-authorization)
@@ -90,14 +92,7 @@ Paulo Abreu - 1240481 <br>
   - [Data Flow Diagrams](#data-flow-diagrams)
     - [Authentication](#authentication)
       - [Level 0](#level-0)
-      - [External Actor:](#external-actor)
-      - [Main Process:](#main-process)
-      - [Data Flows:](#data-flows)
       - [Level 1](#level-1)
-      - [**External Actor:**](#external-actor-1)
-      - [**Subprocesses:**](#subprocesses)
-      - [**Data Storage:**](#data-storage)
-      - [**Data Flows:**](#data-flows-1)
     - [Create Product](#create-product)
       - [Level 0](#level-0-1)
       - [Level 1](#level-1-1)
@@ -405,7 +400,7 @@ This report pulls together AMAPP’s security requirements by CIA (confidentiali
 
 #### Functional Security Requirements (CIA-Based)
 
-#####🔒 Confidentiality
+##### Confidentiality
 - FS01: The system must authenticate all users (OAuth 2.0, JWT).
 - FS02: The system must enforce role-based access control (RBAC).
 - FS03: All communication must use HTTPS/TLS.
@@ -418,7 +413,7 @@ This report pulls together AMAPP’s security requirements by CIA (confidentiali
 - FS08: Audit logs must be tamper-proof and protected from modification.
 - FS09: Error messages must not expose internal system details.
 
-#####️ Availability
+##### Availability
 - FS10: The system must implement rate limiting and DoS protections (flooding, resource exhaustion).
 - FS11: Regular, automated backups must be supported and tested.
 - FS12: The system must support high availability (clustering, replication).
@@ -547,22 +542,12 @@ By using DFDs at different levels of abstraction, we ensure a structured approac
 
 The Level 0 Data Flow Diagram (DFD) provides a high-level overview of the **user authentication process** within the AMAPP application. This diagram illustrates the basic interaction between an external actor (the user) and the internal AMAPP authentication system.
 
-#### External Actor:
-
-- `User`: Any actor (e.g., co-producer, producer, or AMAPP admin) attempting to log in to the system.
 - **External Actor:**
   - `User`: Any actor (e.g., co-producer, producer, or AMAPP admin) attempting to log in to the system.
 
-#### Main Process:
-
-- `AMAPP System`: The internal authentication service responsible for validating login credentials and issuing authentication tokens.
 - **Main Process:**
   - `AMAPP System`: The internal authentication service responsible for validating login credentials and issuing authentication tokens.
 
-#### Data Flows:
-
-- `Submit login credentials`: The user submits their login details (e.g., email and password) to the AMAPP system via a secure HTTPS connection.
-- `Authentication JWT Token`: Upon successful verification, the system responds with a JSON Web Token (JWT) which allows the user to access protected endpoints in future requests.
 - **Data Flows:**
   - `Submit login credentials`: The user submits their login details (e.g., email and password) to the AMAPP system via a secure HTTPS connection.
   - `Authentication JWT Token`: Upon successful verification, the system responds with a JSON Web Token (JWT) which allows the user to access protected endpoints in future requests.
@@ -575,19 +560,9 @@ This context-level diagram defines the **boundary between the user and the syste
 
 The Level 1 Data Flow Diagram (DFD) refines the context-level view of the user authentication process by decomposing the **AMAPP API** into internal subprocesses and detailing how data flows through the system. It also introduces data storage components and defines clear **trust boundaries**.
 
-#### **External Actor:**
-
-- `User`: An individual (e.g., co-producer, producer, or administrator) attempting to authenticate and gain access to the AMAPP platform.
 - **External Actor:**
   - `User`: An individual (e.g., co-producer, producer, or administrator) attempting to authenticate and gain access to the AMAPP platform.
 
-#### **Subprocesses:**
-
-- `Receive Credentials`: Handles the initial reception of login credentials (username/email and password) from the user.
-- `Fetch User Record`: Queries the database to retrieve the stored user record corresponding to the submitted credentials.
-- `Validate Credentials`: Compares the submitted credentials with the stored hash (e.g., using password hashing functions).
-- `Generate Token`: If validation is successful, creates a signed JWT (JSON Web Token) to be used in subsequent authenticated requests.
-- `Return Token`: Sends the authentication token back to the user.
 - **Subprocesses:**
   - `Receive Credentials`: Handles the initial reception of login credentials (username/email and password) from the user.
   - `Fetch User Record`: Queries the database to retrieve the stored user record corresponding to the submitted credentials.
@@ -595,20 +570,9 @@ The Level 1 Data Flow Diagram (DFD) refines the context-level view of the user a
   - `Generate Token`: If validation is successful, creates a signed JWT (JSON Web Token) to be used in subsequent authenticated requests.
   - `Return Token`: Sends the authentication token back to the user.
 
-#### **Data Storage:**
-
-- `AMAPP DB`: The internal database where user records are securely stored, including hashed passwords and roles.
 - **Data Storage:**
   - `AMAPP DB`: The internal database where user records are securely stored, including hashed passwords and roles.
 
-#### **Data Flows:**
-
-- `Submit login credentials`: The user submits their authentication details to the API.
-- `Request user record`: The API requests the corresponding user data from the database.
-- `Return user record`: The database sends the user’s stored information (e.g., hashed password) back to the API.
-- `Validated result`: The outcome of the credential validation is passed to the token generator.
-- `Generated JWT`: A secure token is created for the session.
-- `Authentication JWT Token`: The token is returned to the user as proof of successful authentication.
   
 - **Data Flows:**
   - `Submit login credentials`: The user submits their authentication details to the API.
