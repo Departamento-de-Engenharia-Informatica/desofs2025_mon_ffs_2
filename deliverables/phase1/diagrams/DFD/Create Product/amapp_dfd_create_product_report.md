@@ -1,9 +1,9 @@
 <link href="docs/Stylesheet.css" rel="stylesheet"></link>
 
-## System Description
+## DFD for AMAP - Product Creation
 &nbsp;
 
-Level 1 DFD for product creation in AMAP
+Level 1 DFD for product creation in AMAP.
 
 &nbsp;
 
@@ -12,7 +12,7 @@ Level 1 DFD for product creation in AMAP
 
 ## Dataflow Diagram - Level 1 DFD
 
-![](amap_dfd_level1.png)
+![Dataflow Diagram](amapp_dfd_create_product_1.png)
 
 &nbsp;
 

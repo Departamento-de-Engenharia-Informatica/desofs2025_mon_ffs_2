@@ -257,13 +257,50 @@ a payment date is due.
 
 ![DFD Create Product Level 0](diagrams/DFD/Create%20Product/amapp_dfd_create_product_0.png)
 
-*_[Blablabla]_*
+The Level 0 DFD represents a high-level view of the product creation system, focusing on the interaction between the external actor (producer) and the AMAP API system.
+
+- **External Actor:**
+  - `Producer`: The user who intends to create a product.
+
+- **Main Process:**
+  - `AMAP API`: Interface responsible for receiving product creation requests, processing them, and returning feedback to the producer.
+
+- **Data Flows:**
+  - `Send Product Info`: The producer sends product data (name, description, price, etc.) to the API via HTTPS.
+  - `Send Feedback`: After processing, the API returns a response (success, error, or validation messages) to the producer.
+
+This diagram simply shows who interacts with the system and what data is exchanged, without yet detailing the internal processes.
 
 #### Level 1
 
 ![DFD Create Product Level 1](diagrams/DFD/Create%20Product/amapp_dfd_create_product_1.png)
 
-*_[Blablabla]_*
+The Level 1 DFD deepens the details of the product creation process by breaking down the API into internal subprocesses and introducing data storage and trust boundaries.
+
+- **External Actors:**
+  - `Producer`: Remains the user who initiates the process.
+
+- **Subprocesses:**
+  - `Validate Input`: Validates the data received from the producer (checks required fields, formats, etc.).
+  - `Store Product`: Stores the validated product in the database.
+  - `Send Response`: Generates and sends a response with the operation result.
+
+- **Data Storage:**
+  - `Product DB`: The database where validated products are stored.
+
+- **Data Flows:**
+  - `Submit Product`: The producer sends product data for validation.
+  - `Validated Data`: Verified data is passed to the storage process.
+  - `Save to DB`: The product is saved into the database.
+  - `Operation Outcome`: The result of the storage operation is passed to the response process.
+  - `Return Result`: The response is sent back to the producer.
+
+- **Trust Boundaries:**
+  - `User Zone`: Where the producer resides (external environment).
+  - `AMAP API Zone`: Where internal API processes occur.
+  - `Database Zone`: Where the database resides, typically with stricter access controls.
+
+This level shows in greater detail how the system processes and stores data, helping to identify potential security threats and ensure proper handling of information across different trust zones.
 
 ---
 
@@ -428,7 +465,16 @@ By breaking down the process into these components, the system achieves better m
 
 ## Stride
 
-*_[Blablabla]_*
+STRIDE is a threat modeling methodology used to categorize and analyze security threats in software systems. It helps identify potential vulnerabilities by classifying them into six main categories, each representing a specific type of threat.
+
+The STRIDE acronym stands for:
+
+- **S – Spoofing**: When an attacker pretends to be another entity (e.g., credential theft or impersonation).
+- **T – Tampering**: Unauthorized modification of data or system components.
+- **R – Repudiation**: Performing actions that cannot be traced or proven, allowing users to deny their actions without accountability.
+- **I – Information Disclosure**: Exposure of sensitive information to unauthorized entities.
+- **D – Denial of Service (DoS)**: Making a system or service unavailable to legitimate users by overwhelming or disrupting it.
+- **E – Elevation of Privilege**: Gaining higher access rights than initially authorized, often used to escalate attacks.
 
 ### Authentication
 
@@ -438,7 +484,26 @@ By breaking down the process into these components, the system achieves better m
 
 ### Create Product
 
-*_[Blablabla]_*
+The most relevant potential threats identified in the document [amapp_dfd_create_product_report.md](diagrams/DFD/Create%20Product/amapp_dfd_create_product_report.md), generated from the Level 1 DFD of the product creation process, were selected based on their significance and potential impact. The STRIDE methodology was then applied to these threats to support the analysis and categorization of risks associated with the system.
+
+To select the most important threats listed in the report, the following criteria were used:
+
+1. **High or Critical Severity**: Threats with the greatest potential impact on the system.
+2. **Critical Target**: Threats affecting essential components such as input validation, data storage, or communication.
+3. **Likelihood of Exploitation**: Threats that are more common or easier to exploit.
+4. **Business Impact**: Threats that could compromise sensitive data, cause service disruption, or damage the organization's reputation.
+
+
+| **Threat**                                   | **Targeted Element**                          | **STRIDE Category**         | **Description**                                                                                                                                                                                                                     | **Mitigation**                                                                                                                                                                                                                                                                                                                                                   |
+|---------------------------------------------|-----------------------------------------------|------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **INP02 - Overflow Buffers**                | Validate Input, Store Product, Send Response  | Tampering                   | Buffer overflow é uma vulnerabilidade crítica que pode levar à execução de código arbitrário, comprometendo todo o sistema. Como afeta a validação de entrada e o armazenamento, é uma ameaça prioritária.                          | Use languages or compilers that perform automatic bounds checking. Utilize secure functions and static analysis tools to identify vulnerabilities.                                                                                                                                                                                                              |
+| **INP07 - Buffer Manipulation**             | Validate Input, Store Product, Send Response  | Tampering                   | Manipulação de buffer pode ser explorada para corromper dados ou executar código malicioso. É uma ameaça comum em sistemas que lidam com buffers de dados.                                                                           | Use secure coding practices to prevent buffer manipulation. Validate input sizes and use tools to detect vulnerabilities.                                                                                                                                                                                                                                        |
+| **AC21 - Cross-Site Request Forgery (CSRF)** | Send Response                                 | Spoofing                    | CSRF pode permitir que um atacante realize ações maliciosas em nome de um usuário autenticado, comprometendo a integridade do sistema e a confiança do usuário.                                                                     | Use cryptographic tokens to associate requests with specific actions. Validate HTTP Referrer headers and implement multi-factor authentication for sensitive actions.                                                                                                                                                                                             |
+| **INP23 - File Content Injection**          | Store Product, Send Response                  | Tampering                   | A injeção de conteúdo em arquivos pode levar à execução de código remoto, comprometendo o servidor e os dados armazenados.                                                                                                          | Validate all input, including files. Place accepted files in a sandbox environment. Use host integrity monitoring and antivirus scanning.                                                                                                                                                                                                                       |
+| **CR06 - Communication Channel Manipulation** | Submit Product, Validated Data, Save to DB, Return Result | Information Disclosure      | Manipulação de canais de comunicação pode expor dados sensíveis, como credenciais e informações confidenciais, além de permitir ataques como MITM (Man-in-the-Middle).                                                              | Encrypt all sensitive communications using properly configured cryptography. Associate authentication/authorization with each channel/message.                                                                                                                                                                                                                   |
+| **AC12 - Privilege Escalation**             | Store Product, Send Response                  | Elevation of Privilege      | Escalação de privilégios pode permitir que um atacante obtenha controle total do sistema, comprometendo todos os dados e operações.                                                                                                | Carefully manage privileges and follow the principle of least privilege. Implement privilege separation and require multiple conditions for accessing sensitive resources.                                                                                                                                                                                        |
+| **INP08 - Format String Injection**         | Store Product, Send Response                  | Tampering                   | Injeção de strings de formato pode ser usada para acessar ou modificar dados sensíveis, além de causar falhas no sistema.                                                                                                           | Limit the use of string formatting functions. Validate and filter user input for illegal formatting characters.                                                                                                                                                                                                                                                  |
+| **DE04 - Audit Log Manipulation**           | Product DB                                    | Repudiation                 | Manipulação de logs pode ocultar atividades maliciosas, dificultando a detecção de ataques e comprometendo a integridade do sistema.                                                                                                | Follow the principle of least privilege to prevent unauthorized access to logs. Validate input before writing to logs and avoid tools that interpret control characters.                                                                                                                                                                                          |
 
 ---
 
@@ -488,7 +553,57 @@ By breaking down the process into these components, the system achieves better m
 
 ![Use and Abuse Cases - Create Product](diagrams/Abuse%20Cases/createProduct-abuse-cases.png)
 
-*_[Blablabla]_*
+This diagram represents a security-focused approach using both **Use Cases** and **Abuse Cases** within the product creation process. The main goal is to identify potential threats to the system and link them with appropriate countermeasures.
+
+#### **Use Cases**
+
+- **Submit Product**  
+  The producer submits new product data through the API. This is the starting point of the product creation process.
+
+- **Validate Input**  
+  The submitted data is validated for structure, format, and required fields. This ensures data quality and integrity before persistence.
+
+- **Store Product**  
+  After successful validation, the product data is saved to the database.
+
+- **Send Response**  
+  The system sends a response to the producer, indicating success or failure, including validation or error messages.
+
+#### **Abuse Cases**
+
+- **Submit Malicious Product Data**  
+  An attacker attempts to send malicious content (e.g., scripts or SQL commands) disguised as product data.
+
+- **Exploit Validation Loopholes**  
+  The attacker exploits weaknesses or omissions in the validation logic to inject invalid or harmful data.
+
+- **Inject Malicious Code into Product Data**  
+  Product fields are manipulated with malicious code (e.g., XSS or SQL injection), taking advantage of weak validation.
+
+- **Tamper with Stored Product Data**  
+  The attacker tries to directly alter stored data, compromising the integrity of the database.
+
+- **Flood API with Product Submissions**  
+  A denial-of-service (DoS) attack where the attacker continuously submits product creation requests to overload the system.
+
+#### **Countermeasures**
+
+- **Input Validation and Sanitization**  
+  Protects against malicious input by validating and sanitizing all fields. Mitigates abuse cases AC1 and AC2.
+
+- **Rate Limiting and Throttling**  
+  Limits the number of requests allowed per user over time, preventing system overload. Mitigates AC5.
+
+- **Secure Coding Practices**  
+  Involves practices like avoiding `eval`, using parameterized queries, and applying strict input validation. Mitigates AC3.
+
+- **Database Access Controls**  
+  Restricts direct access and enforces permission controls on the database, preventing unauthorized modifications. Mitigates AC4.
+
+- **Monitoring and Alerts**  
+  Continuous monitoring to detect abnormal behavior and trigger automated alerts. Acts as a monitoring measure for AC5.
+
+This model provides a clear foundation for threat analysis, illustrating how the system could be exploited and what preventive measures are in place.
 
 ---
 

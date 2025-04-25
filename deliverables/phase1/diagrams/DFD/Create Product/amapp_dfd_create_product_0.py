@@ -7,7 +7,7 @@ tm.description = "Context DFD (Level 0) for product creation in the AMAP API"
 producer = Actor("Producer")
 producer.description = "User that creates products"
 
-amap_api = Process("AMAP Product API")
+amap_api = Process("AMAP API")
 amap_api.description = "API that receives and processes product creation requests"
 
 # Dados
