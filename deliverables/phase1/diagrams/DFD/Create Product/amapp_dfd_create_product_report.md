@@ -1,9 +1,9 @@
 <link href="docs/Stylesheet.css" rel="stylesheet"></link>
 
-## System Description
+## DFD for AMAP - Product Creation
 &nbsp;
 
-Level 1 DFD for product creation in AMAP
+Level 1 DFD for product creation in AMAP.
 
 &nbsp;
 
