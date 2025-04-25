@@ -27,7 +27,15 @@ Paulo Abreu - 1240481 <br>
   - [Project Analysis](#project-analysis)
     - [Project description](#project-description)
     - [Domain Model](#domain-model)
+      - [User Hierarchy](#user-hierarchy)
+      - [Products \& Inventory](#products--inventory)
+      - [Orders \& Order Items](#orders--order-items)
+      - [Payments \& Delivery](#payments--delivery)
+      - [Key Relationships](#key-relationships)
     - [Component Diagram](#component-diagram)
+      - [Deployment Nodes](#deployment-nodes)
+      - [Containers \& Components](#containers--components)
+      - [Interfaces](#interfaces)
     - [Threat Model Information](#threat-model-information)
     - [Application Users](#application-users)
       - [Producer](#producer)
@@ -60,6 +68,20 @@ Paulo Abreu - 1240481 <br>
     - [8. Portability](#8-portability)
     - [9. Monitoring and Alerts](#9-monitoring-and-alerts)
     - [Security Requirements](#security-requirements)
+      - [Functional Security Requirements (CIA-Based)](#functional-security-requirements-cia-based)
+        - [Integrity](#integrity)
+      - [Non-Functional Security Requirements](#non-functional-security-requirements)
+      - [Consolidated Security Checklist (Mapped)](#consolidated-security-checklist-mapped)
+    - [1. Authentication and Authorization](#1-authentication-and-authorization)
+    - [2. Session Management](#2-session-management)
+    - [3. Input Validation and Sanitization](#3-input-validation-and-sanitization)
+    - [4. Access Control](#4-access-control)
+    - [5. Encryption and Secure Communication](#5-encryption-and-secure-communication)
+    - [6. DoS and Resource Exhaustion Protection](#6-dos-and-resource-exhaustion-protection)
+    - [7. File and Remote Input](#7-file-and-remote-input)
+    - [8. Logging and Monitoring](#8-logging-and-monitoring)
+    - [9. Privacy and GDPR](#9-privacy-and-gdpr)
+    - [10. Incident Response and Recovery](#10-incident-response-and-recovery)
     - [External Dependencies](#external-dependencies)
     - [Entry Points](#entry-points)
     - [Exit Points](#exit-points)
@@ -101,7 +123,6 @@ Paulo Abreu - 1240481 <br>
     - [Generic Representation](#generic-representation-1)
     - [Payments](#payments)
     - [Product Reservation](#product-reservation-1)
-  - [| INP32 - XML Injection | Reservation Processing | Tampering, Information Disclosure | Attackers inject malicious XML code to manipulate application logic, potentially allowing authentication bypass, data exposure, or system compromise. | • Implement strong input validation for XML content• Filter illegal characters and XML structures• Use custom error pages to prevent information leakage• Implement proper XML parsing with schema validation |](#-inp32---xml-injection--reservation-processing--tampering-information-disclosure--attackers-inject-malicious-xml-code-to-manipulate-application-logic-potentially-allowing-authentication-bypass-data-exposure-or-system-compromise---implement-strong-input-validation-for-xml-content-filter-illegal-characters-and-xml-structures-use-custom-error-pages-to-prevent-information-leakage-implement-proper-xml-parsing-with-schema-validation-)
     - [Registration](#registration-1)
     - [User Management](#user-management-1)
   - [Use Cases and Abuse Cases](#use-cases-and-abuse-cases)
@@ -140,7 +161,27 @@ Paulo Abreu - 1240481 <br>
 
 ![Domain Model](diagrams/Domain%20Model/domain_model_diagram.png)
 
-*_[Blablabla]_*
+#### User Hierarchy
+- **User**: base entity with `UserID`, `Name`, `Email`.  
+- **Producer**, **AMAPAdministrator**, **CoProducer**: specialized users inheriting from **User**.
+
+#### Products & Inventory
+- **Product**: has `ProductID`, `Name`, `Description`, `Price`, `AvailableQty`, `AvailabilityDate`.  
+- **Inventory**: tracks `AvailableQty` for each `ProductID`.
+
+#### Orders & Order Items
+- **Order**: placed by a **CoProducer**, with `OrderID`, `OrderDate`, delivery requirements and status.  
+- **OrderItem**: links an **Order** to one **Product** with a `Quantity`; updates the **Inventory**.
+
+#### Payments & Delivery
+- **Payment**: records payment for an **Order** (`PaymentID`, `Amount`, `Date`, `Status`).  
+- **Delivery**: records shipment details for an **Order** (`DeliveryID`, `DeliveryDate`, `Location`, `Status`), scheduled by the **AMAPAdministrator**.
+
+#### Key Relationships
+- A **Producer** creates many **Products**.  
+- A **CoProducer** places many **Orders**, each containing multiple **OrderItems**.  
+- Each **Order** may have one **Payment** and one **Delivery**.  
+- Creating or updating an **OrderItem** adjusts the corresponding **Inventory**.
 
 ---
 
@@ -148,7 +189,40 @@ Paulo Abreu - 1240481 <br>
 
 ![Component Diagram](diagrams/Component%20Diagram/Amap-component-diagram.png)
 
-*_[Blablabla]_*
+#### Deployment Nodes
+
+- **Localhost**  
+  - Hosts the **AMAP API** container, exposing the public API interface (`a`).
+
+- **vsgate-s1.dei.isep.ipp.pt:10279**  
+  - Hosts the **AMAP Database** component, reachable over the **AmapDB_API** interface.
+
+#### Containers & Components
+
+- **AMAP API**  
+  - Exposes interface `a` for external clients.  
+  - Contains the **AMAP System** component.
+
+- **AMAP System**  
+  - Top-level application component.  
+  - Coordinates requests from the API and delegates to the backend.
+
+- **AMAP BackEnd**  
+  - Core business-logic component.  
+  - Implements the API operations and issues database calls via **AmapDB_API**.
+
+- **AMAP Database**  
+  - Persistent data store component.  
+  - Provides data services over the **AmapDB_API** interface.
+
+#### Interfaces
+
+- **`a`** (AMAP API)  
+  - Public HTTP/REST interface for client requests.
+
+- **AmapDB_API**  
+  - Internal interface for database access between **AMAP BackEnd** and **AMAP Database**.
+
 
 ---
 
@@ -162,41 +236,19 @@ Paulo Abreu - 1240481 <br>
 
 #### Producer
 
-Responsible for the production and management of products available within the AMAP
-system, the producer is the main supplier in the community. Producers update the platform
-with information about product availability, production cycles, and inventory, which allows
-consumers to know exactly what is available each quarter. In addition, they ensure that
-production aligns with the orders placed beforehand, minimizing waste and maximizing
-sustainability. This user class has permissions to manage and adjust production data, keeping
-operations synchronized with consumer orders.
+Responsible for the production and management of products available within the AMAP system, the producer is the main supplier in the community. Producers update the platform with information about product availability, production cycles, and inventory, which allows consumers to know exactly what is available each quarter. In addition, they ensure that production aligns with the orders placed beforehand, minimizing waste and maximizing sustainability. This user class has permissions to manage and adjust production data, keeping operations synchronized with consumer orders.
 
 #### Co-Producer
 
-Also known as co-producers, consumers play an active role in AMAP’s sustainable model by
-ordering products directly from producers. These users engage in a long-term commitment,
-supporting local consumption and securing regular orders, typically on a quarterly basis.
-They have access to detailed information about the products, origin, and production
-practices, and can track order status up to delivery. Although they do not have permissions
-to modify production data, this user class can access product inquiry and ordering functions,
-along with resources that support sustainable consumption.
+Also known as co-producers, consumers play an active role in AMAP's sustainable model by ordering products directly from producers. These users engage in a long-term commitment, supporting local consumption and securing regular orders, typically on a quarterly basis. They have access to detailed information about the products, origin, and production practices, and can track order status up to delivery. Although they do not have permissions to modify production data, this user class can access product inquiry and ordering functions, along with resources that support sustainable consumption.
 
 #### AMAP Administrators
 
-These users oversee the operational management of the system within AMAP. Acting as
-intermediaries between producers and consumers, they ensure data accuracy on the
-platform, address user issues or questions, and uphold AMAP’s values of sustainability and
-transparency. AMAP administrators have the authority to edit and review system content,
-facilitate updates or changes in practices, and ensure that digital operations align with
-organizational objectives. They also handle user support issues and facilitate communication
-among the different stakeholders.
+These users oversee the operational management of the system within AMAP. Acting as intermediaries between producers and consumers, they ensure data accuracy on the platform, address user issues or questions, and uphold AMAP’s values of sustainability and transparency. AMAP administrators have the authority to edit and review system content, facilitate updates or changes in practices, and ensure that digital operations align with organizational objectives. They also handle user support issues and facilitate communication among the different stakeholders.
 
 #### Non-Authenticated User
 
-Representing new visitors or those interested in AMAP, these users can browse the
-system without needing to register. Access is limited to general information about AMAP, its
-mission, values, and available products. However, they cannot place orders or access data
-exclusive to authenticated users. This class enables visitors to learn more about AMAP’s
-purpose, encouraging engagement and fostering a path to becoming co-producers.
+Representing new visitors or those interested in AMAP, these users can browse the system without needing to register. Access is limited to general information about AMAP, its mission, values, and available products. However, they cannot place orders or access data exclusive to authenticated users. This class enables visitors to learn more about AMAP's purpose, encouraging engagement and fostering a path to becoming co-producers.
 
 ---
 
@@ -349,7 +401,105 @@ The non-functional requirements define quality attributes and technical constrai
 
 ### Security Requirements
 
-*_[Blablabla]_*
+This report pulls together AMAPP’s security requirements by CIA (confidentiality, integrity, availability), includes a checklist mapped to functional/non-functional specs, and uses PyTM-generated DFDs, abuse cases, and CAPEC/CWE threat reports to cover every risk.
+
+#### Functional Security Requirements (CIA-Based)
+
+#####🔒 Confidentiality
+- FS01: The system must authenticate all users (OAuth 2.0, JWT).
+- FS02: The system must enforce role-based access control (RBAC).
+- FS03: All communication must use HTTPS/TLS.
+- FS04: Sensitive data must be encrypted in transit and at rest.
+- FS05: Authentication tokens must be unique per session and revocable.
+
+##### Integrity
+- FS06: All input must be validated and sanitized (whitelisting, type, size).
+- FS07: Protection against injection attacks (SQL, XML, LDAP, etc.).
+- FS08: Audit logs must be tamper-proof and protected from modification.
+- FS09: Error messages must not expose internal system details.
+
+#####️ Availability
+- FS10: The system must implement rate limiting and DoS protections (flooding, resource exhaustion).
+- FS11: Regular, automated backups must be supported and tested.
+- FS12: The system must support high availability (clustering, replication).
+
+---
+
+#### Non-Functional Security Requirements
+
+- NFS01: System uptime must be ≥ 99.5% under load.
+- NFS02: The system must scale horizontally without compromising security.
+- NFS03: Audit logs must ensure integrity via hashing or signing.
+- NFS04: Real-time anomaly detection and alerting must be in place.
+- NFS05: Incident response time must be ≤ 2 hours.
+- NFS06: MFA must not degrade system performance by more than 15%.
+- NFS07: Backup recovery must take no longer than 30 minutes.
+- NFS08: Incident response procedures must be documented.
+- NFS09: Logs must be protected and retained for at least one year.
+
+---
+
+####  Consolidated Security Checklist (Mapped)
+
+### 1. Authentication and Authorization
+- [x] OAuth 2.0 and JWT tokens → FS01
+- [ ] Multi-factor authentication (MFA) for admins → FS04
+- [x] Role-based access control (RBAC) → FS02
+- [ ] Token revocation on critical events → FS05
+- [ ] Login attempt limitation (CR03) → FS10
+- [ ] Misuse protection for exposed functions (AC09) → FS02/FS06
+
+### 2. Session Management
+- [x] Token expiration and regeneration → FS05
+- [ ] Protection against session fixation/replay (AC20, AC11, AC16) → FS05
+- [ ] Session hijacking protection (AC17, AC18) → FS05
+
+### 3. Input Validation and Sanitization
+- [x] Syntactic and semantic input validation → FS06
+- [x] Injection protection (SQL, LDAP, XPath, XML, SOAP) → FS07
+- [x] XSS and variants prevention (INP28, SC02, SC04) → FS06
+- [x] Buffer overflow mitigation (INP02, INP07, INP12) → FS06
+- [ ] Double Encoding, Alternate Encoding, Schema Poisoning → FS06
+- [ ] Remote Code / Argument Injection → FS07
+
+### 4. Access Control
+- [x] Role verification → FS02
+- [ ] Prevention of privilege escalation (AC12, AC13) → FS06
+- [ ] Exception management in privileged blocks (AC14) → FS06
+
+### 5. Encryption and Secure Communication
+- [x] HTTPS/TLS communication → FS03
+- [x] JWT tokens signed/encrypted → FS04
+- [ ] Data at rest encryption (e.g., IBAN, passwords) → FS04
+- [ ] Use of strong cryptographic algorithms (CR05) → NFS03
+
+### 6. DoS and Resource Exhaustion Protection
+- [x] Flooding and excessive allocation protection → FS10
+- [ ] Rate limiting, quotas, circuit breakers → FS10, NFS01
+- [ ] XML Entity Expansion / Attribute Blowup mitigation → FS10
+
+### 7. File and Remote Input
+- [ ] Path Traversal, File Inclusion, File Injection → FS07
+- [ ] Upload validation and sandboxing → FS07
+
+### 8. Logging and Monitoring
+- [ ] Secure and immutable logging → FS08, NFS03
+- [ ] Active monitoring with alerts → NFS04
+- [ ] SIEM integration → NFS04
+
+### 9. Privacy and GDPR
+- [x] Informed consent → FS09
+- [ ] Right to be forgotten and data portability → FS09
+- [ ] Log data anonymization → NFS09
+
+### 10. Incident Response and Recovery
+- [ ] Incident response plan → NFS08
+- [ ] Encrypted backups and disaster recovery → FS11, NFS07
+- [ ] Documented mitigation procedures → NFS08
+
+
+---
+
 
 ...
 
@@ -431,7 +581,6 @@ The Level 1 Data Flow Diagram (DFD) refines the context-level view of the user a
 - **External Actor:**
   - `User`: An individual (e.g., co-producer, producer, or administrator) attempting to authenticate and gain access to the AMAPP platform.
 
-
 #### **Subprocesses:**
 
 - `Receive Credentials`: Handles the initial reception of login credentials (username/email and password) from the user.
@@ -451,7 +600,6 @@ The Level 1 Data Flow Diagram (DFD) refines the context-level view of the user a
 - `AMAPP DB`: The internal database where user records are securely stored, including hashed passwords and roles.
 - **Data Storage:**
   - `AMAPP DB`: The internal database where user records are securely stored, including hashed passwords and roles.
-
 
 #### **Data Flows:**
 
@@ -474,7 +622,6 @@ The Level 1 Data Flow Diagram (DFD) refines the context-level view of the user a
   - `Internet Zone`: External environment where the user resides.
   - `AMAPP System Zone`: The internal API and authentication logic, trusted but must validate all inputs.
   - `Database Zone`: A protected area where sensitive user data is stored, with stricter access controls and security policies.
-
 
 This detailed diagram provides a more granular view of how the authentication workflow operates, highlighting not only the logical flow of data but also the interaction between components across different **trust zones**, which is crucial for identifying and mitigating potential security risks.
 
@@ -597,16 +744,17 @@ This Level 1 DFD demonstrates the system's layered architecture approach, with c
 
 ### Stride
 
-| **Threat**                                 | **Targeted Element** | **STRIDE Category**      | **Description**                                                                                                                                                                                      | **Mitigation**                                                                                                                          |
-|--------------------------------------------|----------------|--------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
-| INP02 – Overflow Buffers                   | Request Own Report | Tampering                | Buffer overflows in the request handler could allow an attacker to crash or take over the report-generation endpoint.                                                                               | Use languages/compilers with automatic bounds checking; prefer safe APIs; run static analysis to catch overflow risks.                 |
-| AA01 – Authentication Abuse/ByPass         | View Own Report | Spoofing                 | An attacker who bypasses or steals credentials could view another producer’s report, compromising confidentiality.                                                                                  | Enforce strong authentication (e.g. OAuth 2.0), session timeouts, and multi-factor authentication.                                    |
-| INP07 – Buffer Manipulation                | Request Report for Specific CoProducer | Tampering                | Maliciously crafted request parameters could manipulate internal buffers, leading to malformed queries or code execution in the report engine.                                                    | Validate and bound-check all inputs; use compiler-based canaries (StackGuard/ProPolice); adopt secure coding guidelines.             |
-| AA02 – Principal Spoof                     | View Selected CoProducer Report | Spoofing                 | An attacker may spoof another user’s identity or stolen token to retrieve reports they’re not authorized to see.                                                                                    | Enforce strict authorization checks per request; implement token binding and rotate credentials regularly.                             |
-| CR06 – Communication Channel Manipulation  | Generate Report | Information Disclosure   | A man-in-the-middle on the API↔engine channel could intercept the raw report stream and extract sensitive data.                                                                                     | Encrypt all in-transit data (TLS with strong ciphers); mutually authenticate endpoints; pin certificates.                              |
-| DE03 – Sniffing Attacks                    | Query Database | Information Disclosure   | If the database link isn’t encrypted, an attacker sniffing the network can capture query results containing privileged report data.                                                                  | Use encrypted database connections (e.g. TLS); isolate the database network; enforce least-privilege network policies.                |
-| AC21 – Cross Site Request Forgery (CSRF)   | Request Report | Spoofing                 | A forged request (e.g. via hidden form or link) could trick a logged-in user into submitting a report action they didn’t intend, exposing or altering data.                                         | Implement anti-CSRF tokens for each form/action; validate Referer/Origin headers; require re-authentication for sensitive operations. |
-| INP41 – Argument Injection                 | Request Report | Tampering                | Injection of unexpected arguments into the report-request parameters could cause unintended behavior, data leakage or code execution in the report engine.                                         | Whitelist and sanitize all parameter values; enforce strict length/type checks; use parameterized APIs rather than string concatenation. |
+
+| **Threat**                                 | **Targeted Element**                   | **STRIDE Category**    | **Description**                                                                                                                                              | **Mitigation**                                                                                                                           |
+| ------------------------------------------ | -------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| INP02 – Overflow Buffers                  | Request Own Report                     | Tampering              | Buffer overflows in the request handler could allow an attacker to crash or take over the report-generation endpoint.                                        | Use languages/compilers with automatic bounds checking; prefer safe APIs; run static analysis to catch overflow risks.                   |
+| AA01 – Authentication Abuse/ByPass        | View Own Report                        | Spoofing               | An attacker who bypasses or steals credentials could view another producer’s report, compromising confidentiality.                                          | Enforce strong authentication (e.g. OAuth 2.0), session timeouts, and multi-factor authentication.                                       |
+| INP07 – Buffer Manipulation               | Request Report for Specific CoProducer | Tampering              | Maliciously crafted request parameters could manipulate internal buffers, leading to malformed queries or code execution in the report engine.               | Validate and bound-check all inputs; use compiler-based canaries (StackGuard/ProPolice); adopt secure coding guidelines.                 |
+| AA02 – Principal Spoof                    | View Selected CoProducer Report        | Spoofing               | An attacker may spoof another user’s identity or stolen token to retrieve reports they’re not authorized to see.                                           | Enforce strict authorization checks per request; implement token binding and rotate credentials regularly.                               |
+| CR06 – Communication Channel Manipulation | Generate Report                        | Information Disclosure | A man-in-the-middle on the API↔engine channel could intercept the raw report stream and extract sensitive data.                                             | Encrypt all in-transit data (TLS with strong ciphers); mutually authenticate endpoints; pin certificates.                                |
+| DE03 – Sniffing Attacks                   | Query Database                         | Information Disclosure | If the database link isn’t encrypted, an attacker sniffing the network can capture query results containing privileged report data.                         | Use encrypted database connections (e.g. TLS); isolate the database network; enforce least-privilege network policies.                   |
+| AC21 – Cross Site Request Forgery (CSRF)  | Request Report                         | Spoofing               | A forged request (e.g. via hidden form or link) could trick a logged-in user into submitting a report action they didn’t intend, exposing or altering data. | Implement anti-CSRF tokens for each form/action; validate Referer/Origin headers; require re-authentication for sensitive operations.    |
+| INP41 – Argument Injection                | Request Report                         | Tampering              | Injection of unexpected arguments into the report-request parameters could cause unintended behavior, data leakage or code execution in the report engine.   | Whitelist and sanitize all parameter values; enforce strict length/type checks; use parameterized APIs rather than string concatenation. |
 
 *_[Blablabla]
 
@@ -702,7 +850,6 @@ The Level 0 Data Flow Diagram (DFD) provides a high-level view of the **user reg
   - `Internet Zone`: The untrusted external zone where users reside and submit their requests.
   - `AMAPP System Zone`: The internal, trusted environment where the API and backend logic are executed.
 
-
 This context-level DFD clearly defines the boundaries of the user registration process, focusing on who is involved, what data is exchanged, and how the approval workflow functions. It sets the stage for more detailed diagrams that may further decompose the internal decision logic or validation mechanisms.
 
 #### Level 1
@@ -738,7 +885,6 @@ The Level 1 Data Flow Diagram (DFD) expands the context-level view of the user r
   - `AMAPP System`: Internal zone that runs the application logic and processes data.
   - `DB Server`: A protected database zone with stricter access control where sensitive information is stored.
 
-
 This level of detail helps to understand how registration data is validated, stored, and processed, while also supporting security analysis by clarifying which zones handle sensitive operations and which protocols are used in data transmission.
 
 ---
@@ -760,7 +906,6 @@ The Level 0 Data Flow Diagram (DFD) provides a high-level overview of how the AM
 - **Data Flows:**
   - `Send request to manage users or roles`: The `Administrator` sends commands to the `AMAPP System` to perform management actions.
   - `Send operation result or data`: The `AMAPP System` returns feedback to the `Administrator`, such as confirmation of changes or relevant user/role data.
-
 
 This context-level diagram outlines the scope of the user and permission management functionality, focusing on who interacts with the system and what data is exchanged. It lays the groundwork for future refinements, where the internal logic (e.g., validation, auditing, access control checks) may be explored in more detail through Level 1 diagrams.
 
@@ -871,16 +1016,22 @@ To determine the most important threats included in each STRIDE table, the follo
 
 ### Product Reservation
 
-| **Threat** | **Targeted Element** | **STRIDE Category** | **Description** | **Mitigation** |
-|------------|---------------------|---------------------|-----------------|----------------|
-| INP23 - File Content Injection | Product Catalog | Tampering | Allows attackers to upload malicious files that can be executed through a browser, potentially enabling remote code execution and system compromise. PHP applications with global variables are particularly vulnerable. | • Enforce principle of least privilege<br>• Validate all file content and metadata<br>• Place uploaded files in sandboxed locations<br>• Execute programs with constrained privileges<br>• Use proxy communication to sanitize requests<br>• Implement virus scanning and host integrity monitoring |
-| INP07 - Buffer Manipulation | Order Management | Spoofing, Tampering, Elevation of Privilege | Attackers exploit vulnerable code (especially in C/C++) to manipulate buffer contents, potentially allowing arbitrary code execution with the application's privileges. | • Use memory-safe languages (Java, etc.)<br>• Implement secure functions resistant to buffer manipulation<br>• Perform proper boundary checking<br>• Use compiler protections like StackGuard<br>• Apply OS-level preventative functionality |
-| AC18 - Session Hijacking | Order Management | Spoofing, Information Disclosure | Attackers capture user session IDs (often via XSS) to impersonate legitimate users and gain unauthorized access to accounts and sensitive data. | • Encrypt and sign identity tokens in transit<br>• Use industry standard session key generation with high entropy<br>• Implement session timeouts<br>• Generate new session keys after login<br>• Use HTTPS for all communications |
-| AC21 - Cross Site Request Forgery | Reservation Processing | Spoofing, Tampering | Tricks authenticated users into executing unwanted actions on the application, potentially allowing attackers to modify data or perform unauthorized operations using the victim's identity. | • Implement anti-CSRF tokens for all state-changing operations<br>• Regenerate tokens with each request<br>• Validate Referrer headers<br>• Require confirmation for sensitive actions<br>• Implement proper session handling |
-| AC14 - Catching Exception from Privileged Block | Reservation Processing | Elevation of Privilege | Exploits poorly designed error handling to retain elevated privileges when exceptions occur, allowing attackers to perform unauthorized privileged operations. | • Design callback/signal handlers to shed excess privilege before calling untrusted code<br>• Ensure privileged code blocks properly drop privileges on any return path (success, failure, or exception)<br>• Implement proper privilege boundary enforcement |
-| CR06 - Communication Channel Manipulation | Browse Products, Place Order | Information Disclosure, Tampering | Attackers perform man-in-the-middle attacks to intercept communications, potentially allowing them to steal sensitive information or inject malicious data into the communication stream. | • Encrypt all sensitive communications with properly-configured cryptography<br>• Implement proper authentication for all communication channels<br>• Use secure protocols and cipher suites<br>• Verify certificate validity |
-| INP13 - Command Delimiters | Order Management | Tampering, Elevation of Privilege | Attackers inject special characters into inputs to execute unauthorized commands, potentially allowing SQL injection, LDAP injection, or shell command execution. | • Implement whitelist validation for command parameters<br>• Limit program privileges<br>• Perform thorough input validation<br>• Use parameterized queries (e.g., JDBC prepared statements)<br>• Encode user input properly |
-| INP32 - XML Injection | Reservation Processing | Tampering, Information Disclosure | Attackers inject malicious XML code to manipulate application logic, potentially allowing authentication bypass, data exposure, or system compromise. | • Implement strong input validation for XML content<br>• Filter illegal characters and XML structures<br>• Use custom error pages to prevent information leakage<br>• Implement proper XML parsing with schema validation |
+The most relevant potential threats identified for the AMAPP Product Reservation System were selected based on their significance and potential impact. The STRIDE methodology was applied to these threats to support the analysis and categorization of risks associated with the system.
+
+The following table outlines the most significant security vulnerabilities requiring immediate attention, along with detailed mitigation strategies for each threat. These recommendations should form the foundation of our security hardening plan to protect customer data, maintain system integrity, and ensure business continuity.
+
+
+| **Threat**                                      | **Targeted Element**         | **STRIDE Category**                         | **Description**                                                                                                                                                                                                          | **Mitigation**                                                                                                                                                                                                                                                                                            |
+| ----------------------------------------------- | ---------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| INP23 - File Content Injection                  | Product Catalog              | Tampering                                   | Allows attackers to upload malicious files that can be executed through a browser, potentially enabling remote code execution and system compromise. PHP applications with global variables are particularly vulnerable. | • Enforce principle of least privilege<br>• Validate all file content and metadata<br>• Place uploaded files in sandboxed locations<br>• Execute programs with constrained privileges<br>• Use proxy communication to sanitize requests<br>• Implement virus scanning and host integrity monitoring |
+| INP07 - Buffer Manipulation                     | Order Management             | Spoofing, Tampering, Elevation of Privilege | Attackers exploit vulnerable code (especially in C/C++) to manipulate buffer contents, potentially allowing arbitrary code execution with the application's privileges.                                                  | • Use memory-safe languages (Java, etc.)<br>• Implement secure functions resistant to buffer manipulation<br>• Perform proper boundary checking<br>• Use compiler protections like StackGuard<br>• Apply OS-level preventative functionality                                                         |
+| AC18 - Session Hijacking                        | Order Management             | Spoofing, Information Disclosure            | Attackers capture user session IDs (often via XSS) to impersonate legitimate users and gain unauthorized access to accounts and sensitive data.                                                                          | • Encrypt and sign identity tokens in transit<br>• Use industry standard session key generation with high entropy<br>• Implement session timeouts<br>• Generate new session keys after login<br>• Use HTTPS for all communications                                                                   |
+| AC21 - Cross Site Request Forgery               | Reservation Processing       | Spoofing, Tampering                         | Tricks authenticated users into executing unwanted actions on the application, potentially allowing attackers to modify data or perform unauthorized operations using the victim's identity.                             | • Implement anti-CSRF tokens for all state-changing operations<br>• Regenerate tokens with each request<br>• Validate Referrer headers<br>• Require confirmation for sensitive actions<br>• Implement proper session handling                                                                        |
+| AC14 - Catching Exception from Privileged Block | Reservation Processing       | Elevation of Privilege                      | Exploits poorly designed error handling to retain elevated privileges when exceptions occur, allowing attackers to perform unauthorized privileged operations.                                                           | • Design callback/signal handlers to shed excess privilege before calling untrusted code<br>• Ensure privileged code blocks properly drop privileges on any return path (success, failure, or exception)<br>• Implement proper privilege boundary enforcement                                          |
+| CR06 - Communication Channel Manipulation       | Browse Products, Place Order | Information Disclosure, Tampering           | Attackers perform man-in-the-middle attacks to intercept communications, potentially allowing them to steal sensitive information or inject malicious data into the communication stream.                                | • Encrypt all sensitive communications with properly-configured cryptography<br>• Implement proper authentication for all communication channels<br>• Use secure protocols and cipher suites<br>• Verify certificate validity                                                                         |
+| INP13 - Command Delimiters                      | Order Management             | Tampering, Elevation of Privilege           | Attackers inject special characters into inputs to execute unauthorized commands, potentially allowing SQL injection, LDAP injection, or shell command execution.                                                        | • Implement whitelist validation for command parameters<br>• Limit program privileges<br>• Perform thorough input validation<br>• Use parameterized queries (e.g., JDBC prepared statements)<br>• Encode user input properly                                                                         |
+| INP32 - XML Injection                           | Reservation Processing       | Tampering, Information Disclosure           | Attackers inject malicious XML code to manipulate application logic, potentially allowing authentication bypass, data exposure, or system compromise.                                                                    | • Implement strong input validation for XML content<br>• Filter illegal characters and XML structures<br>• Use custom error pages to prevent information leakage<br>• Implement proper XML parsing with schema validation                                                                             |
+
 ---
 
 ---
@@ -982,20 +1133,23 @@ This model provides a clear foundation for threat analysis, illustrating how the
 
 ![Use and Abuse Cases - Product Reservation](diagrams/Abuse%20Cases/product-reservation-abuse-cases.png)
 
-The diagram illustrates the **Use Cases**, **Abuse Cases**, and **Countermeasures** for the AMAP System. 
+The diagram illustrates the **Use Cases**, **Abuse Cases**, and **Countermeasures** for the AMAP System.
 
 Legitimate actors, like the Co-Producer, interact with the system to:
+
 - **Browse product catalogs**
 - **Select products**
 - **Place orders**
 
 However, potential threats arise from malicious users attempting abuse cases such as:
+
 - **Submitting fraudulent orders**
 - **Performing SQL injections**
 - **Intercepting user credentials**
 - **Manipulating product prices**
 
 To mitigate these threats, the system implements strong countermeasures:
+
 - **Using secure connections** prevents interception of sensitive data.
 - **Two-factor authentication (2FA)** protects user accounts against unauthorized access.
 - The server **verifies order details**, validating prices and quantities against the database to prevent price manipulation.
