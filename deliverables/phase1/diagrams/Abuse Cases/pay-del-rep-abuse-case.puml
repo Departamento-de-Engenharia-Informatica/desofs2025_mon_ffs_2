@@ -6,39 +6,34 @@ actor "CoProducer"          as CoProducer
 actor "AMAPP Administrator" as Admin
 
 package "AMAPP Payment & Delivery Report System" {
-
-
-  usecase "Request Own Report"                   as UC1
-  usecase "View Own Report"                      as UC2
+  usecase "Request Own Report"                    as UC1
+  usecase "View Own Report"                       as UC2
   usecase "Request Report for Specific CoProducer" as UC3
-  usecase "View Selected CoProducer Report"      as UC4
-  usecase "Generate Report"                      as UC5
-  usecase "Query Database"                       as UC6
+  usecase "View Selected CoProducer Report"       as UC4
+  usecase "Generate Report"                       as UC5
+  usecase "Query Database"                        as UC6
 
   '–– Mitigations ––
-  usecase "Authenticate User"                    as SEC1 #palegreen
-  usecase "Authorize Access"                     as SEC2 #palegreen
-  usecase "Secure Communication Channel"         as SEC3 #palegreen
-  usecase "Validate Input Parameters"            as SEC4 #palegreen
-  usecase "Maintain Audit Logs"                  as SEC5 #palegreen
-  usecase "Implement Session Protection"         as SEC6 #palegreen
-  usecase "Enforce Access Control"               as SEC7 #palegreen
+  usecase "Authenticate User"                     as SEC1 #palegreen
+  usecase "Authorize Access"                      as SEC2 #palegreen
+  usecase "Secure Communication Channel"          as SEC3 #palegreen
+  usecase "Validate Input Parameters"             as SEC4 #palegreen
+  usecase "Maintain Audit Logs"                   as SEC5 #palegreen
+  usecase "Implement Session Protection"          as SEC6 #palegreen
+  usecase "Enforce Access Control"                as SEC7 #palegreen
 
   '–– Threats ––
-  usecase "Session Hijacking"                    as T1 #darksalmon
-  usecase "Data Sniffing"                        as T2 #darksalmon
-  usecase "Communication Manipulation"           as T3 #darksalmon
-  usecase "Protocol Manipulation"                as T4 #darksalmon
-  usecase "Argument Injection"                   as T5 #darksalmon
-  usecase "Unauthorized Report Access"           as T6 #darksalmon
-  usecase "Privilege Escalation"                 as T7 #darksalmon
+  usecase "Session Hijacking"                     as T1 #darksalmon
+  usecase "Data Sniffing"                         as T2 #darksalmon
+  usecase "Communication Manipulation"            as T3 #darksalmon
+  usecase "Protocol Manipulation"                 as T4 #darksalmon
+  usecase "Argument Injection\n(covers INP41)"    as T5 #darksalmon
+  usecase "Unauthorized Report Access"            as T6 #darksalmon
+  usecase "Privilege Escalation"                  as T7 #darksalmon
+  usecase "Cross Site Request Forgery"    as T8 #darksalmon
 }
 
-
 actor "Attacker" as Attacker
-
-'–– Attempt to put the Attacker Actor on the right but didn't quite work out––
-T7 -[hidden]-> Attacker
 
 '–– Normal user flows ––
 CoProducer --> UC1
@@ -50,6 +45,7 @@ UC1 ..> UC5 : <<include>>
 UC3 ..> UC5 : <<include>>
 UC5 ..> UC6 : <<include>>
 
+'–– Mitigations on flows ––
 UC1 .[#green].> SEC1 : <<include>>
 UC1 .[#green].> SEC2 : <<include>>
 UC3 .[#green].> SEC1 : <<include>>
@@ -65,12 +61,15 @@ Attacker --> T4
 Attacker --> T5
 Attacker --> T6
 Attacker --> T7
+Attacker --> T8
 
 '–– Threatens ––
 UC1 -[#red,bold]-> T5 : threatens
+UC1 -[#red,bold]-> T8 : threatens
 UC2 -[#red,bold]-> T1 : threatens
 UC2 -[#red,bold]-> T2 : threatens
 UC3 -[#red,bold]-> T5 : threatens
+UC3 -[#red,bold]-> T8 : threatens
 UC4 -[#red,bold]-> T6 : threatens
 UC5 -[#red,bold]-> T4 : threatens
 UC6 -[#red,bold]-> T3 : threatens
@@ -86,5 +85,6 @@ SEC4 -[#green,dashed]-> T5 : mitigates
 SEC2 -[#green,dashed]-> T6 : mitigates
 SEC7 -[#green,dashed]-> T7 : mitigates
 SEC5 -[#green,dashed]-> T6 : mitigates
+SEC6 -[#green,dashed]-> T8 : mitigates   // anti-CSRF via session protection
 
 @enduml
