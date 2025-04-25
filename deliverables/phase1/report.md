@@ -156,6 +156,18 @@ Paulo Abreu - 1240481 <br>
 
 ![Domain Model](diagrams/Domain%20Model/domain_model_diagram.png)
 
+
+This class diagram represents the **core data structure** of the AMAPP platform, outlining the main entities involved in the management of orders between co-producers and producers.
+
+- The base class `User` is extended by three user types: `Producer`, `AMAPAdministrator`, and `CoProducer`, each with specific roles.
+- Producers can **create products**, which are tracked in an associated `Inventory` component.
+- Co-producers can **place orders** (`Order`), which consist of multiple `OrderItem` elements, each linked to a specific product.
+- Orders can be linked to **payments** and **deliveries**, managed by the `Payment` and `Delivery` classes respectively.
+- The `AMAPAdministrator` manages delivery dates and logistics.
+- Inventory updates are reflected based on `OrderItem` activity.
+
+This model supports **data consistency, business rules enforcement, and clear responsibility distribution** among system actors.
+
 #### User Hierarchy
 - **User**: base entity with `UserID`, `Name`, `Email`.  
 - **Producer**, **AMAPAdministrator**, **CoProducer**: specialized users inheriting from **User**.
@@ -178,11 +190,32 @@ Paulo Abreu - 1240481 <br>
 - Each **Order** may have one **Payment** and one **Delivery**.  
 - Creating or updating an **OrderItem** adjusts the corresponding **Inventory**.
 
+
 ---
 
 ### Component Diagram
 
 ![Component Diagram](diagrams/Component%20Diagram/Amap-component-diagram.png)
+
+
+This diagram shows the main components of the AMAPP system and how they interact.
+
+#### Components:
+- **AMAP System**: The main container for all modules.
+- **AMAP BackEnd**: Handles business logic.
+- **AMAP Database**: Stores the system's data.
+- **AmapDB_API**: Connects the backend to the database.
+- **AMAP API**: Allows the frontend or other systems to use backend services.
+
+#### Connections:
+- The **AMAP API** connects to the **BackEnd** to request operations or data.
+- The **BackEnd** uses the **AmapDB_API** to access the **Database**.
+
+#### Deployment:
+- The system runs locally (Localhost) with the backend and APIs.
+- The database is hosted on a remote server: `vsgate-s1.dei.isep.ipp.pt:10279`.
+
+This diagram provides a clear overview of how the components are organized and how they communicate to ensure system functionality.
 
 #### Deployment Nodes
 
@@ -217,6 +250,7 @@ Paulo Abreu - 1240481 <br>
 
 - **AmapDB_API**  
   - Internal interface for database access between **AMAP BackEnd** and **AMAP Database**.
+
 
 
 ---
