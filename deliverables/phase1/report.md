@@ -938,7 +938,25 @@ This model provides a clear foundation for threat analysis, illustrating how the
 
 ![Use and Abuse Cases - Product Reservation](diagrams/Abuse%20Cases/product-reservation-abuse-cases.png)
 
-*_[Blablabla]_*
+The diagram illustrates the **Use Cases**, **Abuse Cases**, and **Countermeasures** for the AMAP System. 
+
+Legitimate actors, like the Co-Producer, interact with the system to:
+- **Browse product catalogs**
+- **Select products**
+- **Place orders**
+
+However, potential threats arise from malicious users attempting abuse cases such as:
+- **Submitting fraudulent orders**
+- **Performing SQL injections**
+- **Intercepting user credentials**
+- **Manipulating product prices**
+
+To mitigate these threats, the system implements strong countermeasures:
+- **Using secure connections** prevents interception of sensitive data.
+- **Two-factor authentication (2FA)** protects user accounts against unauthorized access.
+- The server **verifies order details**, validating prices and quantities against the database to prevent price manipulation.
+
+This model ensures a balanced view of normal functionality and security needs, aligning protective mechanisms with potential vulnerabilities to maintain the system’s integrity.
 
 ---
 
