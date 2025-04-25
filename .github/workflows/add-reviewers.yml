@@ -1,16 +1,17 @@
-name: "Adicionar Reviewers automaticamente"
+name: "Adicionar reviewers automaticamente"
 
 on:
   pull_request:
     types: [opened, reopened, ready_for_review]
 
 jobs:
-  auto-review:
+  add-reviewers:
     runs-on: ubuntu-latest
     steps:
-      - name: Adicionar reviewers automaticamente
-        uses: ahmadnassri/action-auto-request-review@v1
+      - name: Configurar revisores automaticamente
+        uses: necojackarc/auto-request-review@v0.6.0
         with:
-          reviewers: ilidiomagalhaes,hugocoelho-isep,pauloabreu13,pedrojoiliveira
+          config: .github/reviewers.yml
+          token: ${{ secrets.GITHUB_TOKEN }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
