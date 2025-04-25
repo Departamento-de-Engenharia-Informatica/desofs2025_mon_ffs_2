@@ -49,7 +49,15 @@ Paulo Abreu - 1240481 <br>
   - [Data Flow Diagrams](#data-flow-diagrams)
     - [Authentication](#authentication)
       - [Level 0](#level-0)
+      - [External Actor:](#external-actor)
+      - [Main Process:](#main-process)
+      - [Data Flows:](#data-flows)
       - [Level 1](#level-1)
+      - [**External Actor:**](#external-actor-1)
+      - [**Subprocesses:**](#subprocesses)
+      - [**Data Storage:**](#data-storage)
+      - [**Data Flows:**](#data-flows-1)
+      - [**Trust Boundaries:**](#trust-boundaries)
     - [Create Product](#create-product)
       - [Level 0](#level-0-1)
       - [Level 1](#level-1-1)
@@ -59,29 +67,40 @@ Paulo Abreu - 1240481 <br>
     - [Order Payments Deliveries Reports](#order-payments-deliveries-reports)
       - [Level 0](#level-0-3)
       - [Level 1](#level-1-3)
+    - [Stride](#stride)
     - [Product Reservation](#product-reservation)
       - [Level 0](#level-0-4)
       - [Level 1](#level-1-4)
     - [Registration](#registration)
       - [Level 0](#level-0-5)
+      - [**External Actors:**](#external-actors)
+      - [**Main Process:**](#main-process-1)
+      - [**Data Flows:**](#data-flows-2)
+      - [**Trust Boundaries:**](#trust-boundaries-1)
       - [Level 1](#level-1-5)
+      - [**External Actors:**](#external-actors-1)
+      - [**Internal Components:**](#internal-components)
+      - [**Data Flows:**](#data-flows-3)
+      - [**Data Objects:**](#data-objects)
+      - [**Trust Boundaries:**](#trust-boundaries-2)
     - [User Management](#user-management)
       - [Level 0](#level-0-6)
-      - [**External Actor:**](#external-actor)
-      - [**Main Process:**](#main-process)
-      - [**Data Flows:**](#data-flows)
+      - [**External Actor:**](#external-actor-2)
+      - [**Main Process:**](#main-process-2)
+      - [**Data Flows:**](#data-flows-4)
       - [Level 1](#level-1-6)
-      - [**External Actor:**](#external-actor-1)
-      - [**Internal Components:**](#internal-components)
-      - [**Data Flows:**](#data-flows-1)
-      - [**Data Objects:**](#data-objects)
-      - [**Trust Boundaries:**](#trust-boundaries)
-  - [Stride](#stride)
+      - [**External Actor:**](#external-actor-3)
+      - [**Internal Components:**](#internal-components-1)
+      - [**Data Flows:**](#data-flows-5)
+      - [**Data Objects:**](#data-objects-1)
+      - [**Trust Boundaries:**](#trust-boundaries-3)
+  - [Stride](#stride-1)
     - [Authentication](#authentication-1)
     - [Create Product](#create-product-1)
     - [Generic Representation](#generic-representation-1)
     - [Payments](#payments)
     - [Product Reservation](#product-reservation-1)
+  - [| INP32 - XML Injection | Reservation Processing | Tampering, Information Disclosure | Attackers inject malicious XML code to manipulate application logic, potentially allowing authentication bypass, data exposure, or system compromise. | • Implement strong input validation for XML content• Filter illegal characters and XML structures• Use custom error pages to prevent information leakage• Implement proper XML parsing with schema validation |](#-inp32---xml-injection--reservation-processing--tampering-information-disclosure--attackers-inject-malicious-xml-code-to-manipulate-application-logic-potentially-allowing-authentication-bypass-data-exposure-or-system-compromise---implement-strong-input-validation-for-xml-content-filter-illegal-characters-and-xml-structures-use-custom-error-pages-to-prevent-information-leakage-implement-proper-xml-parsing-with-schema-validation-)
     - [Registration](#registration-1)
     - [User Management](#user-management-1)
   - [Use Cases and Abuse Cases](#use-cases-and-abuse-cases)
@@ -818,7 +837,21 @@ To select the most important threats listed in the report, the following criteri
 
 ### Product Reservation
 
-*_[Blablabla]_*
+The most relevant potential threats identified for the AMAPP Product Reservation System were selected based on their significance and potential impact. The STRIDE methodology was applied to these threats to support the analysis and categorization of risks associated with the system.
+
+The following table outlines the most significant security vulnerabilities requiring immediate attention, along with detailed mitigation strategies for each threat. These recommendations should form the foundation of our security hardening plan to protect customer data, maintain system integrity, and ensure business continuity.
+
+| **Threat** | **Targeted Element** | **STRIDE Category** | **Description** | **Mitigation** |
+|------------|---------------------|---------------------|-----------------|----------------|
+| INP23 - File Content Injection | Product Catalog | Tampering | Allows attackers to upload malicious files that can be executed through a browser, potentially enabling remote code execution and system compromise. PHP applications with global variables are particularly vulnerable. | • Enforce principle of least privilege<br>• Validate all file content and metadata<br>• Place uploaded files in sandboxed locations<br>• Execute programs with constrained privileges<br>• Use proxy communication to sanitize requests<br>• Implement virus scanning and host integrity monitoring |
+| INP07 - Buffer Manipulation | Order Management | Spoofing, Tampering, Elevation of Privilege | Attackers exploit vulnerable code (especially in C/C++) to manipulate buffer contents, potentially allowing arbitrary code execution with the application's privileges. | • Use memory-safe languages (Java, etc.)<br>• Implement secure functions resistant to buffer manipulation<br>• Perform proper boundary checking<br>• Use compiler protections like StackGuard<br>• Apply OS-level preventative functionality |
+| AC18 - Session Hijacking | Order Management | Spoofing, Information Disclosure | Attackers capture user session IDs (often via XSS) to impersonate legitimate users and gain unauthorized access to accounts and sensitive data. | • Encrypt and sign identity tokens in transit<br>• Use industry standard session key generation with high entropy<br>• Implement session timeouts<br>• Generate new session keys after login<br>• Use HTTPS for all communications |
+| AC21 - Cross Site Request Forgery | Reservation Processing | Spoofing, Tampering | Tricks authenticated users into executing unwanted actions on the application, potentially allowing attackers to modify data or perform unauthorized operations using the victim's identity. | • Implement anti-CSRF tokens for all state-changing operations<br>• Regenerate tokens with each request<br>• Validate Referrer headers<br>• Require confirmation for sensitive actions<br>• Implement proper session handling |
+| AC14 - Catching Exception from Privileged Block | Reservation Processing | Elevation of Privilege | Exploits poorly designed error handling to retain elevated privileges when exceptions occur, allowing attackers to perform unauthorized privileged operations. | • Design callback/signal handlers to shed excess privilege before calling untrusted code<br>• Ensure privileged code blocks properly drop privileges on any return path (success, failure, or exception)<br>• Implement proper privilege boundary enforcement |
+| CR06 - Communication Channel Manipulation | Browse Products, Place Order | Information Disclosure, Tampering | Attackers perform man-in-the-middle attacks to intercept communications, potentially allowing them to steal sensitive information or inject malicious data into the communication stream. | • Encrypt all sensitive communications with properly-configured cryptography<br>• Implement proper authentication for all communication channels<br>• Use secure protocols and cipher suites<br>• Verify certificate validity |
+| INP13 - Command Delimiters | Order Management | Tampering, Elevation of Privilege | Attackers inject special characters into inputs to execute unauthorized commands, potentially allowing SQL injection, LDAP injection, or shell command execution. | • Implement whitelist validation for command parameters<br>• Limit program privileges<br>• Perform thorough input validation<br>• Use parameterized queries (e.g., JDBC prepared statements)<br>• Encode user input properly |
+| INP32 - XML Injection | Reservation Processing | Tampering, Information Disclosure | Attackers inject malicious XML code to manipulate application logic, potentially allowing authentication bypass, data exposure, or system compromise. | • Implement strong input validation for XML content<br>• Filter illegal characters and XML structures<br>• Use custom error pages to prevent information leakage<br>• Implement proper XML parsing with schema validation |
+---
 
 ---
 
