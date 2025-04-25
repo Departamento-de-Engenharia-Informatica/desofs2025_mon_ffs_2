@@ -169,7 +169,7 @@ production aligns with the orders placed beforehand, minimizing waste and maximi
 sustainability. This user class has permissions to manage and adjust production data, keeping
 operations synchronized with consumer orders.
 
-#### Co-Producer (Consumer)
+#### Co-Producer
 
 Also known as co-producers, consumers play an active role in AMAP’s sustainable model by
 ordering products directly from producers. These users engage in a long-term commitment,
@@ -189,15 +189,6 @@ facilitate updates or changes in practices, and ensure that digital operations a
 organizational objectives. They also handle user support issues and facilitate communication
 among the different stakeholders.
 
-#### System Admin
-
-With high-level permissions, the technical administrator is responsible for the overall
-configuration and maintenance of the system. They ensure the security, functionality, and
-stability of the platform, managing user permissions, updates, backups, and routine
-maintenance. This role is accountable for resolving complex issues and advanced settings,
-ensuring that the system runs efficiently, data is secure, and compliance and data protection
-practices are met.
-
 #### Non-Authenticated User
 
 Representing new visitors or those interested in AMAP, these users can browse the
@@ -206,25 +197,90 @@ mission, values, and available products. However, they cannot place orders or ac
 exclusive to authenticated users. This class enables visitors to learn more about AMAP’s
 purpose, encouraging engagement and fostering a path to becoming co-producers.
 
-#### System
-
-The System itself is responsible for sending automating notifications between users,
-such as notifying a Co-Producer that new product is available for delivery or is available or
-a payment date is due.
-
 ---
 
 ### Use Cases
 
-![Use Cases Diagram]()
+![Use Cases Diagram](diagrams/UseCases/UseCases.png)
 
-*_[Blablabla]_*
+The use case diagram above illustrates the interactions between the main actors of the AMAP system and its functionalities. The identified actors are: Unauthenticated User, Co-Producer, Producer, and AMAP Administrator. Each actor interacts with the system through specific use cases that reflect their roles and responsibilities within the platform. This diagram provides a high-level view of the system's functional scope and user access paths.
 
 ---
 
 ### Functional Requirements
 
-*_[Blablabla]_*
+The functional requirements listed below are organized by use case and describe the essential system functionalities expected to be implemented. Each requirement corresponds to an action or capability that the system must support to fulfill user needs, aligned with their roles and privileges. These requirements serve as the foundation for the system’s behavior and guide the development and testing phases.
+
+### UC01 - Manage Users/Roles
+
+- **REQ-01**: Add a role to a user.
+- **REQ-02**: Change user role.
+- **REQ-03**: View current role configurations.
+- **REQ-04**: Modify criteria and role permissions.
+
+### UC02 - Manage Delivery Settings
+
+- **REQ-05**: Create the delivery settings.
+- **REQ-06**: Update the delivery settings.
+
+### UC03 - Manage Products
+
+- **REQ-07**: Add new products to the catalog.
+- **REQ-08**: Update existing product information.
+- **REQ-09**: Deactivate products from the catalog.
+
+### UC04 - View Orders
+
+- **REQ-10**: Display all active and completed orders.
+- **REQ-11**: Provide detailed information for each order.
+- **REQ-12**: Allow filtering and sorting orders by date, status, product, co-producer or producer.
+- **REQ-13**: Provide detailed information for each order.
+
+### UC05 - Manage AMAP Details
+
+- **REQ-14**: View current AMAP information.
+- **REQ-15**: Update location details and contact information.
+
+### UC06 - Login
+
+- **REQ-16**: Authenticate users based on entered credentials and role privileges.
+- **REQ-17**: Recover user account password via a recovery link or code sent to a registered email or phone number.
+
+### UC07 - Register
+
+- **REQ-18**: Create a new user account.
+
+### UC08 - View/Search Products
+
+- **REQ-19**: View list of products from the AMAP, with filtering options for product type, producer, and availability.
+- **REQ-20**: View detailed information about a product, including information about the producer, type, and availability.
+
+### UC09 - Manage Orders
+
+- **REQ-21**: Co-producer can make new order.
+- **REQ-22**: Co-producer can see the details of their orders.
+- **REQ-23**: Co-producer can update their orders.
+- **REQ-24**: Producer can see the list of orders for their products.
+- **REQ-25**: Producer can update orders that contain their products.
+
+### UC10 - View Order History
+
+- **REQ-26**: Provides access to a comprehensive history of all past orders within the AMAP, including key details such as requested products and order status. It also allows the actor to filter the history by parameters like product, date, or status to easily locate specific orders.
+
+### UC11 - View Delivery
+
+- **REQ-27**: Access detailed information about scheduled deliveries, including date, address, and delivered products, and can filter deliveries by criteria such as date or delivery status.
+- **REQ-28**: View detailed information about the status of each delivery, such as "pending", "in progress", or "completed".
+
+### UC12 - View Order Payments
+
+- **REQ-29**: Co-producer has access to the history of all payments made within the system, displaying relevant details such as date, amount paid, and payment status, and allow filtering of the payment history by date, amount, and payment status.
+- **REQ-30**: AMAP Admin can access the payment history of each co-producer.
+
+### UC13 - Manage Profile
+
+- **REQ-31**: The actor is capable of viewing and editing profile details, including address, contact information, and other personal data.
+- **REQ-32**: The actor can upload important documents, such as organic certification or other credentials, to verify their qualifications.
 
 ---
 
