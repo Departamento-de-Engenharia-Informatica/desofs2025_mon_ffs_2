@@ -1,119 +1,90 @@
 @startuml Use_Case_Diagram
 left to right direction
+skinparam packageStyle rectangle
 
-' Cores para ameaças (tons de vermelho)
-skinparam usecase<<threat>> {
-  BackgroundColor #FFC0C0
-  BorderColor #CC0000
-  FontColor #990000
-}
-
-' Cores para remediações (tons de verde)
-skinparam usecase<<remediation>> {
-  BackgroundColor #C0FFC0
-  BorderColor #00CC00
-  FontColor #006600
-}
-
-' Nota de ameaça
-skinparam note {
-  BackgroundColor #FFF0F0
-  BorderColor #CC0000
-  FontColor #990000
-}
-
-' Nota de remediação
-skinparam note<<remediation>> {
-  BackgroundColor #F0FFF0
-  BorderColor #00CC00
-  FontColor #006600
-}
-
-actor "CoProducer" as CoProducer
+actor "CoProducer"          as CoProducer
 actor "AMAPP Administrator" as Admin
 
-rectangle "AMAPP Payment & Delivery Report System" {
-    usecase "Request Own Report" as UC1
-    usecase "View Own Report" as UC2
-    usecase "Request Report for Specific CoProducer" as UC3
-    usecase "View Selected CoProducer Report" as UC4
-    usecase "Generate Report" as UC5
-    usecase "Query Database" as UC6
+package "AMAPP Payment & Delivery Report System" {
 
-    ' Security Use Cases
-    usecase "Authenticate User"<<remediation>> as UC7
-    usecase "Authorize Access"<<remediation>> as UC8
-    usecase "Secure Communication Channel"<<remediation>> as SEC1
-    usecase "Validate Input Parameters"<<remediation>> as SEC2
-    usecase "Maintain Audit Logs"<<remediation>> as SEC3
-    usecase "Implement Session Protection"<<remediation>> as SEC4
-    usecase "Enforce Access Control"<<remediation>> as SEC5
 
-    ' Threat Use Cases
-    usecase "Session Hijacking"<<threat>> as T1
-    usecase "Data Sniffing"<<threat>> as T2
-    usecase "Communication Manipulation"<<threat>> as T3
-    usecase "Protocol Manipulation"<<threat>> as T4
-    usecase "Argument Injection"<<threat>> as T5
+  usecase "Request Own Report"                   as UC1
+  usecase "View Own Report"                      as UC2
+  usecase "Request Report for Specific CoProducer" as UC3
+  usecase "View Selected CoProducer Report"      as UC4
+  usecase "Generate Report"                      as UC5
+  usecase "Query Database"                       as UC6
+
+  '–– Mitigations ––
+  usecase "Authenticate User"                    as SEC1 #palegreen
+  usecase "Authorize Access"                     as SEC2 #palegreen
+  usecase "Secure Communication Channel"         as SEC3 #palegreen
+  usecase "Validate Input Parameters"            as SEC4 #palegreen
+  usecase "Maintain Audit Logs"                  as SEC5 #palegreen
+  usecase "Implement Session Protection"         as SEC6 #palegreen
+  usecase "Enforce Access Control"               as SEC7 #palegreen
+
+  '–– Threats ––
+  usecase "Session Hijacking"                    as T1 #darksalmon
+  usecase "Data Sniffing"                        as T2 #darksalmon
+  usecase "Communication Manipulation"           as T3 #darksalmon
+  usecase "Protocol Manipulation"                as T4 #darksalmon
+  usecase "Argument Injection"                   as T5 #darksalmon
+  usecase "Unauthorized Report Access"           as T6 #darksalmon
+  usecase "Privilege Escalation"                 as T7 #darksalmon
 }
 
-' Actor relationships
+
+actor "Attacker" as Attacker
+
+'–– Attempt to put the Attacker Actor on the right but didn't quite work out––
+T7 -[hidden]-> Attacker
+
+'–– Normal user flows ––
 CoProducer --> UC1
 CoProducer --> UC2
-Admin --> UC3
-Admin --> UC4
-
-' Use case relationships
-UC1 ..> UC7 : <<include>>
-UC1 ..> UC8 : <<include>>
-UC3 ..> UC7 : <<include>>
-UC3 ..> UC8 : <<include>>
+Admin      --> UC3
+Admin      --> UC4
 
 UC1 ..> UC5 : <<include>>
 UC3 ..> UC5 : <<include>>
 UC5 ..> UC6 : <<include>>
 
-' Security relationships
-UC1 ..> SEC1 : <<include>>
-UC2 ..> SEC1 : <<include>>
-UC3 ..> SEC1 : <<include>>
-UC4 ..> SEC1 : <<include>>
-UC5 ..> SEC2 : <<include>>
-UC5 ..> SEC3 : <<include>>
-UC7 ..> SEC4 : <<include>>
-UC8 ..> SEC5 : <<include>>
+UC1 .[#green].> SEC1 : <<include>>
+UC1 .[#green].> SEC2 : <<include>>
+UC3 .[#green].> SEC1 : <<include>>
+UC3 .[#green].> SEC2 : <<include>>
+UC5 .[#green].> SEC4 : <<include>>
+UC5 .[#green].> SEC5 : <<include>>
 
-' Threat mitigations
-T1 ..> SEC4 : <<mitigated by>>
-T2 ..> SEC1 : <<mitigated by>>
-T3 ..> SEC1 : <<mitigated by>>
-T4 ..> SEC1 : <<mitigated by>>
-T4 ..> SEC2 : <<mitigated by>>
-T5 ..> SEC2 : <<mitigated by>>
+'–– Attacker → Threat flows ––
+Attacker --> T1
+Attacker --> T2
+Attacker --> T3
+Attacker --> T4
+Attacker --> T5
+Attacker --> T6
+Attacker --> T7
 
-' Notes
-note right of SEC1 <<remediation>>
-  HTTPS with TLS 1.3
-  encryption
-end note
+'–– Threatens ––
+UC1 -[#red,bold]-> T5 : threatens
+UC2 -[#red,bold]-> T1 : threatens
+UC2 -[#red,bold]-> T2 : threatens
+UC3 -[#red,bold]-> T5 : threatens
+UC4 -[#red,bold]-> T6 : threatens
+UC5 -[#red,bold]-> T4 : threatens
+UC6 -[#red,bold]-> T3 : threatens
+UC1 -[#red,bold]-> T7 : threatens
+UC3 -[#red,bold]-> T7 : threatens
 
-note right of SEC2 <<remediation>>
-  Strict input validation and
-  parameterized queries
-end note
+'–– Mitigates ––
+SEC6 -[#green,dashed]-> T1 : mitigates
+SEC3 -[#green,dashed]-> T2 : mitigates
+SEC3 -[#green,dashed]-> T3 : mitigates
+SEC4 -[#green,dashed]-> T4 : mitigates
+SEC4 -[#green,dashed]-> T5 : mitigates
+SEC2 -[#green,dashed]-> T6 : mitigates
+SEC7 -[#green,dashed]-> T7 : mitigates
+SEC5 -[#green,dashed]-> T6 : mitigates
 
-note right of SEC3 <<remediation>>
-  Append-only logs with
-  tamper detection
-end note
-
-note right of SEC4 <<remediation>>
-  High-entropy tokens and
-  secure cookies
-end note
-
-note right of SEC5 <<remediation>>
-  Least privilege principle
-  and access verification
-end note
 @enduml
