@@ -133,7 +133,6 @@ Paulo Abreu - 1240481 <br>
       - [**Abuse Cases**](#abuse-cases-2)
       - [**Countermeasures**](#countermeasures-1)
     - [Product Reservation](#product-reservation-2)
-    - [Registration](#registration-2)
     - [User Management](#user-management-2)
   - [Conclusion](#conclusion)
 
@@ -1363,14 +1362,6 @@ To mitigate these threats, the system implements strong countermeasures:
 - The server **verifies order details**, validating prices and quantities against the database to prevent price manipulation.
 
 This model ensures a balanced view of normal functionality and security needs, aligning protective mechanisms with potential vulnerabilities to maintain the system’s integrity.
-
----
-
-### Registration
-
-![Use and Abuse Cases - Registration]()
-
-*_[Blablabla]_*
 
 ---
 
