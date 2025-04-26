@@ -163,7 +163,7 @@ This product is designed to enhance the AMAP (Associação para a Mobilização 
 
 The primary objectives of AMAP are to promote sustainable agricultural practices, provide consumers with transparency about the food they purchase, support local economies, and foster community ties between consumers and producers. The system being specified will automate processes like order management, production planning, inventory tracking, and delivery logistics, improving efficiency while maintaining AMAP's core values.
 
- This system will ensure a seamless flow from order to delivery, improving overall operational efficiency. This will help the AMAP to better manage its processes and provide a more transparent and sustainable service to its consumers.
+This system will ensure a seamless flow from order to delivery, improving overall operational efficiency. This will help the AMAP to better manage its processes and provide a more transparent and sustainable service to its consumers.
 
 ---
 
@@ -218,54 +218,55 @@ Our threat modeling process is based on PyTM (Python Threat Modeling), an open-s
 
 - Programmatically define the system architecture
 - Generate Data Flow Diagrams (DFDs) automatically
--Identify threats using predefined rules and templates
+  -Identify threats using predefined rules and templates
 - Document potential attacks and mitigations systematically
 
 The STRIDE approach helps us identify threats across six key categories:
 
-- **Spoofing**  
-  Impersonation of users or system components  
-- **Tampering**  
-  Unauthorized modification of data  
-- **Repudiation**  
-  Denial of performing actions without others being able to prove otherwise  
-- **Information Disclosure**  
-  Exposure of sensitive information  
-- **Denial of Service**  
-  Making the system unavailable to legitimate users  
-- **Elevation of Privilege**  
-  Gaining unauthorized access to restricted functionality  
+- **Spoofing**
+  Impersonation of users or system components
+- **Tampering**
+  Unauthorized modification of data
+- **Repudiation**
+  Denial of performing actions without others being able to prove otherwise
+- **Information Disclosure**
+  Exposure of sensitive information
+- **Denial of Service**
+  Making the system unavailable to legitimate users
+- **Elevation of Privilege**
+  Gaining unauthorized access to restricted functionality
 
-#### Supplementary Methodologies  
+#### Supplementary Methodologies
+
 To bolster our threat modeling, we also employed:
 
-- **Data Flow Diagrams (DFDs)**  
-  Visualize system components and their interactions  
-- **Abuse Cases**  
-  Model potential attack scenarios  
+- **Data Flow Diagrams (DFDs)**
+  Visualize system components and their interactions
+- **Abuse Cases**
+  Model potential attack scenarios
 
-#### Scope  
+#### Scope
+
 The threat model encompasses all key components of the AMAP system:
 
-- **User Authentication and Authorization**  
-- **User Registration and Management**  
-- **Product Catalog Management**  
-- **Order Processing and Reservation System**   
-- **Delivery Management**  
-- **Reporting Functionality** 
+- **User Authentication and Authorization**
+- **User Registration and Management**
+- **Product Catalog Management**
+- **Order Processing and Reservation System**
+- **Delivery Management**
+- **Reporting Functionality**
 
 ### Assumptions
+
 - The database is hosted on a separate server as specified in the system architecture
 
 ### Assets
+
 Based on our analysis, we identified the following critical assets requiring protection:
 
 - **User Authentication Credentials**: Passwords and session tokens that could be used to impersonate legitimate users
-
 - **Personal User Information**: Names, addresses, contact information, and other PII protected under privacy regulations
-
 - **Product Information**: Details about products, inventory, and pricing that must maintain integrity
-
 - **System Configuration**: Settings that control the behavior of the application and could be misused if compromised
 
 ## Entry Points and Exit Points
@@ -282,12 +283,12 @@ Entry points represent the interfaces through which data enters the AMAPP system
 - Order submission endpoints
 - Report generation endpoints
 - User management endpoints for administrators
-  
+
 **2- File Upload Interfaces**
 
 - Product image upload API endpoints
 - Document submission API endpoints (e.g., certifications)
-  
+
 **3 - Database Connection**
 
 - Connection strings to the database server
@@ -533,6 +534,7 @@ This report pulls together AMAPP’s security requirements by CIA (confidentiali
 These are required activities during software development to ensure that application software does not contain vulnerabilities.
 
 ##### 1. Secure Coding Guidelines
+
 - Follow recognized standards such as [OWASP Secure Coding Practices](https://owasp.org/www-project-secure-coding-practices-quick-reference-guide/), CERT Secure Coding Standards, or Microsoft's Secure Coding Guidelines.
 - Apply best practices:
   - Strict input validation.
@@ -542,11 +544,13 @@ These are required activities during software development to ensure that applica
   - Principle of least privilege.
 
 ##### 2. Dependency Management
+
 - Monitor third-party libraries and frameworks.
 - Quickly update vulnerable dependencies.
 - Avoid using unmaintained or suspicious packages.
 
 ##### 3. Secure Code Review
+
 - Perform security-focused code reviews for all new code and major changes.
 - Use automated tools (e.g., SonarQube) to assist but not replace manual review.
 - Focus areas:
@@ -555,17 +559,21 @@ These are required activities during software development to ensure that applica
   - Business logic errors that could be exploited.
 
 ##### 4. Static Application Security Testing (SAST)
+
 - Use static code analysis tools (e.g., SonarQube) integrated in CI/CD pipelines to detect vulnerabilities early.
 
 ##### 5. Secure Build and Deployment
+
 - Ensure builds are automated, reproducible, and conducted in controlled environments.
 - Prevent secret exposure (keys, passwords) in repositories or pipelines.
 
 ##### 6. Logging and Monitoring
+
 - Implement secure logging of security-relevant events (e.g., logins, unauthorized access attempts, critical errors).
 - Ensure logs do not contain sensitive information (e.g., passwords, credit card numbers).
 
 ##### 7. Development of Automated Security Tests
+
 - Create and maintain automated security tests as part of the development lifecycle.
 - Integrate security tests into the CI/CD pipeline to continuously validate code security.
 - Cover common vulnerabilities such as injection flaws, authentication issues, and access control weaknesses.
@@ -1123,6 +1131,44 @@ The following table outlines the most significant security vulnerabilities requi
 
 ---
 
+## Risk Assessment
+
+To prioritize and manage the most critical threats identified, we follow a four-step risk-assessment process leveraging our STRIDE analysis:
+
+1. **Threat Identification**  
+   We begin with the STRIDE-based threat model, which enumerates potential attacks across Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, and Elevation of Privilege
+
+2. **Scoring Criteria**  
+   Each threat is evaluated on four dimensions:  
+   - **Severity**: the potential damage if exploited  
+   - **Asset Criticality**: importance of the targeted component  
+   - **Likelihood**: probability of successful exploitation  
+   - **Business Impact**: the negative consequences (financial loss, service disruption, reputational damage, regulatory fines, etc.) that would occur if this threat were successfully exploited
+
+3. **Risk Calculation**  
+   We assign values from 1 (lowest) to 5 (highest) for Likelihood and Impact, then compute a composite **Risk Score**:  Risk Score = Likelihood × Impact
+
+4. **Risk Prioritization**  
+Based on the Risk Score:  
+- **High (15–25)**  
+- **Medium (8–14)**  
+- **Low (1–7)**  
+
+### Example Risk Register
+
+| Threat                 | Category               | Likelihood (1–5) | Impact (1–5) | Risk Score | Priority |
+|------------------------|------------------------|------------------|--------------|------------|----------|
+| Authentication Bypass  | Spoofing               | 4                | 5            | 20         | High     |
+| Password Brute Force   | Denial of Service      | 5                | 4            | 20         | High     |
+| Data Exfiltration      | Information Disclosure | 4                | 4            | 16         | High     |
+| Privilege Escalation   | Elevation of Privilege | 3                | 5            | 15         | High     |
+| CSRF                   | Spoofing/Tampering     | 3                | 3            | 9          | Medium   |
+
+> This register translates our STRIDE threats into prioritized risks, guiding the deployment of countermeasures according to the highest scores.  
+
+
+---
+
 ## Use Cases and Abuse Cases
 
 The following are the identified abuse cases in the AMAPP system, along with their descriptions and possible mitigations.
@@ -1134,59 +1180,66 @@ The following are the identified abuse cases in the AMAPP system, along with the
 This diagram represents a security-focused approach to the AMAPP System’s **Authentication** feature. It combines **Use Cases**, **Abuse Cases**, and **Mitigation Cases** to map out normal user workflows, identify how an attacker might exploit them, and link each threat with an appropriate countermeasure.
 
 #### **Actors**
+
 - **User**: Legitimate end-user interacting with authentication flows.
 - **Attacker**: Malicious actor attempting to abuse authentication mechanisms.
 
 #### **Use Cases**
-- **Register**  
+
+- **Register**
   User creates a new account by providing required credentials and profile data.
-- **Log in**  
+- **Log in**
   User submits credentials to obtain an authenticated session or JWT.
-- **Change Password**  
+- **Change Password**
   Authenticated user updates their password to a new value.
-- **Recover Password**  
+- **Recover Password**
   User initiates a password reset flow to regain access if they forget their password.
 
 #### **Use Case Includes**
+
 - **Register** ➔ **Log in** (after successful registration, user is often logged in automatically)
 - **Log in** ➔ **Change Password** (user may change password post-login)
 - **Log in** ➔ **Recover Password** (if login fails, user can initiate recovery)
 
 #### **Abuse Cases**
-- **Register Multiple Accounts**  
+
+- **Register Multiple Accounts**
   Attacker scripts mass account creation to facilitate spam or automated attacks.
-- **Brute Force Login Attack**  
+- **Brute Force Login Attack**
   Attacker attempts many credential guesses to gain unauthorized access.
-- **Unauthorized Password Change**  
+- **Unauthorized Password Change**
   Attacker tries to change another user’s password without owning a valid session.
-- **Password Recovery Abuse**  
+- **Password Recovery Abuse**
   Attacker exploits the reset workflow (e.g. by guessing tokens or abusing email resets).
-- **Authentication Bypass**  
+- **Authentication Bypass**
   Attacker finds weaknesses to skip credential checks entirely (e.g. JWT forgery).
-- **Privilege Escalation**  
+- **Privilege Escalation**
   Attacker elevates privileges via weak authorization checks post-authentication.
 
 #### **Threatens**
+
 - **Register** — threatens → **Register Multiple Accounts**
 - **Log in** — threatens → **Brute Force Login Attack**, **Authentication Bypass**
 - **Change Password** — threatens → **Unauthorized Password Change**, **Privilege Escalation**
 - **Recover Password** — threatens → **Password Recovery Abuse**
 
 #### **Mitigation Cases**
-- **Apply Rate Limiting**  
+
+- **Apply Rate Limiting**
   Throttle registration and login endpoints to prevent mass-account creation and brute-force attempts.
-- **Enforce Strong Authentication**  
+- **Enforce Strong Authentication**
   Require MFA on login to defeat credential-only attacks.
-- **Session Verification on Password Change**  
+- **Session Verification on Password Change**
   Ensure the user’s session is valid and re-authenticated before allowing password changes.
-- **Secure Password Recovery Workflow**  
+- **Secure Password Recovery Workflow**
   Use time-limited, single-use tokens sent over secure channels; validate thoroughly.
-- **Validate JWT Signature and Claims**  
+- **Validate JWT Signature and Claims**
   Strictly verify token integrity, issuer, expiry, and audience to prevent forgery.
-- **Enforce Authorization per Resource**  
+- **Enforce Authorization per Resource**
   Check user’s permissions on every protected endpoint to block privilege escalation.
 
 #### **Mitigates**
+
 - **Apply Rate Limiting** — mitigates → **Register Multiple Accounts**, **Brute Force Login Attack**
 - **Enforce Strong Authentication** — mitigates → **Brute Force Login Attack**, **Authentication Bypass**
 - **Session Verification on Password Change** — mitigates → **Unauthorized Password Change**
@@ -1242,6 +1295,7 @@ This diagram represents a security-focused approach using both **Use Cases** and
 This model provides a clear foundation for threat analysis, illustrating how the system could be exploited and what preventive measures are in place.
 
 ---
+
 ### Order Payments Deliveries Reports
 
 ![Use and Abuse Cases - Payments](diagrams/Abuse%20Cases/pay-del-rep-abuse-case.png)
