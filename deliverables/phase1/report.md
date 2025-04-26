@@ -1148,13 +1148,74 @@ The following table outlines the most significant security vulnerabilities requi
 
 ## Use Cases and Abuse Cases
 
-*_[Blablabla]_*
+The following are the identified abuse cases in the AMAPP system, along with their descriptions and possible mitigations.
 
 ### Authentication
 
 ![Use and Abuse Cases - Authentication](diagrams/Abuse%20Cases/auth-abuse-case.png)
 
-*_[Blablabla]_*
+This diagram represents a security-focused approach to the AMAPP System’s **Authentication** feature. It combines **Use Cases**, **Abuse Cases**, and **Mitigation Cases** to map out normal user workflows, identify how an attacker might exploit them, and link each threat with an appropriate countermeasure.
+
+#### **Actors**
+- **User**: Legitimate end-user interacting with authentication flows.
+- **Attacker**: Malicious actor attempting to abuse authentication mechanisms.
+
+#### **Use Cases**
+- **Register**  
+  User creates a new account by providing required credentials and profile data.
+- **Log in**  
+  User submits credentials to obtain an authenticated session or JWT.
+- **Change Password**  
+  Authenticated user updates their password to a new value.
+- **Recover Password**  
+  User initiates a password reset flow to regain access if they forget their password.
+
+#### **Use Case Includes**
+- **Register** ➔ **Log in** (after successful registration, user is often logged in automatically)
+- **Log in** ➔ **Change Password** (user may change password post-login)
+- **Log in** ➔ **Recover Password** (if login fails, user can initiate recovery)
+
+#### **Abuse Cases**
+- **Register Multiple Accounts**  
+  Attacker scripts mass account creation to facilitate spam or automated attacks.
+- **Brute Force Login Attack**  
+  Attacker attempts many credential guesses to gain unauthorized access.
+- **Unauthorized Password Change**  
+  Attacker tries to change another user’s password without owning a valid session.
+- **Password Recovery Abuse**  
+  Attacker exploits the reset workflow (e.g. by guessing tokens or abusing email resets).
+- **Authentication Bypass**  
+  Attacker finds weaknesses to skip credential checks entirely (e.g. JWT forgery).
+- **Privilege Escalation**  
+  Attacker elevates privileges via weak authorization checks post-authentication.
+
+#### **Threatens**
+- **Register** — threatens → **Register Multiple Accounts**
+- **Log in** — threatens → **Brute Force Login Attack**, **Authentication Bypass**
+- **Change Password** — threatens → **Unauthorized Password Change**, **Privilege Escalation**
+- **Recover Password** — threatens → **Password Recovery Abuse**
+
+#### **Mitigation Cases**
+- **Apply Rate Limiting**  
+  Throttle registration and login endpoints to prevent mass-account creation and brute-force attempts.
+- **Enforce Strong Authentication**  
+  Require MFA on login to defeat credential-only attacks.
+- **Session Verification on Password Change**  
+  Ensure the user’s session is valid and re-authenticated before allowing password changes.
+- **Secure Password Recovery Workflow**  
+  Use time-limited, single-use tokens sent over secure channels; validate thoroughly.
+- **Validate JWT Signature and Claims**  
+  Strictly verify token integrity, issuer, expiry, and audience to prevent forgery.
+- **Enforce Authorization per Resource**  
+  Check user’s permissions on every protected endpoint to block privilege escalation.
+
+#### **Mitigates**
+- **Apply Rate Limiting** — mitigates → **Register Multiple Accounts**, **Brute Force Login Attack**
+- **Enforce Strong Authentication** — mitigates → **Brute Force Login Attack**, **Authentication Bypass**
+- **Session Verification on Password Change** — mitigates → **Unauthorized Password Change**
+- **Secure Password Recovery Workflow** — mitigates → **Password Recovery Abuse**
+- **Validate JWT Signature and Claims** — mitigates → **Authentication Bypass**
+- **Enforce Authorization per Resource** — mitigates → **Privilege Escalation**
 
 ---
 
@@ -1285,7 +1346,37 @@ This model ensures a balanced view of normal functionality and security needs, a
 
 ![Use and Abuse Cases - User Management](diagrams/Abuse%20Cases/user-management-abuse-case.png)
 
-*_[Blablabla]_*
+The Level 1 Data Flow Diagram (DFD) provides a more detailed view of how the AMAPP system handles the management of user accounts and their associated roles and permissions. This diagram decomposes the main system into internal components and shows how data flows between the administrator, the system, and the database.
+
+- **External Actor:**
+
+  - `Administrator`: A privileged user who initiates user management operations (e.g., create/update/delete users, assign roles).
+- **Internal Components:**
+
+  - `AMAPP API`: The internal component responsible for processing requests related to user and permission management.
+  - `AMAPP DB`: The database where user accounts and role/permission data are stored.
+- **Data Flows:**
+
+  - `Submit user or permission management request`: The `Administrator` sends a management request (`User Management Request` or `Role/Permission Management Request`) to the `AMAPP API` via HTTPS.
+  - `Create/update/delete user account`: The `AMAPP API` performs operations on the user account in the `AMAPP DB` using secure SQL.
+  - `Assign/update/retrieve roles and permissions`: The `AMAPP API` handles role and permission data in the `AMAPP DB`.
+  - `Return user data`: The `AMAPP DB` returns relevant user information (`User Data Response`) to the `AMAPP API`.
+  - `Return permission/role data`: The `AMAPP DB` returns role and permission information (`Role/Permission Data Response`) to the `AMAPP API`.
+  - `Send operation confirmation or results`: The `AMAPP API` returns the result (`Operation Confirmation or Result`) to the `Administrator`.
+- **Data Objects:**
+
+  - `User Management Request`: Instructions for creating, updating, or deleting a user account.
+  - `Role/Permission Management Request`: Instructions to assign or modify a user’s roles and permissions.
+  - `User Data Response`: Information about user accounts.
+  - `Role/Permission Data Response`: Information about user roles and assigned permissions.
+  - `Operation Confirmation or Result`: Feedback on the success or failure of the requested operation.
+- **Trust Boundaries:**
+
+  - `Internet`: Where the `Administrator` submits requests.
+  - `AMAPP System`: The internal environment where requests are processed and business logic is applied.
+  - `DB Server`: The secure database zone responsible for storing and retrieving sensitive account and permission data.
+
+This diagram exposes the internal flow of user and permission management in the AMAPP system, supporting both system design and security analysis by detailing protocol use, data handling, and boundary enforcement.
 
 ---
 
