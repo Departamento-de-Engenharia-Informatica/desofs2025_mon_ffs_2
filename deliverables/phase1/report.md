@@ -114,7 +114,7 @@ Paulo Abreu - 1240481 <br>
     - [Registration](#registration-1)
     - [User Management](#user-management-1)
   - [Risk Assessment](#risk-assessment)
-    - [Example Risk Register](#example-risk-register)
+    - [Risk Register](#risk-register)
   - [Use Cases and Abuse Cases](#use-cases-and-abuse-cases)
     - [Authentication And Registration](#authentication-and-registration)
       - [**Actors**](#actors)
@@ -205,7 +205,7 @@ This diagram shows the main components of the AMAPP system and how they interact
 
 #### Deployment:
 
-- The system runs locally (Localhost) with the backend and APIs.
+- The system will run with the backend and APIs.
 - The database is hosted on a remote server
 
 ---
@@ -742,8 +742,8 @@ The Level 1 Data Flow Diagram (DFD) provides a more detailed view of the AMAP/CS
 
 The diagram is structured with nested boundaries:
 
-Localhost serves as the outer boundary
-AMAP System operates within the Localhost boundary
+AMAP Server serves as the outer boundary
+AMAP System operates within the AMAP Server boundary
 Database Server represents a separate boundary for data storage
 Within the AMAP System boundary, two main components are identified:
 
