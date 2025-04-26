@@ -8,7 +8,7 @@ tm.description = "Detailed view of the AMAP/CSA system for sustainable agricultu
 tm.isOrdered = True  
 
 # Define the boundaries
-local_boundary = Boundary("Localhost")
+local_boundary = Boundary("AMAP Server")
 system_boundary = Boundary("AMAP System")
 system_boundary.inBoundary = local_boundary
 
