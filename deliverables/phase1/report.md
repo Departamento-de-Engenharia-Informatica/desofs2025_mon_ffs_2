@@ -116,7 +116,7 @@ Paulo Abreu - 1240481 <br>
   - [Risk Assessment](#risk-assessment)
     - [Example Risk Register](#example-risk-register)
   - [Use Cases and Abuse Cases](#use-cases-and-abuse-cases)
-    - [Authentication](#authentication-2)
+    - [Authentication And Registration](#authentication-and-registration)
       - [**Actors**](#actors)
       - [**Use Cases**](#use-cases-1)
       - [**Use Case Includes**](#use-case-includes)
@@ -133,7 +133,6 @@ Paulo Abreu - 1240481 <br>
       - [**Abuse Cases**](#abuse-cases-2)
       - [**Countermeasures**](#countermeasures-1)
     - [Product Reservation](#product-reservation-2)
-    - [Registration](#registration-2)
     - [User Management](#user-management-2)
   - [Conclusion](#conclusion)
 
@@ -1054,17 +1053,16 @@ To determine the most important threats included in each STRIDE table, the follo
 
 ### Create Product
 
-
-| **Threat**                                    | **Targeted Element**                                      | **STRIDE Category**    | **Description**                                                                                                                                                                                                        | **Mitigation**                                                                                                                                                             |
-| --------------------------------------------- | --------------------------------------------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **INP02 - Overflow Buffers**                  | Validate Input, Store Product, Send Response              | Tampering              | Buffer overflow é uma vulnerabilidade crítica que pode levar à execução de código arbitrário, comprometendo todo o sistema. Como afeta a validação de entrada e o armazenamento, é uma ameaça prioritária. | Use languages or compilers that perform automatic bounds checking. Utilize secure functions and static analysis tools to identify vulnerabilities.                         |
-| **INP07 - Buffer Manipulation**               | Validate Input, Store Product, Send Response              | Tampering              | Manipulação de buffer pode ser explorada para corromper dados ou executar código malicioso. É uma ameaça comum em sistemas que lidam com buffers de dados.                                                        | Use secure coding practices to prevent buffer manipulation. Validate input sizes and use tools to detect vulnerabilities.                                                  |
-| **AC21 - Cross-Site Request Forgery (CSRF)**  | Send Response                                             | Spoofing               | CSRF pode permitir que um atacante realize ações maliciosas em nome de um usuário autenticado, comprometendo a integridade do sistema e a confiança do usuário.                                                   | Use cryptographic tokens to associate requests with specific actions. Validate HTTP Referrer headers and implement multi-factor authentication for sensitive actions.      |
-| **INP23 - File Content Injection**            | Store Product, Send Response                              | Tampering              | A injeção de conteúdo em arquivos pode levar à execução de código remoto, comprometendo o servidor e os dados armazenados.                                                                                      | Validate all input, including files. Place accepted files in a sandbox environment. Use host integrity monitoring and antivirus scanning.                                  |
-| **CR06 - Communication Channel Manipulation** | Submit Product, Validated Data, Save to DB, Return Result | Information Disclosure | Manipulação de canais de comunicação pode expor dados sensíveis, como credenciais e informações confidenciais, além de permitir ataques como MITM (Man-in-the-Middle).                                         | Encrypt all sensitive communications using properly configured cryptography. Associate authentication/authorization with each channel/message.                             |
-| **AC12 - Privilege Escalation**               | Store Product, Send Response                              | Elevation of Privilege | Escalação de privilégios pode permitir que um atacante obtenha controle total do sistema, comprometendo todos os dados e operações.                                                                               | Carefully manage privileges and follow the principle of least privilege. Implement privilege separation and require multiple conditions for accessing sensitive resources. |
-| **INP08 - Format String Injection**           | Store Product, Send Response                              | Tampering              | Injeção de strings de formato pode ser usada para acessar ou modificar dados sensíveis, além de causar falhas no sistema.                                                                                          | Limit the use of string formatting functions. Validate and filter user input for illegal formatting characters.                                                            |
-| **DE04 - Audit Log Manipulation**             | Product DB                                                | Repudiation            | Manipulação de logs pode ocultar atividades maliciosas, dificultando a detecção de ataques e comprometendo a integridade do sistema.                                                                               | Follow the principle of least privilege to prevent unauthorized access to logs. Validate input before writing to logs and avoid tools that interpret control characters.   |
+| **Threat**                                    | **Targeted Element**              | **STRIDE Category**           | **Description**                                                                                                                                                            | **Mitigation**                                                                                                                                                                                                                                                               |
+| --------------------------------------------- | --------------------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **INP02 – Buffer Overflow**                   | Validate Input, Store Product, Send Response | Tampering                     | A buffer overflow is a critical vulnerability that can lead to arbitrary code execution, compromising the entire system. Because it affects both input validation and storage, it is a high-priority threat. | • Use languages or compilers with built-in bounds checking<br>• Employ safe library functions<br>• Integrate static analysis tools to detect overflow risks                                                                                                                    |
+| **INP07 – Buffer Manipulation**               | Validate Input, Store Product, Send Response | Tampering                     | Buffer manipulation can be exploited to corrupt data or execute malicious code. It’s common in systems that handle raw data buffers.                                       | • Follow secure coding practices to prevent buffer overflows<br>• Enforce strict input size limits<br>• Use memory-safe constructs and automated vulnerability scanners                                                                                                     |
+| **AC21 – Cross-Site Request Forgery (CSRF)**  | Send Response                    | Spoofing                      | CSRF allows an attacker to perform actions on behalf of an authenticated user, compromising system integrity and user trust.                                              | • Implement anti-CSRF tokens for all state-changing endpoints<br>• Validate the HTTP Referer/Origin header<br>• Require re-authentication or MFA for sensitive actions                                                                                                     |
+| **INP23 – File Content Injection**            | Store Product, Send Response     | Tampering                     | File content injection can allow remote code execution if malicious files are uploaded and later rendered or executed by the server.                                      | • Validate and sanitize all uploaded files<br>• Store files in a sandbox or restricted directory<br>• Scan uploads for malware and enforce file-type restrictions                                                                                                           |
+| **CR06 – Communication Channel Manipulation** | Submit Product, Validated Data, Save to DB, Return Result | Information Disclosure        | Manipulating the communication channel (e.g., via MITM) can expose sensitive data such as credentials or order details.                                                   | • Encrypt all communications with TLS<br>• Use strong cipher suites and certificate pinning<br>• Authenticate endpoints to prevent impersonation                                                                                                                           |
+| **AC12 – Privilege Escalation**               | Store Product, Send Response     | Elevation of Privilege        | Weak privilege controls can allow an attacker to gain full system access, compromising all data and operations.                                                            | • Enforce the principle of least privilege<br>• Separate duties across services<br>• Require multiple approvals for high-impact actions                                                                                                                               |
+| **INP08 – Format String Injection**           | Store Product, Send Response     | Tampering                     | Format string injection can be used to read or write arbitrary memory, leading to data leaks or crashes.                                                                   | • Avoid unsafe formatting functions<br>• Strictly validate and escape user input before formatting<br>• Use parameterized logging and output APIs                                                                                                                     |
+| **DE04 – Audit Log Manipulation**             | Product DB                       | Repudiation                   | If logs can be tampered with, attackers can hide malicious activity and obscure audit trails.                                                                             | • Store logs in append-only sinks<br>• Sign and timestamp log entries<br>• Restrict write access to log storage and periodically archive logs to immutable storage                                                                                                      |
 
 ---
 
@@ -1077,7 +1075,7 @@ To determine the most important threats included in each STRIDE table, the follo
 | AA01 – Authentication Abuse/ByPass        | View Own Report                        | Spoofing               | An attacker who bypasses or steals credentials could view another producer’s report, compromising confidentiality.                                          | Enforce strong authentication (e.g. OAuth 2.0), session timeouts, and multi-factor authentication.                                       |
 | INP07 – Buffer Manipulation               | Request Report for Specific CoProducer | Tampering              | Maliciously crafted request parameters could manipulate internal buffers, leading to malformed queries or code execution in the report engine.               | Validate and bound-check all inputs; use compiler-based canaries (StackGuard/ProPolice); adopt secure coding guidelines.                 |
 | AA02 – Principal Spoof                    | View Selected CoProducer Report        | Spoofing               | An attacker may spoof another user’s identity or stolen token to retrieve reports they’re not authorized to see.                                           | Enforce strict authorization checks per request; implement token binding and rotate credentials regularly.                               |
-| CR06 – Communication Channel Manipulation | Generate Report                        | Information Disclosure | A man-in-the-middle on the API↔engine channel could intercept the raw report stream and extract sensitive data.                                             | Encrypt all in-transit data (TLS with strong ciphers); mutually authenticate endpoints; pin certificates.                                |
+| CR06 – Communication Channel Manipulation | Generate Report                        | Information Disclosure | A man-in-the-middle on the API engine channel could intercept the raw report stream and extract sensitive data.                                             | Encrypt all in-transit data (TLS with strong ciphers); mutually authenticate endpoints; pin certificates.                                |
 | DE03 – Sniffing Attacks                   | Query Database                         | Information Disclosure | If the database link isn’t encrypted, an attacker sniffing the network can capture query results containing privileged report data.                         | Use encrypted database connections (e.g. TLS); isolate the database network; enforce least-privilege network policies.                   |
 | AC21 – Cross Site Request Forgery (CSRF)  | Request Report                         | Spoofing               | A forged request (e.g. via hidden form or link) could trick a logged-in user into submitting a report action they didn’t intend, exposing or altering data. | Implement anti-CSRF tokens for each form/action; validate Referer/Origin headers; require re-authentication for sensitive operations.    |
 | INP41 – Argument Injection                | Request Report                         | Tampering              | Injection of unexpected arguments into the report-request parameters could cause unintended behavior, data leakage or code execution in the report engine.   | Whitelist and sanitize all parameter values; enforce strict length/type checks; use parameterized APIs rather than string concatenation. |
@@ -1091,16 +1089,15 @@ The most relevant potential threats identified for the AMAPP Product Reservation
 The following table outlines the most significant security vulnerabilities requiring immediate attention, along with detailed mitigation strategies for each threat. These recommendations should form the foundation of our security hardening plan to protect customer data, maintain system integrity, and ensure business continuity.
 
 
-| **Threat**                                      | **Targeted Element**         | **STRIDE Category**                         | **Description**                                                                                                                                                                                                          | **Mitigation**                                                                                                                                                                                                                                                                                            |
-| ----------------------------------------------- | ---------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| INP23 - File Content Injection                  | Product Catalog              | Tampering                                   | Allows attackers to upload malicious files that can be executed through a browser, potentially enabling remote code execution and system compromise. PHP applications with global variables are particularly vulnerable. | • Enforce principle of least privilege<br>• Validate all file content and metadata<br>• Place uploaded files in sandboxed locations<br>• Execute programs with constrained privileges<br>• Use proxy communication to sanitize requests<br>• Implement virus scanning and host integrity monitoring |
-| INP07 - Buffer Manipulation                     | Order Management             | Spoofing, Tampering, Elevation of Privilege | Attackers exploit vulnerable code (especially in C/C++) to manipulate buffer contents, potentially allowing arbitrary code execution with the application's privileges.                                                  | • Use memory-safe languages (Java, etc.)<br>• Implement secure functions resistant to buffer manipulation<br>• Perform proper boundary checking<br>• Use compiler protections like StackGuard<br>• Apply OS-level preventative functionality                                                         |
-| AC18 - Session Hijacking                        | Order Management             | Spoofing, Information Disclosure            | Attackers capture user session IDs (often via XSS) to impersonate legitimate users and gain unauthorized access to accounts and sensitive data.                                                                          | • Encrypt and sign identity tokens in transit<br>• Use industry standard session key generation with high entropy<br>• Implement session timeouts<br>• Generate new session keys after login<br>• Use HTTPS for all communications                                                                   |
-| AC21 - Cross Site Request Forgery               | Reservation Processing       | Spoofing, Tampering                         | Tricks authenticated users into executing unwanted actions on the application, potentially allowing attackers to modify data or perform unauthorized operations using the victim's identity.                             | • Implement anti-CSRF tokens for all state-changing operations<br>• Regenerate tokens with each request<br>• Validate Referrer headers<br>• Require confirmation for sensitive actions<br>• Implement proper session handling                                                                        |
-| AC14 - Catching Exception from Privileged Block | Reservation Processing       | Elevation of Privilege                      | Exploits poorly designed error handling to retain elevated privileges when exceptions occur, allowing attackers to perform unauthorized privileged operations.                                                           | • Design callback/signal handlers to shed excess privilege before calling untrusted code<br>• Ensure privileged code blocks properly drop privileges on any return path (success, failure, or exception)<br>• Implement proper privilege boundary enforcement                                          |
-| CR06 - Communication Channel Manipulation       | Browse Products, Place Order | Information Disclosure, Tampering           | Attackers perform man-in-the-middle attacks to intercept communications, potentially allowing them to steal sensitive information or inject malicious data into the communication stream.                                | • Encrypt all sensitive communications with properly-configured cryptography<br>• Implement proper authentication for all communication channels<br>• Use secure protocols and cipher suites<br>• Verify certificate validity                                                                         |
-| INP13 - Command Delimiters                      | Order Management             | Tampering, Elevation of Privilege           | Attackers inject special characters into inputs to execute unauthorized commands, potentially allowing SQL injection, LDAP injection, or shell command execution.                                                        | • Implement whitelist validation for command parameters<br>• Limit program privileges<br>• Perform thorough input validation<br>• Use parameterized queries (e.g., JDBC prepared statements)<br>• Encode user input properly                                                                         |
-| INP32 - XML Injection                           | Reservation Processing       | Tampering, Information Disclosure           | Attackers inject malicious XML code to manipulate application logic, potentially allowing authentication bypass, data exposure, or system compromise.                                                                    | • Implement strong input validation for XML content<br>• Filter illegal characters and XML structures<br>• Use custom error pages to prevent information leakage<br>• Implement proper XML parsing with schema validation                                                                             |
+| **Threat**                                      | **Targeted Element**         | **STRIDE Category**                         | **Description**                                                                                                                                                                              | **Mitigation**                                                                                                                                                                                                                                                   |
+| ----------------------------------------------- | ---------------------------- | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| INP07 - Buffer Manipulation                     | Order Management             | Spoofing, Tampering, Elevation of Privilege | Attackers exploit vulnerable code to manipulate buffer contents, potentially allowing arbitrary code execution with the application's privileges.                                            | • Use memory-safe languages (Java, etc.)<br>• Implement secure functions resistant to buffer manipulation<br>• Perform proper boundary checking<br>• Use compiler protections like StackGuard<br>• Apply OS-level preventative functionality                |
+| AC18 - Session Hijacking                        | Order Management             | Spoofing, Information Disclosure            | Attackers capture user session IDs (often via XSS) to impersonate legitimate users and gain unauthorized access to accounts and sensitive data.                                              | • Encrypt and sign identity tokens in transit<br>• Use industry standard session key generation with high entropy<br>• Implement session timeouts<br>• Generate new session keys after login<br>• Use HTTPS for all communications                          |
+| AC21 - Cross Site Request Forgery               | Reservation Processing       | Spoofing, Tampering                         | Tricks authenticated users into executing unwanted actions on the application, potentially allowing attackers to modify data or perform unauthorized operations using the victim's identity. | • Implement anti-CSRF tokens for all state-changing operations<br>• Regenerate tokens with each request<br>• Validate Referrer headers<br>• Require confirmation for sensitive actions<br>• Implement proper session handling                               |
+| AC14 - Catching Exception from Privileged Block | Reservation Processing       | Elevation of Privilege                      | Exploits poorly designed error handling to retain elevated privileges when exceptions occur, allowing attackers to perform unauthorized privileged operations.                               | • Design callback/signal handlers to shed excess privilege before calling untrusted code<br>• Ensure privileged code blocks properly drop privileges on any return path (success, failure, or exception)<br>• Implement proper privilege boundary enforcement |
+| CR06 - Communication Channel Manipulation       | Browse Products, Place Order | Information Disclosure, Tampering           | Attackers perform man-in-the-middle attacks to intercept communications, potentially allowing them to steal sensitive information or inject malicious data into the communication stream.    | • Encrypt all sensitive communications with properly-configured cryptography<br>• Implement proper authentication for all communication channels<br>• Use secure protocols and cipher suites<br>• Verify certificate validity                                |
+| INP13 - Command Delimiters                      | Order Management             | Tampering, Elevation of Privilege           | Attackers inject special characters into inputs to execute unauthorized commands, potentially allowing SQL injection, LDAP injection, or shell command execution.                            | • Implement whitelist validation for command parameters<br>• Limit program privileges<br>• Perform thorough input validation<br>• Use parameterized queries (e.g., JDBC prepared statements)<br>• Encode user input properly                                |
+| INP32 - XML Injection                           | Reservation Processing       | Tampering, Information Disclosure           | Attackers inject malicious XML code to manipulate application logic, potentially allowing authentication bypass, data exposure, or system compromise.                                        | • Implement strong input validation for XML content<br>• Filter illegal characters and XML structures<br>• Use custom error pages to prevent information leakage<br>• Implement proper XML parsing with schema validation                                    |
 
 ---
 
@@ -1134,39 +1131,38 @@ The following table outlines the most significant security vulnerabilities requi
 
 ## Risk Assessment
 
-To prioritize and manage the most critical threats identified, we follow a four-step risk-assessment process leveraging our STRIDE analysis:
+To prioritize and manage the most critical threats identified, we follow a four-step risk-assessment process leveraging our STRIDE analysis: Risk Score = Likelihood × Impact
 
-1. **Threat Identification**  
-   We begin with the STRIDE-based threat model, which enumerates potential attacks across Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, and Elevation of Privilege
+1. **Threat Identification**
+   We begin with the STRIDE-based threat model, which enumerates potential attacks across Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, and Elevation of Privilege.
+2. **Scoring Criteria**Each threat is evaluated on four dimensions:
 
-2. **Scoring Criteria**  
-   Each threat is evaluated on four dimensions:  
-   - **Severity**: the potential damage if exploited  
-   - **Asset Criticality**: importance of the targeted component  
-   - **Likelihood**: probability of successful exploitation  
+   - **Severity**: the potential damage if exploited
+   - **Asset Criticality**: importance of the targeted component
+   - **Likelihood**: probability of successful exploitation
    - **Business Impact**: the negative consequences (financial loss, service disruption, reputational damage, regulatory fines, etc.) that would occur if this threat were successfully exploited
+3. **Risk Calculation**
+   We assign values from 1 (lowest) to 5 (highest) for Likelihood and Impact, then compute a composite **Risk Score**:
+4. **Risk Prioritization**
+   Based on the Risk Score:
 
-3. **Risk Calculation**  
-   We assign values from 1 (lowest) to 5 (highest) for Likelihood and Impact, then compute a composite **Risk Score**:  Risk Score = Likelihood × Impact
+- **High (15–25)**
+- **Medium (8–14)**
+- **Low (1–7)**
 
-4. **Risk Prioritization**  
-Based on the Risk Score:  
-- **High (15–25)**  
-- **Medium (8–14)**  
-- **Low (1–7)**  
+### Risk Register
 
-### Example Risk Register
 
-| Threat                 | Category               | Likelihood (1–5) | Impact (1–5) | Risk Score | Priority |
-|------------------------|------------------------|------------------|--------------|------------|----------|
-| Authentication Bypass  | Spoofing               | 4                | 5            | 20         | High     |
-| Password Brute Force   | Denial of Service      | 5                | 4            | 20         | High     |
-| Data Exfiltration      | Information Disclosure | 4                | 4            | 16         | High     |
-| Privilege Escalation   | Elevation of Privilege | 3                | 5            | 15         | High     |
-| CSRF                   | Spoofing/Tampering     | 3                | 3            | 9          | Medium   |
+| Threat                   | Category               | Likelihood (1–5) | Impact (1–5) | Risk Score | Priority |
+| ------------------------ | ---------------------- | ----------------- | ------------- | ---------- | -------- |
+| Authentication Bypass    | Spoofing               | 4                 | 5             | 20         | High     |
+| Session Replay           | Tampering              | 3                 | 4             | 12         | Medium   |
+| Password Brute Force     | Denial of Service      | 5                 | 4             | 20         | High     |
+| LDAP Injection           | Tampering              | 3                 | 3             | 9          | Medium   |
+| Error Message Excavation | Information Disclosure | 2                 | 3             | 6          | Low      |
 
-> This register translates our STRIDE threats into prioritized risks, guiding the deployment of countermeasures according to the highest scores.  
-
+> **Comment:**
+> This risk register focuses on the most critical authentication threats. “Authentication Bypass” and “Password Brute Force” score highest, driving prompt implementation of strong token validation, MFA, and rate limiting. Lower-scoring threats (e.g. “Error Message Excavation”) still warrant attention—standardizing error output and suppressing debug details will mitigate them. Adjust scores and add additional rows as you refine your analysis.
 
 ---
 
@@ -1174,7 +1170,7 @@ Based on the Risk Score:
 
 The following are the identified abuse cases in the AMAPP system, along with their descriptions and possible mitigations.
 
-### Authentication
+### Authentication And Registration
 
 ![Use and Abuse Cases - Authentication](diagrams/Abuse%20Cases/auth-abuse-case.png)
 
@@ -1363,14 +1359,6 @@ To mitigate these threats, the system implements strong countermeasures:
 - The server **verifies order details**, validating prices and quantities against the database to prevent price manipulation.
 
 This model ensures a balanced view of normal functionality and security needs, aligning protective mechanisms with potential vulnerabilities to maintain the system’s integrity.
-
----
-
-### Registration
-
-![Use and Abuse Cases - Registration]()
-
-*_[Blablabla]_*
 
 ---
 
