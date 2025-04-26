@@ -116,6 +116,7 @@ Paulo Abreu - 1240481 <br>
     - [Product Reservation](#product-reservation-1)
     - [Registration](#registration-1)
     - [User Management](#user-management-1)
+  - [Risk Assessment](#risk-assessment)
   - [Use Cases and Abuse Cases](#use-cases-and-abuse-cases)
     - [Authentication](#authentication-2)
     - [Create Product](#create-product-2)
