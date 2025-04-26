@@ -75,7 +75,7 @@ Paulo Abreu - 1240481 <br>
         - [Integrity](#integrity)
         - [Availability](#availability)
       - [Non-Functional Security Requirements](#non-functional-security-requirements)
-      - [Consolidated Security Checklist (Mapped)](#consolidated-security-checklist-mapped)
+      - [Secure Development Requirements)](#secure-development-requirements)
     - [1. Authentication and Authorization](#1-authentication-and-authorization)
     - [2. Session Management](#2-session-management)
     - [3. Input Validation and Sanitization](#3-input-validation-and-sanitization)
@@ -528,77 +528,54 @@ This report pulls together AMAPP’s security requirements by CIA (confidentiali
 
 ---
 
-#### Consolidated Security Checklist (Mapped)
+#### Secure Development Requirements
 
-### 1. Authentication and Authorization
+These are required activities during software development to ensure that application software does not contain vulnerabilities.
 
-- [X]  OAuth 2.0 and JWT tokens → FS01
-- [ ]  Multi-factor authentication (MFA) for admins → FS04
-- [X]  Role-based access control (RBAC) → FS02
-- [ ]  Token revocation on critical events → FS05
-- [ ]  Login attempt limitation (CR03) → FS10
-- [ ]  Misuse protection for exposed functions (AC09) → FS02/FS06
+##### 1. Secure Coding Guidelines
+- Follow recognized standards such as [OWASP Secure Coding Practices](https://owasp.org/www-project-secure-coding-practices-quick-reference-guide/), CERT Secure Coding Standards, or Microsoft's Secure Coding Guidelines.
+- Apply best practices:
+  - Strict input validation.
+  - Strong authentication and secure session management.
+  - Proper use of cryptography.
+  - Secure error and exception handling (e.g., no stack trace exposure).
+  - Principle of least privilege.
 
-### 2. Session Management
+##### 2. Dependency Management
+- Monitor third-party libraries and frameworks.
+- Quickly update vulnerable dependencies.
+- Avoid using unmaintained or suspicious packages.
 
-- [X]  Token expiration and regeneration → FS05
-- [ ]  Protection against session fixation/replay (AC20, AC11, AC16) → FS05
-- [ ]  Session hijacking protection (AC17, AC18) → FS05
+##### 3. Secure Code Review
+- Perform security-focused code reviews for all new code and major changes.
+- Use automated tools (e.g., SonarQube) to assist but not replace manual review.
+- Focus areas:
+  - Critical components like authentication, authorization, and data access.
+  - Common vulnerability patterns (SQL Injection, XSS, CSRF, etc.).
+  - Business logic errors that could be exploited.
 
-### 3. Input Validation and Sanitization
+##### 4. Static Application Security Testing (SAST)
+- Use static code analysis tools (e.g., SonarQube) integrated in CI/CD pipelines to detect vulnerabilities early.
 
-- [X]  Syntactic and semantic input validation → FS06
-- [X]  Injection protection (SQL, LDAP, XPath, XML, SOAP) → FS07
-- [X]  XSS and variants prevention (INP28, SC02, SC04) → FS06
-- [X]  Buffer overflow mitigation (INP02, INP07, INP12) → FS06
-- [ ]  Double Encoding, Alternate Encoding, Schema Poisoning → FS06
-- [ ]  Remote Code / Argument Injection → FS07
+##### 5. Secure Build and Deployment
+- Ensure builds are automated, reproducible, and conducted in controlled environments.
+- Prevent secret exposure (keys, passwords) in repositories or pipelines.
 
-### 4. Access Control
+##### 6. Logging and Monitoring
+- Implement secure logging of security-relevant events (e.g., logins, unauthorized access attempts, critical errors).
+- Ensure logs do not contain sensitive information (e.g., passwords, credit card numbers).
 
-- [X]  Role verification → FS02
-- [ ]  Prevention of privilege escalation (AC12, AC13) → FS06
-- [ ]  Exception management in privileged blocks (AC14) → FS06
+##### 7. Development of Automated Security Tests
+- Create and maintain automated security tests as part of the development lifecycle.
+- Integrate security tests into the CI/CD pipeline to continuously validate code security.
+- Cover common vulnerabilities such as injection flaws, authentication issues, and access control weaknesses.
+- Include unit tests focused on validating security-related functions.
+- Implement integration tests to verify secure interactions between different components.
+- Develop end-to-end tests to simulate real-world security scenarios and verify protection mechanisms.
 
-### 5. Encryption and Secure Communication
-
-- [X]  HTTPS/TLS communication → FS03
-- [X]  JWT tokens signed/encrypted → FS04
-- [ ]  Data at rest encryption (e.g., IBAN, passwords) → FS04
-- [ ]  Use of strong cryptographic algorithms (CR05) → NFS03
-
-### 6. DoS and Resource Exhaustion Protection
-
-- [X]  Flooding and excessive allocation protection → FS10
-- [ ]  Rate limiting, quotas, circuit breakers → FS10, NFS01
-- [ ]  XML Entity Expansion / Attribute Blowup mitigation → FS10
-
-### 7. File and Remote Input
-
-- [ ]  Path Traversal, File Inclusion, File Injection → FS07
-- [ ]  Upload validation and sandboxing → FS07
-
-### 8. Logging and Monitoring
-
-- [ ]  Secure and immutable logging → FS08, NFS03
-- [ ]  Active monitoring with alerts → NFS04
-- [ ]  SIEM integration → NFS04
-
-### 9. Privacy and GDPR
-
-- [X]  Informed consent → FS09
-- [ ]  Right to be forgotten and data portability → FS09
-- [ ]  Log data anonymization → NFS09
-
-### 10. Incident Response and Recovery
-
-- [ ]  Incident response plan → NFS08
-- [ ]  Encrypted backups and disaster recovery → FS11, NFS07
-- [ ]  Documented mitigation procedures → NFS08
+> **Note:** These requirements must be continuously reviewed and updated to adapt to evolving security threats.
 
 ---
-
-...
 
 ### External Dependencies
 
@@ -1148,13 +1125,74 @@ The following table outlines the most significant security vulnerabilities requi
 
 ## Use Cases and Abuse Cases
 
-*_[Blablabla]_*
+The following are the identified abuse cases in the AMAPP system, along with their descriptions and possible mitigations.
 
 ### Authentication
 
 ![Use and Abuse Cases - Authentication](diagrams/Abuse%20Cases/auth-abuse-case.png)
 
-*_[Blablabla]_*
+This diagram represents a security-focused approach to the AMAPP System’s **Authentication** feature. It combines **Use Cases**, **Abuse Cases**, and **Mitigation Cases** to map out normal user workflows, identify how an attacker might exploit them, and link each threat with an appropriate countermeasure.
+
+#### **Actors**
+- **User**: Legitimate end-user interacting with authentication flows.
+- **Attacker**: Malicious actor attempting to abuse authentication mechanisms.
+
+#### **Use Cases**
+- **Register**  
+  User creates a new account by providing required credentials and profile data.
+- **Log in**  
+  User submits credentials to obtain an authenticated session or JWT.
+- **Change Password**  
+  Authenticated user updates their password to a new value.
+- **Recover Password**  
+  User initiates a password reset flow to regain access if they forget their password.
+
+#### **Use Case Includes**
+- **Register** ➔ **Log in** (after successful registration, user is often logged in automatically)
+- **Log in** ➔ **Change Password** (user may change password post-login)
+- **Log in** ➔ **Recover Password** (if login fails, user can initiate recovery)
+
+#### **Abuse Cases**
+- **Register Multiple Accounts**  
+  Attacker scripts mass account creation to facilitate spam or automated attacks.
+- **Brute Force Login Attack**  
+  Attacker attempts many credential guesses to gain unauthorized access.
+- **Unauthorized Password Change**  
+  Attacker tries to change another user’s password without owning a valid session.
+- **Password Recovery Abuse**  
+  Attacker exploits the reset workflow (e.g. by guessing tokens or abusing email resets).
+- **Authentication Bypass**  
+  Attacker finds weaknesses to skip credential checks entirely (e.g. JWT forgery).
+- **Privilege Escalation**  
+  Attacker elevates privileges via weak authorization checks post-authentication.
+
+#### **Threatens**
+- **Register** — threatens → **Register Multiple Accounts**
+- **Log in** — threatens → **Brute Force Login Attack**, **Authentication Bypass**
+- **Change Password** — threatens → **Unauthorized Password Change**, **Privilege Escalation**
+- **Recover Password** — threatens → **Password Recovery Abuse**
+
+#### **Mitigation Cases**
+- **Apply Rate Limiting**  
+  Throttle registration and login endpoints to prevent mass-account creation and brute-force attempts.
+- **Enforce Strong Authentication**  
+  Require MFA on login to defeat credential-only attacks.
+- **Session Verification on Password Change**  
+  Ensure the user’s session is valid and re-authenticated before allowing password changes.
+- **Secure Password Recovery Workflow**  
+  Use time-limited, single-use tokens sent over secure channels; validate thoroughly.
+- **Validate JWT Signature and Claims**  
+  Strictly verify token integrity, issuer, expiry, and audience to prevent forgery.
+- **Enforce Authorization per Resource**  
+  Check user’s permissions on every protected endpoint to block privilege escalation.
+
+#### **Mitigates**
+- **Apply Rate Limiting** — mitigates → **Register Multiple Accounts**, **Brute Force Login Attack**
+- **Enforce Strong Authentication** — mitigates → **Brute Force Login Attack**, **Authentication Bypass**
+- **Session Verification on Password Change** — mitigates → **Unauthorized Password Change**
+- **Secure Password Recovery Workflow** — mitigates → **Password Recovery Abuse**
+- **Validate JWT Signature and Claims** — mitigates → **Authentication Bypass**
+- **Enforce Authorization per Resource** — mitigates → **Privilege Escalation**
 
 ---
 
@@ -1285,7 +1323,37 @@ This model ensures a balanced view of normal functionality and security needs, a
 
 ![Use and Abuse Cases - User Management](diagrams/Abuse%20Cases/user-management-abuse-case.png)
 
-*_[Blablabla]_*
+The Level 1 Data Flow Diagram (DFD) provides a more detailed view of how the AMAPP system handles the management of user accounts and their associated roles and permissions. This diagram decomposes the main system into internal components and shows how data flows between the administrator, the system, and the database.
+
+- **External Actor:**
+
+  - `Administrator`: A privileged user who initiates user management operations (e.g., create/update/delete users, assign roles).
+- **Internal Components:**
+
+  - `AMAPP API`: The internal component responsible for processing requests related to user and permission management.
+  - `AMAPP DB`: The database where user accounts and role/permission data are stored.
+- **Data Flows:**
+
+  - `Submit user or permission management request`: The `Administrator` sends a management request (`User Management Request` or `Role/Permission Management Request`) to the `AMAPP API` via HTTPS.
+  - `Create/update/delete user account`: The `AMAPP API` performs operations on the user account in the `AMAPP DB` using secure SQL.
+  - `Assign/update/retrieve roles and permissions`: The `AMAPP API` handles role and permission data in the `AMAPP DB`.
+  - `Return user data`: The `AMAPP DB` returns relevant user information (`User Data Response`) to the `AMAPP API`.
+  - `Return permission/role data`: The `AMAPP DB` returns role and permission information (`Role/Permission Data Response`) to the `AMAPP API`.
+  - `Send operation confirmation or results`: The `AMAPP API` returns the result (`Operation Confirmation or Result`) to the `Administrator`.
+- **Data Objects:**
+
+  - `User Management Request`: Instructions for creating, updating, or deleting a user account.
+  - `Role/Permission Management Request`: Instructions to assign or modify a user’s roles and permissions.
+  - `User Data Response`: Information about user accounts.
+  - `Role/Permission Data Response`: Information about user roles and assigned permissions.
+  - `Operation Confirmation or Result`: Feedback on the success or failure of the requested operation.
+- **Trust Boundaries:**
+
+  - `Internet`: Where the `Administrator` submits requests.
+  - `AMAPP System`: The internal environment where requests are processed and business logic is applied.
+  - `DB Server`: The secure database zone responsible for storing and retrieving sensitive account and permission data.
+
+This diagram exposes the internal flow of user and permission management in the AMAPP system, supporting both system design and security analysis by detailing protocol use, data handling, and boundary enforcement.
 
 ---
 
