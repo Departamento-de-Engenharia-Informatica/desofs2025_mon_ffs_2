@@ -35,7 +35,7 @@ Paulo Abreu - 1240481 <br>
       - [Supplementary Methodologies](#supplementary-methodologies)
       - [Scope](#scope)
     - [Assumptions](#assumptions)
-    - [Key Assets to Protect](#key-assets-to-protect)
+    - [Assets](#assets)
   - [Entry Points and Exit Points](#entry-points-and-exit-points)
     - [Entry Points](#entry-points)
     - [Exit Points](#exit-points)
@@ -87,10 +87,6 @@ Paulo Abreu - 1240481 <br>
     - [9. Privacy and GDPR](#9-privacy-and-gdpr)
     - [10. Incident Response and Recovery](#10-incident-response-and-recovery)
     - [External Dependencies](#external-dependencies)
-    - [Entry Points](#entry-points-1)
-    - [Exit Points](#exit-points-1)
-    - [Assets](#assets)
-    - [Trust Levels](#trust-levels)
   - [Data Flow Diagrams](#data-flow-diagrams)
     - [Authentication](#authentication)
       - [Level 0](#level-0)
@@ -113,10 +109,9 @@ Paulo Abreu - 1240481 <br>
     - [User Management](#user-management)
       - [Level 0](#level-0-6)
       - [Level 1](#level-1-6)
-  - [Stride](#stride)
+  - [STRIDE](#stride)
     - [Authentication](#authentication-1)
     - [Create Product](#create-product-1)
-    - [Generic Representation](#generic-representation-1)
     - [Order Payments Deliveries Reports](#order-payments-deliveries-reports-1)
     - [Product Reservation](#product-reservation-1)
     - [Registration](#registration-1)
@@ -138,13 +133,25 @@ Paulo Abreu - 1240481 <br>
   - [Mitigations and Countermeasures](#mitigations-and-countermeasures)
   - [Threat Profile](#threat-profile)
   - [Conclusion](#conclusion)
-  - [References](#references)
 
 ---
 
 ## Introduction
 
-*_[Blablabla]_*
+This report documents the comprehensive threat modeling process conducted for the AMAP system, a platform designed to connect local agricultural producers directly with consumers through a sustainable pre-ordering model. The threat modeling analysis aims to identify, categorize, and recommend mitigations for potential security vulnerabilities before they can be exploited in a production environment.
+
+We employed a Software-Centric approach to threat modeling, evaluating the application from its core architecture outward, determining risks at each component level, and identifying appropriate controls. Our methodology leverages the STRIDE framework (Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, and Elevation of Privilege) to systematically categorize threats across the system's attack surface.
+
+The scope of our analysis encompasses all critical components of the AMAP platform, including user authentication and registration, product catalog management, order processing, and delivery management. Using Data Flow Diagrams (DFDs) at both context and detailed levels, we visualized how data moves through the system and identified potential security weaknesses at trust boundaries and processing points.
+
+This report presents our findings organized by system module, with each section containing:
+
+- Data Flow Diagrams illustrating component interactions
+- STRIDE-based threat analysis tables
+- Use and Abuse Cases demonstrating legitimate usage patterns alongside potential attack scenarios
+- Detailed mitigation recommendations for identified vulnerabilities
+
+By identifying and addressing security concerns early in the development lifecycle, this threat model serves as a foundation for building a robust, secure platform that protects sensitive user data while maintaining the integrity of the AMAP ecosystem and supporting its mission of sustainable agriculture.
 
 ---
 
@@ -152,7 +159,11 @@ Paulo Abreu - 1240481 <br>
 
 ### Project description
 
-*_[Blablabla]_*
+This product is designed to enhance the AMAP (Associação para a Mobilização de Alimentos e Produtos) initiative, a Portuguese organization that connects local producers directly with consumers. AMAP's core model is based on pre-ordering, where consumers place orders before the production cycle begins, ensuring that only the requested products are produced. This reduces food waste, supports local agriculture, and promotes sustainability. AMAP’s principles include sustainability, transparency, local consumption, and community engagement.
+
+The primary objectives of AMAP are to promote sustainable agricultural practices, provide consumers with transparency about the food they purchase, support local economies, and foster community ties between consumers and producers. The system being specified will automate processes like order management, production planning, inventory tracking, and delivery logistics, improving efficiency while maintaining AMAP's core values.
+
+ This system will ensure a seamless flow from order to delivery, improving overall operational efficiency. This will help the AMAP to better manage its processes and provide a more transparent and sustainable service to its consumers.
 
 ---
 
@@ -207,55 +218,54 @@ Our threat modeling process is based on PyTM (Python Threat Modeling), an open-s
 
 - Programmatically define the system architecture
 - Generate Data Flow Diagrams (DFDs) automatically
-  -Identify threats using predefined rules and templates
+-Identify threats using predefined rules and templates
 - Document potential attacks and mitigations systematically
 
 The STRIDE approach helps us identify threats across six key categories:
 
-- **Spoofing**
-  Impersonation of users or system components
-- **Tampering**
-  Unauthorized modification of data
-- **Repudiation**
-  Denial of performing actions without others being able to prove otherwise
-- **Information Disclosure**
-  Exposure of sensitive information
-- **Denial of Service**
-  Making the system unavailable to legitimate users
-- **Elevation of Privilege**
-  Gaining unauthorized access to restricted functionality
+- **Spoofing**  
+  Impersonation of users or system components  
+- **Tampering**  
+  Unauthorized modification of data  
+- **Repudiation**  
+  Denial of performing actions without others being able to prove otherwise  
+- **Information Disclosure**  
+  Exposure of sensitive information  
+- **Denial of Service**  
+  Making the system unavailable to legitimate users  
+- **Elevation of Privilege**  
+  Gaining unauthorized access to restricted functionality  
 
-#### Supplementary Methodologies
-
+#### Supplementary Methodologies  
 To bolster our threat modeling, we also employed:
 
-- **Data Flow Diagrams (DFDs)**
-  Visualize system components and their interactions
-- **Abuse Cases**
-  Model potential attack scenarios
+- **Data Flow Diagrams (DFDs)**  
+  Visualize system components and their interactions  
+- **Abuse Cases**  
+  Model potential attack scenarios  
 
-#### Scope
-
+#### Scope  
 The threat model encompasses all key components of the AMAP system:
 
-- **User Authentication and Authorization**
-- **User Registration and Management**
-- **Product Catalog Management**
-- **Order Processing and Reservation System**
-- **Delivery Management**
-- **Reporting Functionality**
+- **User Authentication and Authorization**  
+- **User Registration and Management**  
+- **Product Catalog Management**  
+- **Order Processing and Reservation System**   
+- **Delivery Management**  
+- **Reporting Functionality** 
 
 ### Assumptions
-
 - The database is hosted on a separate server as specified in the system architecture
 
-### Key Assets to Protect
-
+### Assets
 Based on our analysis, we identified the following critical assets requiring protection:
 
 - **User Authentication Credentials**: Passwords and session tokens that could be used to impersonate legitimate users
+
 - **Personal User Information**: Names, addresses, contact information, and other PII protected under privacy regulations
+
 - **Product Information**: Details about products, inventory, and pricing that must maintain integrity
+
 - **System Configuration**: Settings that control the behavior of the application and could be misused if compromised
 
 ## Entry Points and Exit Points
@@ -272,12 +282,12 @@ Entry points represent the interfaces through which data enters the AMAPP system
 - Order submission endpoints
 - Report generation endpoints
 - User management endpoints for administrators
-
+  
 **2- File Upload Interfaces**
 
 - Product image upload API endpoints
 - Document submission API endpoints (e.g., certifications)
-
+  
 **3 - Database Connection**
 
 - Connection strings to the database server
@@ -592,27 +602,7 @@ This report pulls together AMAPP’s security requirements by CIA (confidentiali
 
 ### External Dependencies
 
-*_[Blablabla]_*
-
-...
-
-### Entry Points
-
-*_[Blablabla]_*
-
-...
-
-### Exit Points
-
-*_[Blablabla]_*
-
-### Assets
-
-*_[Blablabla]_*
-
-### Trust Levels
-
-*_[Blablabla]_*
+This project will rely on external libraries and tools to provide key features—authentication (JWT), PDF generation, input validation, PostgreSQL connectivity and migrations, and CI/CD automation via GitHub Actions. All of these will be managed as NuGet packages (for runtime and build-time dependencies) and GitHub Actions workflows, under the umbrella of the .NET 8.0 SDK and runtime. Proper version control, security and update processes will be applied to maintain stability and integrity.
 
 ---
 
@@ -1034,7 +1024,7 @@ This diagram exposes the internal flow of user and permission management in the 
 
 ---
 
-## Stride
+## STRIDE
 
 STRIDE is a threat modeling methodology used to categorize and analyze security threats in software systems. It helps identify potential vulnerabilities by classifying them into six main categories, each representing a specific type of threat.
 
@@ -1087,12 +1077,6 @@ To determine the most important threats included in each STRIDE table, the follo
 | **AC12 - Privilege Escalation**               | Store Product, Send Response                              | Elevation of Privilege | Escalação de privilégios pode permitir que um atacante obtenha controle total do sistema, comprometendo todos os dados e operações.                                                                               | Carefully manage privileges and follow the principle of least privilege. Implement privilege separation and require multiple conditions for accessing sensitive resources. |
 | **INP08 - Format String Injection**           | Store Product, Send Response                              | Tampering              | Injeção de strings de formato pode ser usada para acessar ou modificar dados sensíveis, além de causar falhas no sistema.                                                                                          | Limit the use of string formatting functions. Validate and filter user input for illegal formatting characters.                                                            |
 | **DE04 - Audit Log Manipulation**             | Product DB                                                | Repudiation            | Manipulação de logs pode ocultar atividades maliciosas, dificultando a detecção de ataques e comprometendo a integridade do sistema.                                                                               | Follow the principle of least privilege to prevent unauthorized access to logs. Validate input before writing to logs and avoid tools that interpret control characters.   |
-
----
-
-### Generic Representation
-
-*_[Blablabla]_*
 
 ---
 
@@ -1164,81 +1148,13 @@ The following table outlines the most significant security vulnerabilities requi
 
 ## Use Cases and Abuse Cases
 
-The following are the identified abuse cases in the AMAPP system, along with their descriptions and possible mitigations.
+*_[Blablabla]_*
 
 ### Authentication
 
 ![Use and Abuse Cases - Authentication](diagrams/Abuse%20Cases/auth-abuse-case.png)
 
-This diagram represents a security-focused approach to the AMAPP System’s **Authentication** feature. It combines **Use Cases**, **Abuse Cases**, and **Mitigation Cases** to map out normal user workflows, identify how an attacker might exploit them, and link each threat with an appropriate countermeasure.
-
-#### **Actors**
-
-- **User**: Legitimate end-user interacting with authentication flows.
-- **Attacker**: Malicious actor attempting to abuse authentication mechanisms.
-
-#### **Use Cases**
-
-- **Register**
-  User creates a new account by providing required credentials and profile data.
-- **Log in**
-  User submits credentials to obtain an authenticated session or JWT.
-- **Change Password**
-  Authenticated user updates their password to a new value.
-- **Recover Password**
-  User initiates a password reset flow to regain access if they forget their password.
-
-#### **Use Case Includes**
-
-- **Register** ➔ **Log in** (after successful registration, user is often logged in automatically)
-- **Log in** ➔ **Change Password** (user may change password post-login)
-- **Log in** ➔ **Recover Password** (if login fails, user can initiate recovery)
-
-#### **Abuse Cases**
-
-- **Register Multiple Accounts**
-  Attacker scripts mass account creation to facilitate spam or automated attacks.
-- **Brute Force Login Attack**
-  Attacker attempts many credential guesses to gain unauthorized access.
-- **Unauthorized Password Change**
-  Attacker tries to change another user’s password without owning a valid session.
-- **Password Recovery Abuse**
-  Attacker exploits the reset workflow (e.g. by guessing tokens or abusing email resets).
-- **Authentication Bypass**
-  Attacker finds weaknesses to skip credential checks entirely (e.g. JWT forgery).
-- **Privilege Escalation**
-  Attacker elevates privileges via weak authorization checks post-authentication.
-
-#### **Threatens**
-
-- **Register** — threatens → **Register Multiple Accounts**
-- **Log in** — threatens → **Brute Force Login Attack**, **Authentication Bypass**
-- **Change Password** — threatens → **Unauthorized Password Change**, **Privilege Escalation**
-- **Recover Password** — threatens → **Password Recovery Abuse**
-
-#### **Mitigation Cases**
-
-- **Apply Rate Limiting**
-  Throttle registration and login endpoints to prevent mass-account creation and brute-force attempts.
-- **Enforce Strong Authentication**
-  Require MFA on login to defeat credential-only attacks.
-- **Session Verification on Password Change**
-  Ensure the user’s session is valid and re-authenticated before allowing password changes.
-- **Secure Password Recovery Workflow**
-  Use time-limited, single-use tokens sent over secure channels; validate thoroughly.
-- **Validate JWT Signature and Claims**
-  Strictly verify token integrity, issuer, expiry, and audience to prevent forgery.
-- **Enforce Authorization per Resource**
-  Check user’s permissions on every protected endpoint to block privilege escalation.
-
-#### **Mitigates**
-
-- **Apply Rate Limiting** — mitigates → **Register Multiple Accounts**, **Brute Force Login Attack**
-- **Enforce Strong Authentication** — mitigates → **Brute Force Login Attack**, **Authentication Bypass**
-- **Session Verification on Password Change** — mitigates → **Unauthorized Password Change**
-- **Secure Password Recovery Workflow** — mitigates → **Password Recovery Abuse**
-- **Validate JWT Signature and Claims** — mitigates → **Authentication Bypass**
-- **Enforce Authorization per Resource** — mitigates → **Privilege Escalation**
+*_[Blablabla]_*
 
 ---
 
@@ -1288,7 +1204,6 @@ This diagram represents a security-focused approach using both **Use Cases** and
 This model provides a clear foundation for threat analysis, illustrating how the system could be exploited and what preventive measures are in place.
 
 ---
-
 ### Order Payments Deliveries Reports
 
 ![Use and Abuse Cases - Payments](diagrams/Abuse%20Cases/pay-del-rep-abuse-case.png)
@@ -1329,8 +1244,6 @@ This model provides a clear foundation for threat analysis, illustrating how the
 
 ---
 
----
-
 ### Product Reservation
 
 ![Use and Abuse Cases - Product Reservation](diagrams/Abuse%20Cases/product-reservation-abuse-cases.png)
@@ -1356,7 +1269,7 @@ To mitigate these threats, the system implements strong countermeasures:
 - **Two-factor authentication (2FA)** protects user accounts against unauthorized access.
 - The server **verifies order details**, validating prices and quantities against the database to prevent price manipulation.
 
-This model ensures a balanced view of normal functionality and security needs, aligning protective mechanisms with potential vulnerabilities to maintain the system's integrity.
+This model ensures a balanced view of normal functionality and security needs, aligning protective mechanisms with potential vulnerabilities to maintain the system’s integrity.
 
 ---
 
@@ -1372,59 +1285,7 @@ This model ensures a balanced view of normal functionality and security needs, a
 
 ![Use and Abuse Cases - User Management](diagrams/Abuse%20Cases/user-management-abuse-case.png)
 
-This diagram represents a security-focused approach to the AMAPP System’s **User Management** feature. It combines **Use Cases**, **Abuse Cases**, and **Mitigation Cases** to map out normal administrator workflows, identify how a malicious actor might exploit them, and link each threat with an appropriate countermeasure.
-
-#### **Actors**
-
-- **Administrator**: Legitimate system administrator performing user and role management.
-- **Malicious Admin**: Insider threat with administrator privileges aiming to abuse the system.
-
-#### **Use Cases**
-
-- **Create/Update/Delete User Account**
-  Administrator manages the full lifecycle of user accounts: creating new users, modifying their profiles, or removing obsolete accounts.
-- **Assign/Update/Retrieve Roles and Permissions**
-  Administrator assigns roles, updates permission sets, and retrieves existing role configurations to enforce fine-grained access control.
-- **Return User Data**
-  System returns user profile and metadata in response to authorized queries (e.g., to populate management dashboards).
-- **Return Permission/Role Data**
-  System provides current role-permission mappings for auditing or verification purposes.
-- **Review Registration Requests**
-  Administrator reviews pending user sign-up requests to approve or deny new registrations.
-- **Update Approval Status**
-  Administrator changes the approval state of registration requests (e.g., from “pending” to “approved” or “rejected”).
-
-#### **Abuse Cases**
-
-- **Account Takeover**
-  Malicious Admin hijacks an existing user account to impersonate or control it.
-- **Privilege Escalation**
-  Malicious Admin elevates their own or another user’s privileges beyond intended limits.
-- **User Data Exfiltration**
-  Malicious Admin extracts sensitive user information for unauthorized use or disclosure.
-- **Permission Enumeration**
-  Malicious Admin probes the system to discover which roles and permissions exist and who holds them.
-- **Approve Fake Registrations**
-  Malicious Admin bypasses normal review to approve fraudulent or dummy user accounts.
-- **Tamper Approval Process**
-  Malicious Admin alters the state or history of registration approvals to cover tracks or introduce rogue accounts.
-
-#### **Mitigation Cases**
-
-- **Enforce Strong Authentication (MFA)**
-  Require multi-factor authentication on all administrative accounts to thwart account takeover attempts.
-- **Strict Role Management Policies**
-  Define clear separation of duties and approval workflows to prevent unauthorized privilege escalation.
-- **Access Control and Logging**
-  Implement detailed access logs and real-time monitoring of sensitive actions (e.g., role changes, data exports).
-- **Limit API Information Disclosure**
-  Restrict role/permission metadata returned by APIs to only what’s necessary, reducing the attack surface for enumeration.
-- **Multi-level Registration Review**
-  Introduce layered approval (e.g., peer review + manager sign-off) for new user registrations to catch fake or malicious requests.
-- **Approval Auditing and Alerts**
-  Maintain immutable audit trails of approval decisions and trigger alerts on unusual patterns (e.g., bulk approvals).
-
-This model clearly ties each normal operation to its potential threats and the safeguards that mitigate them, forming a comprehensive threat analysis for the AMAPP System’s user management module.
+*_[Blablabla]_*
 
 ---
 
@@ -1451,7 +1312,3 @@ This model clearly ties each normal operation to its potential threats and the s
 *_[Blablabla]_*
 
 ---
-
-## References
-
-*[Bibliographic references go here, in ACM-Reference-Format]*
