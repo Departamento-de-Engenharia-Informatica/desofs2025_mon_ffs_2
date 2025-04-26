@@ -75,17 +75,14 @@ Paulo Abreu - 1240481 <br>
         - [Integrity](#integrity)
         - [Availability](#availability)
       - [Non-Functional Security Requirements](#non-functional-security-requirements)
-      - [Secure Development Requirements)](#secure-development-requirements)
-    - [1. Authentication and Authorization](#1-authentication-and-authorization)
-    - [2. Session Management](#2-session-management)
-    - [3. Input Validation and Sanitization](#3-input-validation-and-sanitization)
-    - [4. Access Control](#4-access-control)
-    - [5. Encryption and Secure Communication](#5-encryption-and-secure-communication)
-    - [6. DoS and Resource Exhaustion Protection](#6-dos-and-resource-exhaustion-protection)
-    - [7. File and Remote Input](#7-file-and-remote-input)
-    - [8. Logging and Monitoring](#8-logging-and-monitoring)
-    - [9. Privacy and GDPR](#9-privacy-and-gdpr)
-    - [10. Incident Response and Recovery](#10-incident-response-and-recovery)
+      - [Secure Development Requirements](#secure-development-requirements)
+        - [1. Secure Coding Guidelines](#1-secure-coding-guidelines)
+        - [2. Dependency Management](#2-dependency-management)
+        - [3. Secure Code Review](#3-secure-code-review)
+        - [4. Static Application Security Testing (SAST)](#4-static-application-security-testing-sast)
+        - [5. Secure Build and Deployment](#5-secure-build-and-deployment)
+        - [6. Logging and Monitoring](#6-logging-and-monitoring)
+        - [7. Development of Automated Security Tests](#7-development-of-automated-security-tests)
     - [External Dependencies](#external-dependencies)
   - [Data Flow Diagrams](#data-flow-diagrams)
     - [Authentication](#authentication)
@@ -117,22 +114,27 @@ Paulo Abreu - 1240481 <br>
     - [Registration](#registration-1)
     - [User Management](#user-management-1)
   - [Risk Assessment](#risk-assessment)
+    - [Example Risk Register](#example-risk-register)
   - [Use Cases and Abuse Cases](#use-cases-and-abuse-cases)
     - [Authentication](#authentication-2)
-    - [Create Product](#create-product-2)
+      - [**Actors**](#actors)
       - [**Use Cases**](#use-cases-1)
+      - [**Use Case Includes**](#use-case-includes)
       - [**Abuse Cases**](#abuse-cases)
-      - [**Countermeasures**](#countermeasures)
-    - [Order Payments Deliveries Reports](#order-payments-deliveries-reports-2)
+      - [**Threatens**](#threatens)
+      - [**Mitigation Cases**](#mitigation-cases)
+      - [**Mitigates**](#mitigates)
+    - [Create Product](#create-product-2)
       - [**Use Cases**](#use-cases-2)
       - [**Abuse Cases**](#abuse-cases-1)
+      - [**Countermeasures**](#countermeasures)
+    - [Order Payments Deliveries Reports](#order-payments-deliveries-reports-2)
+      - [**Use Cases**](#use-cases-3)
+      - [**Abuse Cases**](#abuse-cases-2)
       - [**Countermeasures**](#countermeasures-1)
     - [Product Reservation](#product-reservation-2)
     - [Registration](#registration-2)
     - [User Management](#user-management-2)
-  - [Threat Classification](#threat-classification)
-  - [Mitigations and Countermeasures](#mitigations-and-countermeasures)
-  - [Threat Profile](#threat-profile)
   - [Conclusion](#conclusion)
 
 ---
@@ -1102,8 +1104,6 @@ The following table outlines the most significant security vulnerabilities requi
 
 ---
 
----
-
 ### Registration
 
 
@@ -1412,26 +1412,14 @@ This diagram exposes the internal flow of user and permission management in the 
 
 ---
 
-## Threat Classification
-
-*_[Blablabla]_*
-
----
-
-## Mitigations and Countermeasures
-
-*_[Blablabla]_*
-
----
-
-## Threat Profile
-
-*_[Blablabla]_*
-
----
-
 ## Conclusion
 
-*_[Blablabla]_*
+The threat modeling exercise conducted for the AMAPP platform provided a structured and comprehensive analysis of the system’s security posture. By applying the STRIDE methodology, supported by detailed Data Flow Diagrams (DFDs) and the examination of use and abuse cases, we systematically identified critical vulnerabilities and proposed suitable mitigation strategies.
+
+Through a risk-driven and security-by-design approach, this project ensures that AMAPP is well-prepared to address major security concerns, safeguarding the confidentiality, integrity, and availability of its data and services. Clear functional and non-functional security requirements were defined, establishing a strong foundation for building a resilient, secure platform that protects sensitive user information and supports the system's long-term sustainability.
+
+This analysis highlights the importance of embedding security considerations early in the software development lifecycle. Early identification and mitigation of risks contribute significantly to reducing the likelihood of security breaches, enhancing system reliability, and maintaining user trust.
+
+The threat model developed serves not only as a defense plan against potential attacks but also as a strategic asset for continuous improvement and adaptation to future security challenges. With these foundations, AMAPP is well positioned to fulfill its mission of promoting sustainable agriculture through a secure and trustworthy digital platform.
 
 ---
