@@ -43,7 +43,6 @@ Paulo Abreu - 1240481 <br>
       - [Producer](#producer)
       - [Co-Producer](#co-producer)
       - [AMAP Administrators](#amap-administrators)
-      - [Non-Authenticated User](#non-authenticated-user)
     - [Use Cases](#use-cases)
     - [Functional Requirements](#functional-requirements)
     - [UC01 - Manage Users/Roles](#uc01---manage-usersroles)
@@ -65,10 +64,9 @@ Paulo Abreu - 1240481 <br>
     - [3. Scalability](#3-scalability)
     - [4. Security](#4-security)
     - [5. Reliability and Integrity](#5-reliability-and-integrity)
-    - [6. Usability](#6-usability)
-    - [7. Maintainability](#7-maintainability)
-    - [8. Portability](#8-portability)
-    - [9. Monitoring and Alerts](#9-monitoring-and-alerts)
+    - [6. Maintainability](#6-maintainability)
+    - [7. Portability](#7-portability)
+    - [8. Monitoring and Alerts](#8-monitoring-and-alerts)
     - [Security Requirements](#security-requirements)
       - [Functional Security Requirements (CIA-Based)](#functional-security-requirements-cia-based)
         - [Confidentiality](#confidentiality)
@@ -117,23 +115,22 @@ Paulo Abreu - 1240481 <br>
     - [Risk Register](#risk-register)
   - [Use Cases and Abuse Cases](#use-cases-and-abuse-cases)
     - [Authentication And Registration](#authentication-and-registration)
-      - [**Actors**](#actors)
       - [**Use Cases**](#use-cases-1)
-      - [**Use Case Includes**](#use-case-includes)
       - [**Abuse Cases**](#abuse-cases)
-      - [**Threatens**](#threatens)
-      - [**Mitigation Cases**](#mitigation-cases)
-      - [**Mitigates**](#mitigates)
+      - [**Countermeasures**](#countermeasures)
     - [Create Product](#create-product-2)
       - [**Use Cases**](#use-cases-2)
       - [**Abuse Cases**](#abuse-cases-1)
-      - [**Countermeasures**](#countermeasures)
+      - [**Countermeasures**](#countermeasures-1)
     - [Order Payments Deliveries Reports](#order-payments-deliveries-reports-2)
       - [**Use Cases**](#use-cases-3)
       - [**Abuse Cases**](#abuse-cases-2)
-      - [**Countermeasures**](#countermeasures-1)
+      - [**Countermeasures**](#countermeasures-2)
     - [Product Reservation](#product-reservation-2)
     - [User Management](#user-management-2)
+      - [**Use Cases**](#use-cases-4)
+      - [**Abuse Cases**](#abuse-cases-3)
+      - [**Countermeasures**](#countermeasures-3)
   - [Conclusion](#conclusion)
 
 ---
@@ -335,10 +332,6 @@ Also known as co-producers, consumers play an active role in AMAP's sustainable 
 
 These users oversee the operational management of the system within AMAP. Acting as intermediaries between producers and consumers, they ensure data accuracy on the platform, address user issues or questions, and uphold AMAP’s values of sustainability and transparency. AMAP administrators have the authority to edit and review system content, facilitate updates or changes in practices, and ensure that digital operations align with organizational objectives. They also handle user support issues and facilitate communication among the different stakeholders.
 
-#### Non-Authenticated User
-
-Representing new visitors or those interested in AMAP, these users can browse the system without needing to register. Access is limited to general information about AMAP, its mission, values, and available products. However, they cannot place orders or access data exclusive to authenticated users. This class enables visitors to learn more about AMAP's purpose, encouraging engagement and fostering a path to becoming co-producers.
-
 ---
 
 ### Use Cases
@@ -462,25 +455,19 @@ The non-functional requirements define quality attributes and technical constrai
 - There must be **error and event logging** for **auditability** and recovery.
 - The system must follow the **ACID principle** for relational database operations, and eventual consistency for MongoDB operations.
 
-### 6. Usability
-
-- The interface must be **intuitive, responsive, and accessible**, compatible with both mobile and desktop devices.
-- The application must provide **clear and helpful feedback** to users in case of errors (e.g., failed authentication, invalid form fields).
-- Navigation should be smooth, and user flows must minimize the number of steps required to complete common tasks.
-
-### 7. Maintainability
+### 6. Maintainability
 
 - The code must follow **software engineering best practices**, such as separation of concerns, design patterns, and documentation.
 - The system must allow for **modular updates**, enabling new features to be added without requiring full downtime.
 - There should be **test coverage above 80%** for critical features, including unit, integration, and acceptance tests.
 
-### 8. Portability
+### 7. Portability
 
 - The application must be **compatible with Linux environments**, preferably via **Docker containers** orchestrated with **Kubernetes**.
 - The API must follow **RESTful standards**, enabling future integration with other systems and external services.
 - The system should be easily deployable in both local and cloud environments.
 
-### 9. Monitoring and Alerts
+### 8. Monitoring and Alerts
 
 - The system must expose **technical metrics** (CPU, memory, latency, throughput, etc.) compatible with tools like **Prometheus and Grafana**.
 - There must be **automatic alerts** for critical errors, service failures, or performance degradation, ensuring rapid response to incidents.
@@ -1084,10 +1071,6 @@ To determine the most important threats included in each STRIDE table, the follo
 
 ### Product Reservation
 
-The most relevant potential threats identified for the AMAPP Product Reservation System were selected based on their significance and potential impact. The STRIDE methodology was applied to these threats to support the analysis and categorization of risks associated with the system.
-
-The following table outlines the most significant security vulnerabilities requiring immediate attention, along with detailed mitigation strategies for each threat. These recommendations should form the foundation of our security hardening plan to protect customer data, maintain system integrity, and ensure business continuity.
-
 
 | **Threat**                                      | **Targeted Element**         | **STRIDE Category**                         | **Description**                                                                                                                                                                              | **Mitigation**                                                                                                                                                                                                                                                   |
 | ----------------------------------------------- | ---------------------------- | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1174,75 +1157,70 @@ The following are the identified abuse cases in the AMAPP system, along with the
 
 ![Use and Abuse Cases - Authentication](diagrams/Abuse%20Cases/auth-abuse-case.png)
 
-This diagram represents a security-focused approach to the AMAPP System’s **Authentication** feature. It combines **Use Cases**, **Abuse Cases**, and **Mitigation Cases** to map out normal user workflows, identify how an attacker might exploit them, and link each threat with an appropriate countermeasure.
 
-#### **Actors**
-
-- **User**: Legitimate end-user interacting with authentication flows.
-- **Attacker**: Malicious actor attempting to abuse authentication mechanisms.
+This diagram represents a security-focused approach using both **Use Cases** and **Abuse Cases** within the authentication feature of the AMAPP System. The main goal is to identify potential threats to the system and link them with appropriate countermeasures.
 
 #### **Use Cases**
 
-- **Register**
-  User creates a new account by providing required credentials and profile data.
-- **Log in**
-  User submits credentials to obtain an authenticated session or JWT.
-- **Change Password**
-  Authenticated user updates their password to a new value.
-- **Recover Password**
-  User initiates a password reset flow to regain access if they forget their password.
+- **Register**  
+  The user creates a new account by providing required credentials and profile information.
 
-#### **Use Case Includes**
+- **Log in**  
+  The user submits credentials to obtain an authenticated session or a valid JWT.
 
-- **Register** ➔ **Log in** (after successful registration, user is often logged in automatically)
-- **Log in** ➔ **Change Password** (user may change password post-login)
-- **Log in** ➔ **Recover Password** (if login fails, user can initiate recovery)
+- **Change Password**  
+  An authenticated user updates their password to a new value.
+
+- **Recover Password**  
+  The user initiates a password reset flow to regain access if they forget their password.
+
+- **Use Case Relationships**  
+  - After successful registration, the user is automatically logged in (Register ➔ Log in).
+  - After logging in, the user may change their password (Log in ➔ Change Password).
+  - If login fails, the user can initiate a password recovery process (Log in ➔ Recover Password).
 
 #### **Abuse Cases**
 
-- **Register Multiple Accounts**
-  Attacker scripts mass account creation to facilitate spam or automated attacks.
-- **Brute Force Login Attack**
-  Attacker attempts many credential guesses to gain unauthorized access.
-- **Unauthorized Password Change**
-  Attacker tries to change another user’s password without owning a valid session.
-- **Password Recovery Abuse**
-  Attacker exploits the reset workflow (e.g. by guessing tokens or abusing email resets).
-- **Authentication Bypass**
-  Attacker finds weaknesses to skip credential checks entirely (e.g. JWT forgery).
-- **Privilege Escalation**
-  Attacker elevates privileges via weak authorization checks post-authentication.
+- **Register Multiple Accounts**  
+  An attacker scripts mass account creation to facilitate spam or automated attacks.
 
-#### **Threatens**
+- **Brute Force Login Attack**  
+  An attacker attempts many credential guesses to gain unauthorized access.
 
-- **Register** — threatens → **Register Multiple Accounts**
-- **Log in** — threatens → **Brute Force Login Attack**, **Authentication Bypass**
-- **Change Password** — threatens → **Unauthorized Password Change**, **Privilege Escalation**
-- **Recover Password** — threatens → **Password Recovery Abuse**
+- **Unauthorized Password Change**  
+  An attacker tries to change another user’s password without owning a valid session.
 
-#### **Mitigation Cases**
+- **Password Recovery Abuse**  
+  An attacker exploits the password reset workflow, such as guessing tokens or abusing the reset process.
 
-- **Apply Rate Limiting**
-  Throttle registration and login endpoints to prevent mass-account creation and brute-force attempts.
-- **Enforce Strong Authentication**
-  Require MFA on login to defeat credential-only attacks.
-- **Session Verification on Password Change**
-  Ensure the user’s session is valid and re-authenticated before allowing password changes.
-- **Secure Password Recovery Workflow**
-  Use time-limited, single-use tokens sent over secure channels; validate thoroughly.
-- **Validate JWT Signature and Claims**
-  Strictly verify token integrity, issuer, expiry, and audience to prevent forgery.
-- **Enforce Authorization per Resource**
-  Check user’s permissions on every protected endpoint to block privilege escalation.
+- **Authentication Bypass**  
+  An attacker finds weaknesses to skip credential checks entirely (e.g., JWT forgery).
 
-#### **Mitigates**
+- **Privilege Escalation**  
+  An attacker elevates their privileges by exploiting weak authorization checks after authentication.
 
-- **Apply Rate Limiting** — mitigates → **Register Multiple Accounts**, **Brute Force Login Attack**
-- **Enforce Strong Authentication** — mitigates → **Brute Force Login Attack**, **Authentication Bypass**
-- **Session Verification on Password Change** — mitigates → **Unauthorized Password Change**
-- **Secure Password Recovery Workflow** — mitigates → **Password Recovery Abuse**
-- **Validate JWT Signature and Claims** — mitigates → **Authentication Bypass**
-- **Enforce Authorization per Resource** — mitigates → **Privilege Escalation**
+#### **Countermeasures**
+
+- **Apply Rate Limiting**  
+  Throttles registration and login endpoints to prevent mass-account creation and brute-force attacks. Mitigates abuse cases Register Multiple Accounts and Brute Force Login Attack.
+
+- **Enforce Strong Authentication**  
+  Requires multi-factor authentication (MFA) on login to defeat credential-only attacks. Mitigates abuse cases Brute Force Login Attack and Authentication Bypass.
+
+- **Session Verification on Password Change**  
+  Ensures the session is valid and may require re-authentication before allowing a password change. Mitigates abuse case Unauthorized Password Change.
+
+- **Secure Password Recovery Workflow**  
+  Uses time-limited, single-use tokens sent over secure channels, with strict validation. Mitigates abuse case Password Recovery Abuse.
+
+- **Validate JWT Signature and Claims**  
+  Strictly verifies token integrity, issuer, expiry, and audience to prevent forgery. Mitigates abuse case Authentication Bypass.
+
+- **Enforce Authorization per Resource**  
+  Checks user permissions on every protected endpoint to prevent privilege escalation. Mitigates abuse case Privilege Escalation.
+
+This model provides a clear foundation for threat analysis, illustrating how the authentication flows could be exploited and what preventive measures are in place.
+
 
 ---
 
@@ -1366,37 +1344,70 @@ This model ensures a balanced view of normal functionality and security needs, a
 
 ![Use and Abuse Cases - User Management](diagrams/Abuse%20Cases/user-management-abuse-case.png)
 
-The Level 1 Data Flow Diagram (DFD) provides a more detailed view of how the AMAPP system handles the management of user accounts and their associated roles and permissions. This diagram decomposes the main system into internal components and shows how data flows between the administrator, the system, and the database.
 
-- **External Actor:**
+This diagram represents a security-focused approach using both **Use Cases** and **Abuse Cases** within the user management feature of the AMAPP System. The main goal is to identify potential threats to the system and link them with appropriate countermeasures.
 
-  - `Administrator`: A privileged user who initiates user management operations (e.g., create/update/delete users, assign roles).
-- **Internal Components:**
+#### **Use Cases**
 
-  - `AMAPP API`: The internal component responsible for processing requests related to user and permission management.
-  - `AMAPP DB`: The database where user accounts and role/permission data are stored.
-- **Data Flows:**
+- **Create/Update/Delete User Account**  
+  The administrator manages user accounts, including creating, updating, or deleting user profiles.
 
-  - `Submit user or permission management request`: The `Administrator` sends a management request (`User Management Request` or `Role/Permission Management Request`) to the `AMAPP API` via HTTPS.
-  - `Create/update/delete user account`: The `AMAPP API` performs operations on the user account in the `AMAPP DB` using secure SQL.
-  - `Assign/update/retrieve roles and permissions`: The `AMAPP API` handles role and permission data in the `AMAPP DB`.
-  - `Return user data`: The `AMAPP DB` returns relevant user information (`User Data Response`) to the `AMAPP API`.
-  - `Return permission/role data`: The `AMAPP DB` returns role and permission information (`Role/Permission Data Response`) to the `AMAPP API`.
-  - `Send operation confirmation or results`: The `AMAPP API` returns the result (`Operation Confirmation or Result`) to the `Administrator`.
-- **Data Objects:**
+- **Assign/Update/Retrieve Roles and Permissions**  
+  The administrator assigns or updates user roles and retrieves permissions when needed.
 
-  - `User Management Request`: Instructions for creating, updating, or deleting a user account.
-  - `Role/Permission Management Request`: Instructions to assign or modify a user’s roles and permissions.
-  - `User Data Response`: Information about user accounts.
-  - `Role/Permission Data Response`: Information about user roles and assigned permissions.
-  - `Operation Confirmation or Result`: Feedback on the success or failure of the requested operation.
-- **Trust Boundaries:**
+- **Return User Data**  
+  The system provides user information to authorized administrators.
 
-  - `Internet`: Where the `Administrator` submits requests.
-  - `AMAPP System`: The internal environment where requests are processed and business logic is applied.
-  - `DB Server`: The secure database zone responsible for storing and retrieving sensitive account and permission data.
+- **Return Permission/Role Data**  
+  The system provides details about roles and permissions to authorized administrators.
 
-This diagram exposes the internal flow of user and permission management in the AMAPP system, supporting both system design and security analysis by detailing protocol use, data handling, and boundary enforcement.
+- **Review Registration Requests**  
+  The administrator reviews new user registration requests for approval.
+
+- **Update Approval Status**  
+  The administrator updates the approval status (e.g., accepting or rejecting registration requests).
+
+#### **Abuse Cases**
+
+- **Account Takeover**  
+  A malicious administrator attempts to hijack user accounts.
+
+- **Privilege Escalation**  
+  A malicious actor assigns themselves elevated roles or permissions without authorization.
+
+- **User Data Exfiltration**  
+  A malicious actor extracts sensitive user information from the system.
+
+- **Permission Enumeration**  
+  An attacker enumerates available roles and permissions to plan privilege escalation or information gathering.
+
+- **Approve Fake Registrations**  
+  A malicious administrator approves fake or fraudulent user registrations.
+
+- **Tamper Approval Process**  
+  A malicious administrator alters the approval workflow to bypass legitimate checks.
+
+#### **Countermeasures**
+
+- **Enforce Strong Authentication (MFA)**  
+  Requires multi-factor authentication to prevent account hijacking. Mitigates abuse case Account Takeover.
+
+- **Strict Role Management Policies**  
+  Applies strict policies for role assignment and modification, minimizing the risk of privilege escalation. Mitigates abuse case Privilege Escalation.
+
+- **Access Control and Logging**  
+  Implements strong access controls and detailed audit logs to detect and prevent data exfiltration. Mitigates abuse case User Data Exfiltration.
+
+- **Limit API Information Disclosure**  
+  Reduces the amount of permission and role data exposed by the API, hindering enumeration attempts. Mitigates abuse case Permission Enumeration.
+
+- **Multi-level Registration Review**  
+  Enforces multiple levels of review and approval for new registrations to detect fake accounts. Mitigates abuse case Approve Fake Registrations.
+
+- **Approval Auditing and Alerts**  
+  Monitors approval actions and generates alerts for suspicious activity. Mitigates abuse case Tamper Approval Process.
+
+This model provides a clear foundation for threat analysis, illustrating how user management functionalities could be exploited and what preventive measures are in place.
 
 ---
 
