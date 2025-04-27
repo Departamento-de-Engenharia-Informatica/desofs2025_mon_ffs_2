@@ -43,7 +43,6 @@ Paulo Abreu - 1240481 <br>
       - [Producer](#producer)
       - [Co-Producer](#co-producer)
       - [AMAP Administrators](#amap-administrators)
-      - [Non-Authenticated User](#non-authenticated-user)
     - [Use Cases](#use-cases)
     - [Functional Requirements](#functional-requirements)
     - [UC01 - Manage Users/Roles](#uc01---manage-usersroles)
@@ -65,10 +64,9 @@ Paulo Abreu - 1240481 <br>
     - [3. Scalability](#3-scalability)
     - [4. Security](#4-security)
     - [5. Reliability and Integrity](#5-reliability-and-integrity)
-    - [6. Usability](#6-usability)
-    - [7. Maintainability](#7-maintainability)
-    - [8. Portability](#8-portability)
-    - [9. Monitoring and Alerts](#9-monitoring-and-alerts)
+    - [6. Maintainability](#6-maintainability)
+    - [7. Portability](#7-portability)
+    - [8. Monitoring and Alerts](#8-monitoring-and-alerts)
     - [Security Requirements](#security-requirements)
       - [Functional Security Requirements (CIA-Based)](#functional-security-requirements-cia-based)
         - [Confidentiality](#confidentiality)
@@ -117,23 +115,25 @@ Paulo Abreu - 1240481 <br>
     - [Risk Register](#risk-register)
   - [Use Cases and Abuse Cases](#use-cases-and-abuse-cases)
     - [Authentication And Registration](#authentication-and-registration)
-      - [**Actors**](#actors)
       - [**Use Cases**](#use-cases-1)
-      - [**Use Case Includes**](#use-case-includes)
       - [**Abuse Cases**](#abuse-cases)
-      - [**Threatens**](#threatens)
-      - [**Mitigation Cases**](#mitigation-cases)
-      - [**Mitigates**](#mitigates)
+      - [**Countermeasures**](#countermeasures)
     - [Create Product](#create-product-2)
       - [**Use Cases**](#use-cases-2)
       - [**Abuse Cases**](#abuse-cases-1)
-      - [**Countermeasures**](#countermeasures)
+      - [**Countermeasures**](#countermeasures-1)
     - [Order Payments Deliveries Reports](#order-payments-deliveries-reports-2)
       - [**Use Cases**](#use-cases-3)
       - [**Abuse Cases**](#abuse-cases-2)
-      - [**Countermeasures**](#countermeasures-1)
+      - [**Countermeasures**](#countermeasures-2)
     - [Product Reservation](#product-reservation-2)
+      - [**Use Cases**](#use-cases-4)
+      - [**Abuse Cases**](#abuse-cases-3)
+      - [**Countermeasures**](#countermeasures-3)
     - [User Management](#user-management-2)
+      - [**Use Cases**](#use-cases-5)
+      - [**Abuse Cases**](#abuse-cases-4)
+      - [**Countermeasures**](#countermeasures-4)
   - [Conclusion](#conclusion)
 
 ---
@@ -335,10 +335,6 @@ Also known as co-producers, consumers play an active role in AMAP's sustainable 
 
 These users oversee the operational management of the system within AMAP. Acting as intermediaries between producers and consumers, they ensure data accuracy on the platform, address user issues or questions, and uphold AMAP’s values of sustainability and transparency. AMAP administrators have the authority to edit and review system content, facilitate updates or changes in practices, and ensure that digital operations align with organizational objectives. They also handle user support issues and facilitate communication among the different stakeholders.
 
-#### Non-Authenticated User
-
-Representing new visitors or those interested in AMAP, these users can browse the system without needing to register. Access is limited to general information about AMAP, its mission, values, and available products. However, they cannot place orders or access data exclusive to authenticated users. This class enables visitors to learn more about AMAP's purpose, encouraging engagement and fostering a path to becoming co-producers.
-
 ---
 
 ### Use Cases
@@ -462,25 +458,19 @@ The non-functional requirements define quality attributes and technical constrai
 - There must be **error and event logging** for **auditability** and recovery.
 - The system must follow the **ACID principle** for relational database operations, and eventual consistency for MongoDB operations.
 
-### 6. Usability
-
-- The interface must be **intuitive, responsive, and accessible**, compatible with both mobile and desktop devices.
-- The application must provide **clear and helpful feedback** to users in case of errors (e.g., failed authentication, invalid form fields).
-- Navigation should be smooth, and user flows must minimize the number of steps required to complete common tasks.
-
-### 7. Maintainability
+### 6. Maintainability
 
 - The code must follow **software engineering best practices**, such as separation of concerns, design patterns, and documentation.
 - The system must allow for **modular updates**, enabling new features to be added without requiring full downtime.
 - There should be **test coverage above 80%** for critical features, including unit, integration, and acceptance tests.
 
-### 8. Portability
+### 7. Portability
 
 - The application must be **compatible with Linux environments**, preferably via **Docker containers** orchestrated with **Kubernetes**.
 - The API must follow **RESTful standards**, enabling future integration with other systems and external services.
 - The system should be easily deployable in both local and cloud environments.
 
-### 9. Monitoring and Alerts
+### 8. Monitoring and Alerts
 
 - The system must expose **technical metrics** (CPU, memory, latency, throughput, etc.) compatible with tools like **Prometheus and Grafana**.
 - There must be **automatic alerts** for critical errors, service failures, or performance degradation, ensuring rapid response to incidents.
@@ -724,15 +714,16 @@ This level shows in greater detail how the system processes and stores data, hel
 
 The Level 0 Data Flow Diagram (DFD) provides a high-level overview of the AMAP/CSA agricultural system. This context diagram illustrates the core interactions between the system's main components and external entities.
 
-At the center of the diagram is the AMAP API, which serves as the core processing unit handling all business logic and operations. The system interacts with three primary user types:
+At the center of the diagram is the `AMAP API`, which serves as the core processing unit handling all business logic and operations. The system interacts with three primary user types:
 
-- Consumers (Co-Producers) who browse products, place orders, and manage their subscriptions. The system responds by providing product information, order confirmations, and various notifications.
-- Producers who manage their product listings, update inventory, and process incoming orders. The system provides them with order notifications and delivery schedules.
-- AMAP Administrators who manage users, organize deliveries, and configure system settings. They receive system status updates, user data, and various reports.
+- **Consumers (Co-Producers)**: Who browse products, place orders, and manage their subscriptions. The system responds by providing product information, order confirmations, and various notifications.
+- **Producers**: Who manage their product listings, update inventory, and process incoming orders. The system provides them with order notifications and delivery schedules.
+- **AMAP Administrators**: Who manage users, organize deliveries, and configure system settings. They receive system status updates, user data, and various reports.
 
-All data persistence is handled through the external AMAP Database, where the API performs read and write operations for user data, orders, products, and inventory information. The database returns the requested data records to the API.
+All data persistence is handled through the external `AMAP Database`, where the API performs read and write operations for user data, orders, products, and inventory information. The database returns the requested data records to the API.
 
 This Level 0 DFD effectively captures the fundamental data exchanges within the sustainable agriculture platform, showing how information flows between the system and its stakeholders without delving into the internal processing details.
+
 
 #### Level 1
 
@@ -742,23 +733,41 @@ The Level 1 Data Flow Diagram (DFD) provides a more detailed view of the AMAP/CS
 
 The diagram is structured with nested boundaries:
 
-AMAP Server serves as the outer boundary
-AMAP System operates within the AMAP Server boundary
-Database Server represents a separate boundary for data storage
-Within the AMAP System boundary, two main components are identified:
+- `AMAP Server` serves as the outer boundary.
+- `AMAP System` operates within the AMAP Server boundary.
+- `Database Server` represents a separate boundary for data storage.
 
-- AMAP API - The core processing component handling business logic, user authentication, and orchestrating the system's operations. It directly interfaces with all external actors and coordinates data operations.
-- AmapDB_API - A dedicated server component that serves as an intermediary layer between the main API and the database, providing abstraction and security for database operations.
+Within the `AMAP System` boundary, two main components are identified:
 
-Outside the system boundary, the AMAP Database exists as an external datastore where all system information is persistently stored.
+- **Internal Components:**
 
-The diagram illustrates several key data flows:
+  - `AMAP API`: The core processing component handling business logic, user authentication, and orchestrating the system's operations. It directly interfaces with all external actors and coordinates data operations.
+  - `AmapDB_API`: A dedicated server component that serves as an intermediary layer between the main API and the database, providing abstraction and security for database operations.
 
-- External Actor Communications: The three user types (Consumers, Producers, and Administrators) send API requests to and receive responses from the AMAP API.
-- Internal Data Processing: The AMAP API sends database requests to the AmapDB_API, which translates these into structured database queries.
-- Data Exchange: The database communication flow shows how CRUD operations are transformed into SQL queries, with result sets being returned and processed back into application-level data.
+- **External Components:**
+
+  - `AMAP Database`: An external datastore where all system information is persistently stored.
+
+- **External Actors:**
+
+  - `Consumer (Co-Producer)`: A user who browses, reserves, or purchases products.
+  - `Producer`: A user who lists and manages agricultural products.
+  - `Administrator`: A user who manages the platform operations and approves user registrations.
+
+- **Data Flows:**
+
+  - `External Actor Communications`: The `Consumers`, `Producers`, and `Administrators` send API requests to and receive responses from the `AMAP API`.
+  - `Internal Data Processing`: The `AMAP API` sends structured database requests to the `AmapDB_API`, which translates them into SQL queries.
+  - `Data Exchange`: The `AmapDB_API` communicates with the `AMAP Database` to perform CRUD operations and returns result sets back to the `AMAP API`.
+
+- **Trust Boundaries:**
+
+  - `Internet`: Where external actors interact with the system.
+  - `AMAP Server`: A secure processing boundary running the application logic.
+  - `Database Server`: A protected boundary where persistent data is securely stored.
 
 This Level 1 DFD demonstrates the system's layered architecture approach, with clear separation between the user interface logic, business processing, and data persistence layers. This architecture enhances security by ensuring database operations are properly abstracted and controlled through dedicated interfaces.
+
 
 ---
 
@@ -831,52 +840,76 @@ This Level 1 DFD illustrates the layered architecture—separating request handl
 
 The Level 0 Data Flow Diagram (DFD) for the AMAP/CSA product purchase flow provides a high-level overview of how consumers interact with the system to browse and reserve agricultural products.
 
-This simplified context diagram focuses specifically on the purchase/reservation process from the consumer perspective. At its core is the AMAP API, which serves as the central processing component that handles all product purchase operations. Unlike the general system overview, this diagram isolates the specific functionality related to product transactions.
+This simplified context diagram focuses specifically on the purchase/reservation process from the consumer perspective. At its core is the `AMAP API`, which serves as the central processing component that handles all product purchase operations. Unlike the general system overview, this diagram isolates the specific functionality related to product transactions.
 
-The diagram shows a single external actor, the Consumer (Co-Producer), who interacts with the system to browse available products and place orders. This focused view highlights the consumer's journey through the purchase process without the complexity of other system interactions.
+- **External Actors:**
 
-The data flows are presented in a logical sequence that follows the typical purchase process:
+  - `Consumer (Co-Producer)`: The user who interacts with the system to browse products and place purchase orders.
 
-The consumer initiates the process by sending a Purchase Request to the system, which includes product selections, order details, and payment information.
+- **Internal Components:**
 
-The AMAP API communicates with the external AMAP Database through Data Operations to store and retrieve purchase-related data, including product queries, order storage, and inventory updates.
+  - `AMAP API`: The backend system that processes purchase requests, interacts with the database, and returns responses to consumers.
+  - `AMAP Database`: The persistent storage for product data, orders, inventory, and payment information.
 
-The database responds with Data Results containing product data, order confirmations, and current inventory status.
+- **Data Flows:**
 
-Finally, the AMAP API sends a Purchase Response back to the consumer with product listings, order confirmations, and payment receipts.
+  - `Purchase Request`: The `Consumer` sends a purchase request to the `AMAP API` including product selections, order details, and payment info.
+  - `Data Operations`: The `AMAP API` communicates with the `AMAP Database` to store and retrieve purchase-related information.
+  - `Data Results`: The `AMAP Database` responds with product data, order confirmations, and inventory status.
+  - `Purchase Response`: The `AMAP API` sends a response back to the `Consumer` containing product listings, order confirmations, and payment receipts.
+
+- **Trust Boundaries:**
+
+  - `Internet`: Where the external `Consumer` accesses the AMAP System.
+  - `AMAP System`: Trusted internal zone where the `AMAP API` processes requests.
+  - `Database Server`: A protected environment where sensitive purchase and payment information is stored securely.
 
 This Level 0 DFD effectively captures the fundamental flow of the purchase process, showing how information moves between the consumer, the system, and the database in a complete transaction cycle. This representation allows stakeholders to understand the high-level purchase flow without being overwhelmed by implementation details.
+
 
 #### Level 1
 
 ![DFD Product Reservation Level 1](diagrams/DFD/Product%20Reservation/amapp_dfd_productReservation_1.png)
 
-The Level 1 Data Flow Diagram (DFD) for the AMAP/CSA product reservation process provides a detailed view of the system components involved in the consumer product reservation journey. Unlike the Level 0 diagram which presented a high-level overview, this diagram breaks down the internal processes and data flows that facilitate the reservation experience.
+The Level 1 Data Flow Diagram (DFD) expands the context-level view of the product reservation process in the AMAP/CSA system. It decomposes the internal system into subprocesses, introduces data storage, and clearly defines trust boundaries and specific data flows.
 
-The diagram defines two main boundaries:
+- **External Actors:**
 
-AMAP System containing the application processes
-Database Server containing the data persistence layer
-Within the AMAP System boundary, four distinct processes work together to handle the product reservation workflow:
+  - `Co-Producer (Consumer)`: The user who browses available products and makes reservation requests.
 
-- Product Catalog - Manages product listings and inventory information, serving as the entry point for consumers browsing available products.
-- Order Management - Handles order creation and processing, coordinating the overall reservation workflow.
-- Reservation Processing - Specifically manages product reservation requests, ensuring products are properly reserved for consumers.
-- Delivery Management - Handles product delivery coordination after reservation.
+- **Internal Components:**
 
-The diagram shows a single external actor, the Co-Producer (consumer), who interacts with the system to browse products and make reservations.
+  - `Product Catalog`: Manages product listings and inventory information, enabling consumers to browse products.
+  - `Order Management`: Handles order creation and oversees the reservation workflow coordination.
+  - `Reservation Processing`: Manages the reservation of products, ensuring they are correctly reserved for the consumer.
+  - `Delivery Management`: Coordinates the logistics for delivering reserved products.
+  - `AMAP DB`: The database where product, order, reservation, and delivery information are persistently stored.
 
-The data flows illustrate a comprehensive reservation process:
+- **Data Flows:**
 
-The consumer begins by browsing products, with product information flowing from the catalog.
-Once products are selected, the consumer places an order that is processed by Order Management.
-Order Management checks product availability through the Product Catalog.
-The reservation is processed by the Reservation Processing component.
-Delivery details are managed by the Delivery Management component.
-Throughout the process, data is stored and retrieved from the external AMAP Database.
-This Level 1 DFD reveals how the system's modular architecture separates concerns into distinct processing components, each handling a specific part of the reservation workflow. The diagram shows not only the consumer-facing interactions but also the important internal communications between components that ensure the reservation process functions correctly.
+  - `Browse products`: The `Co-Producer` requests product information from the `Product Catalog` via the AMAP System.
+  - `Place reservation order`: After selecting products, the `Co-Producer` submits an order (`Reservation Request`) to `Order Management`.
+  - `Check product availability`: `Order Management` queries the `Product Catalog` to verify stock before confirming the reservation.
+  - `Process reservation`: `Reservation Processing` finalizes the reservation and allocates the products.
+  - `Coordinate delivery`: `Delivery Management` arranges the delivery based on the reservation details.
+  - `Data persistence`: Throughout the process, information (`Product Data`, `Order Data`, `Reservation Data`, `Delivery Data`) is stored and retrieved from the `AMAP DB`.
 
-By breaking down the process into these components, the system achieves better maintainability and security through separation of responsibilities while providing a seamless experience for consumers reserving agricultural products.
+- **Data Objects:**
+
+  - `Product Data`: Information about products available for reservation.
+  - `Reservation Request`: Consumer's selection of products to reserve.
+  - `Order Data`: Detailed record of the consumer’s reservation.
+  - `Reservation Data`: Confirmation and allocation of reserved products.
+  - `Delivery Data`: Information related to the logistics of delivering reserved products.
+
+- **Trust Boundaries:**
+
+  - `Internet`: Where the `Co-Producer` interacts with the AMAP System.
+  - `AMAP System`: Internal zone that manages application logic and coordinates reservations and deliveries.
+  - `Database Server`: A protected zone responsible for securely storing product, order, reservation, and delivery data.
+
+This level of detail highlights how modularization into separate processes (Catalog, Order Management, Reservation, Delivery) improves system maintainability and security while ensuring a smooth and reliable reservation experience for the consumer.
+
 
 ---
 
@@ -1084,10 +1117,6 @@ To determine the most important threats included in each STRIDE table, the follo
 
 ### Product Reservation
 
-The most relevant potential threats identified for the AMAPP Product Reservation System were selected based on their significance and potential impact. The STRIDE methodology was applied to these threats to support the analysis and categorization of risks associated with the system.
-
-The following table outlines the most significant security vulnerabilities requiring immediate attention, along with detailed mitigation strategies for each threat. These recommendations should form the foundation of our security hardening plan to protect customer data, maintain system integrity, and ensure business continuity.
-
 
 | **Threat**                                      | **Targeted Element**         | **STRIDE Category**                         | **Description**                                                                                                                                                                              | **Mitigation**                                                                                                                                                                                                                                                   |
 | ----------------------------------------------- | ---------------------------- | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1174,75 +1203,70 @@ The following are the identified abuse cases in the AMAPP system, along with the
 
 ![Use and Abuse Cases - Authentication](diagrams/Abuse%20Cases/auth-abuse-case.png)
 
-This diagram represents a security-focused approach to the AMAPP System’s **Authentication** feature. It combines **Use Cases**, **Abuse Cases**, and **Mitigation Cases** to map out normal user workflows, identify how an attacker might exploit them, and link each threat with an appropriate countermeasure.
 
-#### **Actors**
-
-- **User**: Legitimate end-user interacting with authentication flows.
-- **Attacker**: Malicious actor attempting to abuse authentication mechanisms.
+This diagram represents a security-focused approach using both **Use Cases** and **Abuse Cases** within the authentication feature of the AMAPP System. The main goal is to identify potential threats to the system and link them with appropriate countermeasures.
 
 #### **Use Cases**
 
-- **Register**
-  User creates a new account by providing required credentials and profile data.
-- **Log in**
-  User submits credentials to obtain an authenticated session or JWT.
-- **Change Password**
-  Authenticated user updates their password to a new value.
-- **Recover Password**
-  User initiates a password reset flow to regain access if they forget their password.
+- **Register**  
+  The user creates a new account by providing required credentials and profile information.
 
-#### **Use Case Includes**
+- **Log in**  
+  The user submits credentials to obtain an authenticated session or a valid JWT.
 
-- **Register** ➔ **Log in** (after successful registration, user is often logged in automatically)
-- **Log in** ➔ **Change Password** (user may change password post-login)
-- **Log in** ➔ **Recover Password** (if login fails, user can initiate recovery)
+- **Change Password**  
+  An authenticated user updates their password to a new value.
+
+- **Recover Password**  
+  The user initiates a password reset flow to regain access if they forget their password.
+
+- **Use Case Relationships**  
+  - After successful registration, the user is automatically logged in (Register ➔ Log in).
+  - After logging in, the user may change their password (Log in ➔ Change Password).
+  - If login fails, the user can initiate a password recovery process (Log in ➔ Recover Password).
 
 #### **Abuse Cases**
 
-- **Register Multiple Accounts**
-  Attacker scripts mass account creation to facilitate spam or automated attacks.
-- **Brute Force Login Attack**
-  Attacker attempts many credential guesses to gain unauthorized access.
-- **Unauthorized Password Change**
-  Attacker tries to change another user’s password without owning a valid session.
-- **Password Recovery Abuse**
-  Attacker exploits the reset workflow (e.g. by guessing tokens or abusing email resets).
-- **Authentication Bypass**
-  Attacker finds weaknesses to skip credential checks entirely (e.g. JWT forgery).
-- **Privilege Escalation**
-  Attacker elevates privileges via weak authorization checks post-authentication.
+- **Register Multiple Accounts**  
+  An attacker scripts mass account creation to facilitate spam or automated attacks.
 
-#### **Threatens**
+- **Brute Force Login Attack**  
+  An attacker attempts many credential guesses to gain unauthorized access.
 
-- **Register** — threatens → **Register Multiple Accounts**
-- **Log in** — threatens → **Brute Force Login Attack**, **Authentication Bypass**
-- **Change Password** — threatens → **Unauthorized Password Change**, **Privilege Escalation**
-- **Recover Password** — threatens → **Password Recovery Abuse**
+- **Unauthorized Password Change**  
+  An attacker tries to change another user’s password without owning a valid session.
 
-#### **Mitigation Cases**
+- **Password Recovery Abuse**  
+  An attacker exploits the password reset workflow, such as guessing tokens or abusing the reset process.
 
-- **Apply Rate Limiting**
-  Throttle registration and login endpoints to prevent mass-account creation and brute-force attempts.
-- **Enforce Strong Authentication**
-  Require MFA on login to defeat credential-only attacks.
-- **Session Verification on Password Change**
-  Ensure the user’s session is valid and re-authenticated before allowing password changes.
-- **Secure Password Recovery Workflow**
-  Use time-limited, single-use tokens sent over secure channels; validate thoroughly.
-- **Validate JWT Signature and Claims**
-  Strictly verify token integrity, issuer, expiry, and audience to prevent forgery.
-- **Enforce Authorization per Resource**
-  Check user’s permissions on every protected endpoint to block privilege escalation.
+- **Authentication Bypass**  
+  An attacker finds weaknesses to skip credential checks entirely (e.g., JWT forgery).
 
-#### **Mitigates**
+- **Privilege Escalation**  
+  An attacker elevates their privileges by exploiting weak authorization checks after authentication.
 
-- **Apply Rate Limiting** — mitigates → **Register Multiple Accounts**, **Brute Force Login Attack**
-- **Enforce Strong Authentication** — mitigates → **Brute Force Login Attack**, **Authentication Bypass**
-- **Session Verification on Password Change** — mitigates → **Unauthorized Password Change**
-- **Secure Password Recovery Workflow** — mitigates → **Password Recovery Abuse**
-- **Validate JWT Signature and Claims** — mitigates → **Authentication Bypass**
-- **Enforce Authorization per Resource** — mitigates → **Privilege Escalation**
+#### **Countermeasures**
+
+- **Apply Rate Limiting**  
+  Throttles registration and login endpoints to prevent mass-account creation and brute-force attacks. Mitigates abuse cases Register Multiple Accounts and Brute Force Login Attack.
+
+- **Enforce Strong Authentication**  
+  Requires multi-factor authentication (MFA) on login to defeat credential-only attacks. Mitigates abuse cases Brute Force Login Attack and Authentication Bypass.
+
+- **Session Verification on Password Change**  
+  Ensures the session is valid and may require re-authentication before allowing a password change. Mitigates abuse case Unauthorized Password Change.
+
+- **Secure Password Recovery Workflow**  
+  Uses time-limited, single-use tokens sent over secure channels, with strict validation. Mitigates abuse case Password Recovery Abuse.
+
+- **Validate JWT Signature and Claims**  
+  Strictly verifies token integrity, issuer, expiry, and audience to prevent forgery. Mitigates abuse case Authentication Bypass.
+
+- **Enforce Authorization per Resource**  
+  Checks user permissions on every protected endpoint to prevent privilege escalation. Mitigates abuse case Privilege Escalation.
+
+This model provides a clear foundation for threat analysis, illustrating how the authentication flows could be exploited and what preventive measures are in place.
+
 
 ---
 
@@ -1337,28 +1361,46 @@ This model provides a clear foundation for threat analysis, illustrating how the
 
 ![Use and Abuse Cases - Product Reservation](diagrams/Abuse%20Cases/product-reservation-abuse-cases.png)
 
-The diagram illustrates the **Use Cases**, **Abuse Cases**, and **Countermeasures** for the AMAP System.
+This diagram represents a security-focused approach using both **Use Cases** and **Abuse Cases** within the authentication feature of the AMAPP System. The main goal is to identify potential threats to the system and link them with appropriate countermeasures.
 
-Legitimate actors, like the Co-Producer, interact with the system to:
+#### **Use Cases**
 
-- **Browse product catalogs**
-- **Select products**
-- **Place orders**
+- **Browse product catalogs**  
+  The Co-Producer interacts with the system to view available products.
 
-However, potential threats arise from malicious users attempting abuse cases such as:
+- **Select products**  
+  The Co-Producer chooses products from the catalog to reserve.
 
-- **Submitting fraudulent orders**
-- **Performing SQL injections**
-- **Intercepting user credentials**
-- **Manipulating product prices**
+- **Place orders**  
+  The Co-Producer submits a reservation request to place an order for selected products.
 
-To mitigate these threats, the system implements strong countermeasures:
+#### **Abuse Cases**
 
-- **Using secure connections** prevents interception of sensitive data.
-- **Two-factor authentication (2FA)** protects user accounts against unauthorized access.
-- The server **verifies order details**, validating prices and quantities against the database to prevent price manipulation.
+- **Submit fraudulent orders**  
+  A malicious actor submits fake orders to exploit the system.
+
+- **Perform SQL injections**  
+  An attacker attempts to inject malicious SQL queries into the system to retrieve or manipulate data.
+
+- **Intercept user credentials**  
+  A hacker intercepts sensitive data, like user credentials, during transmission to compromise accounts.
+
+- **Manipulate product prices**  
+  An attacker attempts to change product prices to their advantage.
+
+#### **Countermeasures**
+
+- **Using secure connections**  
+  Prevents interception of sensitive data by using encryption protocols like HTTPS.
+
+- **Two-factor authentication (2FA)**  
+  Protects user accounts by requiring an additional verification step beyond just the password.
+
+- **Verify order details**  
+  The system checks prices and quantities against the database to ensure accuracy and prevent manipulation.
 
 This model ensures a balanced view of normal functionality and security needs, aligning protective mechanisms with potential vulnerabilities to maintain the system’s integrity.
+
 
 ---
 
@@ -1366,37 +1408,70 @@ This model ensures a balanced view of normal functionality and security needs, a
 
 ![Use and Abuse Cases - User Management](diagrams/Abuse%20Cases/user-management-abuse-case.png)
 
-The Level 1 Data Flow Diagram (DFD) provides a more detailed view of how the AMAPP system handles the management of user accounts and their associated roles and permissions. This diagram decomposes the main system into internal components and shows how data flows between the administrator, the system, and the database.
 
-- **External Actor:**
+This diagram represents a security-focused approach using both **Use Cases** and **Abuse Cases** within the user management feature of the AMAPP System. The main goal is to identify potential threats to the system and link them with appropriate countermeasures.
 
-  - `Administrator`: A privileged user who initiates user management operations (e.g., create/update/delete users, assign roles).
-- **Internal Components:**
+#### **Use Cases**
 
-  - `AMAPP API`: The internal component responsible for processing requests related to user and permission management.
-  - `AMAPP DB`: The database where user accounts and role/permission data are stored.
-- **Data Flows:**
+- **Create/Update/Delete User Account**  
+  The administrator manages user accounts, including creating, updating, or deleting user profiles.
 
-  - `Submit user or permission management request`: The `Administrator` sends a management request (`User Management Request` or `Role/Permission Management Request`) to the `AMAPP API` via HTTPS.
-  - `Create/update/delete user account`: The `AMAPP API` performs operations on the user account in the `AMAPP DB` using secure SQL.
-  - `Assign/update/retrieve roles and permissions`: The `AMAPP API` handles role and permission data in the `AMAPP DB`.
-  - `Return user data`: The `AMAPP DB` returns relevant user information (`User Data Response`) to the `AMAPP API`.
-  - `Return permission/role data`: The `AMAPP DB` returns role and permission information (`Role/Permission Data Response`) to the `AMAPP API`.
-  - `Send operation confirmation or results`: The `AMAPP API` returns the result (`Operation Confirmation or Result`) to the `Administrator`.
-- **Data Objects:**
+- **Assign/Update/Retrieve Roles and Permissions**  
+  The administrator assigns or updates user roles and retrieves permissions when needed.
 
-  - `User Management Request`: Instructions for creating, updating, or deleting a user account.
-  - `Role/Permission Management Request`: Instructions to assign or modify a user’s roles and permissions.
-  - `User Data Response`: Information about user accounts.
-  - `Role/Permission Data Response`: Information about user roles and assigned permissions.
-  - `Operation Confirmation or Result`: Feedback on the success or failure of the requested operation.
-- **Trust Boundaries:**
+- **Return User Data**  
+  The system provides user information to authorized administrators.
 
-  - `Internet`: Where the `Administrator` submits requests.
-  - `AMAPP System`: The internal environment where requests are processed and business logic is applied.
-  - `DB Server`: The secure database zone responsible for storing and retrieving sensitive account and permission data.
+- **Return Permission/Role Data**  
+  The system provides details about roles and permissions to authorized administrators.
 
-This diagram exposes the internal flow of user and permission management in the AMAPP system, supporting both system design and security analysis by detailing protocol use, data handling, and boundary enforcement.
+- **Review Registration Requests**  
+  The administrator reviews new user registration requests for approval.
+
+- **Update Approval Status**  
+  The administrator updates the approval status (e.g., accepting or rejecting registration requests).
+
+#### **Abuse Cases**
+
+- **Account Takeover**  
+  A malicious administrator attempts to hijack user accounts.
+
+- **Privilege Escalation**  
+  A malicious actor assigns themselves elevated roles or permissions without authorization.
+
+- **User Data Exfiltration**  
+  A malicious actor extracts sensitive user information from the system.
+
+- **Permission Enumeration**  
+  An attacker enumerates available roles and permissions to plan privilege escalation or information gathering.
+
+- **Approve Fake Registrations**  
+  A malicious administrator approves fake or fraudulent user registrations.
+
+- **Tamper Approval Process**  
+  A malicious administrator alters the approval workflow to bypass legitimate checks.
+
+#### **Countermeasures**
+
+- **Enforce Strong Authentication (MFA)**  
+  Requires multi-factor authentication to prevent account hijacking. Mitigates abuse case Account Takeover.
+
+- **Strict Role Management Policies**  
+  Applies strict policies for role assignment and modification, minimizing the risk of privilege escalation. Mitigates abuse case Privilege Escalation.
+
+- **Access Control and Logging**  
+  Implements strong access controls and detailed audit logs to detect and prevent data exfiltration. Mitigates abuse case User Data Exfiltration.
+
+- **Limit API Information Disclosure**  
+  Reduces the amount of permission and role data exposed by the API, hindering enumeration attempts. Mitigates abuse case Permission Enumeration.
+
+- **Multi-level Registration Review**  
+  Enforces multiple levels of review and approval for new registrations to detect fake accounts. Mitigates abuse case Approve Fake Registrations.
+
+- **Approval Auditing and Alerts**  
+  Monitors approval actions and generates alerts for suspicious activity. Mitigates abuse case Tamper Approval Process.
+
+This model provides a clear foundation for threat analysis, illustrating how user management functionalities could be exploited and what preventive measures are in place.
 
 ---
 
