@@ -127,10 +127,13 @@ Paulo Abreu - 1240481 <br>
       - [**Abuse Cases**](#abuse-cases-2)
       - [**Countermeasures**](#countermeasures-2)
     - [Product Reservation](#product-reservation-2)
-    - [User Management](#user-management-2)
       - [**Use Cases**](#use-cases-4)
       - [**Abuse Cases**](#abuse-cases-3)
       - [**Countermeasures**](#countermeasures-3)
+    - [User Management](#user-management-2)
+      - [**Use Cases**](#use-cases-5)
+      - [**Abuse Cases**](#abuse-cases-4)
+      - [**Countermeasures**](#countermeasures-4)
   - [Conclusion](#conclusion)
 
 ---
@@ -711,15 +714,16 @@ This level shows in greater detail how the system processes and stores data, hel
 
 The Level 0 Data Flow Diagram (DFD) provides a high-level overview of the AMAP/CSA agricultural system. This context diagram illustrates the core interactions between the system's main components and external entities.
 
-At the center of the diagram is the AMAP API, which serves as the core processing unit handling all business logic and operations. The system interacts with three primary user types:
+At the center of the diagram is the `AMAP API`, which serves as the core processing unit handling all business logic and operations. The system interacts with three primary user types:
 
-- Consumers (Co-Producers) who browse products, place orders, and manage their subscriptions. The system responds by providing product information, order confirmations, and various notifications.
-- Producers who manage their product listings, update inventory, and process incoming orders. The system provides them with order notifications and delivery schedules.
-- AMAP Administrators who manage users, organize deliveries, and configure system settings. They receive system status updates, user data, and various reports.
+- **Consumers (Co-Producers)**: Who browse products, place orders, and manage their subscriptions. The system responds by providing product information, order confirmations, and various notifications.
+- **Producers**: Who manage their product listings, update inventory, and process incoming orders. The system provides them with order notifications and delivery schedules.
+- **AMAP Administrators**: Who manage users, organize deliveries, and configure system settings. They receive system status updates, user data, and various reports.
 
-All data persistence is handled through the external AMAP Database, where the API performs read and write operations for user data, orders, products, and inventory information. The database returns the requested data records to the API.
+All data persistence is handled through the external `AMAP Database`, where the API performs read and write operations for user data, orders, products, and inventory information. The database returns the requested data records to the API.
 
 This Level 0 DFD effectively captures the fundamental data exchanges within the sustainable agriculture platform, showing how information flows between the system and its stakeholders without delving into the internal processing details.
+
 
 #### Level 1
 
@@ -729,23 +733,41 @@ The Level 1 Data Flow Diagram (DFD) provides a more detailed view of the AMAP/CS
 
 The diagram is structured with nested boundaries:
 
-AMAP Server serves as the outer boundary
-AMAP System operates within the AMAP Server boundary
-Database Server represents a separate boundary for data storage
-Within the AMAP System boundary, two main components are identified:
+- `AMAP Server` serves as the outer boundary.
+- `AMAP System` operates within the AMAP Server boundary.
+- `Database Server` represents a separate boundary for data storage.
 
-- AMAP API - The core processing component handling business logic, user authentication, and orchestrating the system's operations. It directly interfaces with all external actors and coordinates data operations.
-- AmapDB_API - A dedicated server component that serves as an intermediary layer between the main API and the database, providing abstraction and security for database operations.
+Within the `AMAP System` boundary, two main components are identified:
 
-Outside the system boundary, the AMAP Database exists as an external datastore where all system information is persistently stored.
+- **Internal Components:**
 
-The diagram illustrates several key data flows:
+  - `AMAP API`: The core processing component handling business logic, user authentication, and orchestrating the system's operations. It directly interfaces with all external actors and coordinates data operations.
+  - `AmapDB_API`: A dedicated server component that serves as an intermediary layer between the main API and the database, providing abstraction and security for database operations.
 
-- External Actor Communications: The three user types (Consumers, Producers, and Administrators) send API requests to and receive responses from the AMAP API.
-- Internal Data Processing: The AMAP API sends database requests to the AmapDB_API, which translates these into structured database queries.
-- Data Exchange: The database communication flow shows how CRUD operations are transformed into SQL queries, with result sets being returned and processed back into application-level data.
+- **External Components:**
+
+  - `AMAP Database`: An external datastore where all system information is persistently stored.
+
+- **External Actors:**
+
+  - `Consumer (Co-Producer)`: A user who browses, reserves, or purchases products.
+  - `Producer`: A user who lists and manages agricultural products.
+  - `Administrator`: A user who manages the platform operations and approves user registrations.
+
+- **Data Flows:**
+
+  - `External Actor Communications`: The `Consumers`, `Producers`, and `Administrators` send API requests to and receive responses from the `AMAP API`.
+  - `Internal Data Processing`: The `AMAP API` sends structured database requests to the `AmapDB_API`, which translates them into SQL queries.
+  - `Data Exchange`: The `AmapDB_API` communicates with the `AMAP Database` to perform CRUD operations and returns result sets back to the `AMAP API`.
+
+- **Trust Boundaries:**
+
+  - `Internet`: Where external actors interact with the system.
+  - `AMAP Server`: A secure processing boundary running the application logic.
+  - `Database Server`: A protected boundary where persistent data is securely stored.
 
 This Level 1 DFD demonstrates the system's layered architecture approach, with clear separation between the user interface logic, business processing, and data persistence layers. This architecture enhances security by ensuring database operations are properly abstracted and controlled through dedicated interfaces.
+
 
 ---
 
@@ -818,52 +840,76 @@ This Level 1 DFD illustrates the layered architecture—separating request handl
 
 The Level 0 Data Flow Diagram (DFD) for the AMAP/CSA product purchase flow provides a high-level overview of how consumers interact with the system to browse and reserve agricultural products.
 
-This simplified context diagram focuses specifically on the purchase/reservation process from the consumer perspective. At its core is the AMAP API, which serves as the central processing component that handles all product purchase operations. Unlike the general system overview, this diagram isolates the specific functionality related to product transactions.
+This simplified context diagram focuses specifically on the purchase/reservation process from the consumer perspective. At its core is the `AMAP API`, which serves as the central processing component that handles all product purchase operations. Unlike the general system overview, this diagram isolates the specific functionality related to product transactions.
 
-The diagram shows a single external actor, the Consumer (Co-Producer), who interacts with the system to browse available products and place orders. This focused view highlights the consumer's journey through the purchase process without the complexity of other system interactions.
+- **External Actors:**
 
-The data flows are presented in a logical sequence that follows the typical purchase process:
+  - `Consumer (Co-Producer)`: The user who interacts with the system to browse products and place purchase orders.
 
-The consumer initiates the process by sending a Purchase Request to the system, which includes product selections, order details, and payment information.
+- **Internal Components:**
 
-The AMAP API communicates with the external AMAP Database through Data Operations to store and retrieve purchase-related data, including product queries, order storage, and inventory updates.
+  - `AMAP API`: The backend system that processes purchase requests, interacts with the database, and returns responses to consumers.
+  - `AMAP Database`: The persistent storage for product data, orders, inventory, and payment information.
 
-The database responds with Data Results containing product data, order confirmations, and current inventory status.
+- **Data Flows:**
 
-Finally, the AMAP API sends a Purchase Response back to the consumer with product listings, order confirmations, and payment receipts.
+  - `Purchase Request`: The `Consumer` sends a purchase request to the `AMAP API` including product selections, order details, and payment info.
+  - `Data Operations`: The `AMAP API` communicates with the `AMAP Database` to store and retrieve purchase-related information.
+  - `Data Results`: The `AMAP Database` responds with product data, order confirmations, and inventory status.
+  - `Purchase Response`: The `AMAP API` sends a response back to the `Consumer` containing product listings, order confirmations, and payment receipts.
+
+- **Trust Boundaries:**
+
+  - `Internet`: Where the external `Consumer` accesses the AMAP System.
+  - `AMAP System`: Trusted internal zone where the `AMAP API` processes requests.
+  - `Database Server`: A protected environment where sensitive purchase and payment information is stored securely.
 
 This Level 0 DFD effectively captures the fundamental flow of the purchase process, showing how information moves between the consumer, the system, and the database in a complete transaction cycle. This representation allows stakeholders to understand the high-level purchase flow without being overwhelmed by implementation details.
+
 
 #### Level 1
 
 ![DFD Product Reservation Level 1](diagrams/DFD/Product%20Reservation/amapp_dfd_productReservation_1.png)
 
-The Level 1 Data Flow Diagram (DFD) for the AMAP/CSA product reservation process provides a detailed view of the system components involved in the consumer product reservation journey. Unlike the Level 0 diagram which presented a high-level overview, this diagram breaks down the internal processes and data flows that facilitate the reservation experience.
+The Level 1 Data Flow Diagram (DFD) expands the context-level view of the product reservation process in the AMAP/CSA system. It decomposes the internal system into subprocesses, introduces data storage, and clearly defines trust boundaries and specific data flows.
 
-The diagram defines two main boundaries:
+- **External Actors:**
 
-AMAP System containing the application processes
-Database Server containing the data persistence layer
-Within the AMAP System boundary, four distinct processes work together to handle the product reservation workflow:
+  - `Co-Producer (Consumer)`: The user who browses available products and makes reservation requests.
 
-- Product Catalog - Manages product listings and inventory information, serving as the entry point for consumers browsing available products.
-- Order Management - Handles order creation and processing, coordinating the overall reservation workflow.
-- Reservation Processing - Specifically manages product reservation requests, ensuring products are properly reserved for consumers.
-- Delivery Management - Handles product delivery coordination after reservation.
+- **Internal Components:**
 
-The diagram shows a single external actor, the Co-Producer (consumer), who interacts with the system to browse products and make reservations.
+  - `Product Catalog`: Manages product listings and inventory information, enabling consumers to browse products.
+  - `Order Management`: Handles order creation and oversees the reservation workflow coordination.
+  - `Reservation Processing`: Manages the reservation of products, ensuring they are correctly reserved for the consumer.
+  - `Delivery Management`: Coordinates the logistics for delivering reserved products.
+  - `AMAP DB`: The database where product, order, reservation, and delivery information are persistently stored.
 
-The data flows illustrate a comprehensive reservation process:
+- **Data Flows:**
 
-The consumer begins by browsing products, with product information flowing from the catalog.
-Once products are selected, the consumer places an order that is processed by Order Management.
-Order Management checks product availability through the Product Catalog.
-The reservation is processed by the Reservation Processing component.
-Delivery details are managed by the Delivery Management component.
-Throughout the process, data is stored and retrieved from the external AMAP Database.
-This Level 1 DFD reveals how the system's modular architecture separates concerns into distinct processing components, each handling a specific part of the reservation workflow. The diagram shows not only the consumer-facing interactions but also the important internal communications between components that ensure the reservation process functions correctly.
+  - `Browse products`: The `Co-Producer` requests product information from the `Product Catalog` via the AMAP System.
+  - `Place reservation order`: After selecting products, the `Co-Producer` submits an order (`Reservation Request`) to `Order Management`.
+  - `Check product availability`: `Order Management` queries the `Product Catalog` to verify stock before confirming the reservation.
+  - `Process reservation`: `Reservation Processing` finalizes the reservation and allocates the products.
+  - `Coordinate delivery`: `Delivery Management` arranges the delivery based on the reservation details.
+  - `Data persistence`: Throughout the process, information (`Product Data`, `Order Data`, `Reservation Data`, `Delivery Data`) is stored and retrieved from the `AMAP DB`.
 
-By breaking down the process into these components, the system achieves better maintainability and security through separation of responsibilities while providing a seamless experience for consumers reserving agricultural products.
+- **Data Objects:**
+
+  - `Product Data`: Information about products available for reservation.
+  - `Reservation Request`: Consumer's selection of products to reserve.
+  - `Order Data`: Detailed record of the consumer’s reservation.
+  - `Reservation Data`: Confirmation and allocation of reserved products.
+  - `Delivery Data`: Information related to the logistics of delivering reserved products.
+
+- **Trust Boundaries:**
+
+  - `Internet`: Where the `Co-Producer` interacts with the AMAP System.
+  - `AMAP System`: Internal zone that manages application logic and coordinates reservations and deliveries.
+  - `Database Server`: A protected zone responsible for securely storing product, order, reservation, and delivery data.
+
+This level of detail highlights how modularization into separate processes (Catalog, Order Management, Reservation, Delivery) improves system maintainability and security while ensuring a smooth and reliable reservation experience for the consumer.
+
 
 ---
 
@@ -1315,28 +1361,46 @@ This model provides a clear foundation for threat analysis, illustrating how the
 
 ![Use and Abuse Cases - Product Reservation](diagrams/Abuse%20Cases/product-reservation-abuse-cases.png)
 
-The diagram illustrates the **Use Cases**, **Abuse Cases**, and **Countermeasures** for the AMAP System.
+This diagram represents a security-focused approach using both **Use Cases** and **Abuse Cases** within the authentication feature of the AMAPP System. The main goal is to identify potential threats to the system and link them with appropriate countermeasures.
 
-Legitimate actors, like the Co-Producer, interact with the system to:
+#### **Use Cases**
 
-- **Browse product catalogs**
-- **Select products**
-- **Place orders**
+- **Browse product catalogs**  
+  The Co-Producer interacts with the system to view available products.
 
-However, potential threats arise from malicious users attempting abuse cases such as:
+- **Select products**  
+  The Co-Producer chooses products from the catalog to reserve.
 
-- **Submitting fraudulent orders**
-- **Performing SQL injections**
-- **Intercepting user credentials**
-- **Manipulating product prices**
+- **Place orders**  
+  The Co-Producer submits a reservation request to place an order for selected products.
 
-To mitigate these threats, the system implements strong countermeasures:
+#### **Abuse Cases**
 
-- **Using secure connections** prevents interception of sensitive data.
-- **Two-factor authentication (2FA)** protects user accounts against unauthorized access.
-- The server **verifies order details**, validating prices and quantities against the database to prevent price manipulation.
+- **Submit fraudulent orders**  
+  A malicious actor submits fake orders to exploit the system.
+
+- **Perform SQL injections**  
+  An attacker attempts to inject malicious SQL queries into the system to retrieve or manipulate data.
+
+- **Intercept user credentials**  
+  A hacker intercepts sensitive data, like user credentials, during transmission to compromise accounts.
+
+- **Manipulate product prices**  
+  An attacker attempts to change product prices to their advantage.
+
+#### **Countermeasures**
+
+- **Using secure connections**  
+  Prevents interception of sensitive data by using encryption protocols like HTTPS.
+
+- **Two-factor authentication (2FA)**  
+  Protects user accounts by requiring an additional verification step beyond just the password.
+
+- **Verify order details**  
+  The system checks prices and quantities against the database to ensure accuracy and prevent manipulation.
 
 This model ensures a balanced view of normal functionality and security needs, aligning protective mechanisms with potential vulnerabilities to maintain the system’s integrity.
+
 
 ---
 
