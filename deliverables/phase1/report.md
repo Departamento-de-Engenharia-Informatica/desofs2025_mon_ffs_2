@@ -13,7 +13,7 @@ Ilídio Magalhães - 1191577 <br>
 Hugo Coelho - 1162086 <br>
 Pedro Oliveira - 1240482 <br>
 Paulo Abreu - 1240481 <br>
-...
+
 **Location:** Porto, April 27, 2025
 
 ---
@@ -115,25 +115,25 @@ Paulo Abreu - 1240481 <br>
     - [Risk Register](#risk-register)
   - [Use Cases and Abuse Cases](#use-cases-and-abuse-cases)
     - [Authentication And Registration](#authentication-and-registration)
-      - [**Use Cases**](#use-cases-1)
-      - [**Abuse Cases**](#abuse-cases)
-      - [**Countermeasures**](#countermeasures)
+      - [Use Cases](#use-cases-1)
+      - [Abuse Cases](#abuse-cases)
+      - [Countermeasures](#countermeasures)
     - [Create Product](#create-product-2)
-      - [**Use Cases**](#use-cases-2)
-      - [**Abuse Cases**](#abuse-cases-1)
-      - [**Countermeasures**](#countermeasures-1)
+      - [Use Cases](#use-cases-2)
+      - [Abuse Cases](#abuse-cases-1)
+      - [Countermeasures](#countermeasures-1)
     - [Order Payments Deliveries Reports](#order-payments-deliveries-reports-2)
-      - [**Use Cases**](#use-cases-3)
-      - [**Abuse Cases**](#abuse-cases-2)
-      - [**Countermeasures**](#countermeasures-2)
+      - [Use Cases](#use-cases-3)
+      - [Abuse Cases](#abuse-cases-2)
+      - [Countermeasures](#countermeasures-2)
     - [Product Reservation](#product-reservation-2)
-      - [**Use Cases**](#use-cases-4)
-      - [**Abuse Cases**](#abuse-cases-3)
-      - [**Countermeasures**](#countermeasures-3)
+      - [Use Cases](#use-cases-4)
+      - [Abuse Cases](#abuse-cases-3)
+      - [Countermeasures](#countermeasures-3)
     - [User Management](#user-management-2)
-      - [**Use Cases**](#use-cases-5)
-      - [**Abuse Cases**](#abuse-cases-4)
-      - [**Countermeasures**](#countermeasures-4)
+      - [Use Cases](#use-cases-5)
+      - [Abuse Cases](#abuse-cases-4)
+      - [Countermeasures](#countermeasures-4)
   - [Conclusion](#conclusion)
 
 ---
@@ -724,7 +724,6 @@ All data persistence is handled through the external `AMAP Database`, where the 
 
 This Level 0 DFD effectively captures the fundamental data exchanges within the sustainable agriculture platform, showing how information flows between the system and its stakeholders without delving into the internal processing details.
 
-
 #### Level 1
 
 ![DFD Generic Representation Level 1](diagrams/DFD/Generic%20Representation/amapp_dfd_generic_1.png)
@@ -743,23 +742,19 @@ Within the `AMAP System` boundary, two main components are identified:
 
   - `AMAP API`: The core processing component handling business logic, user authentication, and orchestrating the system's operations. It directly interfaces with all external actors and coordinates data operations.
   - `AmapDB_API`: A dedicated server component that serves as an intermediary layer between the main API and the database, providing abstraction and security for database operations.
-
 - **External Components:**
 
   - `AMAP Database`: An external datastore where all system information is persistently stored.
-
 - **External Actors:**
 
   - `Consumer (Co-Producer)`: A user who browses, reserves, or purchases products.
   - `Producer`: A user who lists and manages agricultural products.
   - `Administrator`: A user who manages the platform operations and approves user registrations.
-
 - **Data Flows:**
 
   - `External Actor Communications`: The `Consumers`, `Producers`, and `Administrators` send API requests to and receive responses from the `AMAP API`.
   - `Internal Data Processing`: The `AMAP API` sends structured database requests to the `AmapDB_API`, which translates them into SQL queries.
   - `Data Exchange`: The `AmapDB_API` communicates with the `AMAP Database` to perform CRUD operations and returns result sets back to the `AMAP API`.
-
 - **Trust Boundaries:**
 
   - `Internet`: Where external actors interact with the system.
@@ -767,7 +762,6 @@ Within the `AMAP System` boundary, two main components are identified:
   - `Database Server`: A protected boundary where persistent data is securely stored.
 
 This Level 1 DFD demonstrates the system's layered architecture approach, with clear separation between the user interface logic, business processing, and data persistence layers. This architecture enhances security by ensuring database operations are properly abstracted and controlled through dedicated interfaces.
-
 
 ---
 
@@ -805,9 +799,9 @@ The Level 1 Data Flow Diagram (DFD) provides a more detailed view of the Order P
 
 - **Boundaries**
 
-  - **Internet**: outer boundary for external actors
-  - **AMAPP System**: hosts the API Endpoint and Report Generation Engine
-  - **DB Server**: hosts the Report Data DB
+  - `Internet`: outer boundary for external actors
+  - `AMAPP System`: hosts the API Endpoint and Report Generation Engine
+  - `DB Server`: hosts the Report Data DB
 - **External Actors**
 
   - `CoProducer` (in Internet)
@@ -819,14 +813,14 @@ The Level 1 Data Flow Diagram (DFD) provides a more detailed view of the Order P
   - `Report Data DB` (Datastore, SQL): stores payments & deliveries records for reporting
 - **Data Flows**
 
-  1. **Request own report**: CoProducer → AMAPP API Endpoint
-  2. **Request report for specific CoProducer**: AMAPP Administrator → AMAPP API Endpoint
-  3. **Forward authorized request**: AMAPP API Endpoint → Report Generation Engine
-  4. **Query data (filtered by role)**: Report Generation Engine → Report Data DB
-  5. **Return report data**: Report Data DB → Report Generation Engine
-  6. **Generated PDF (binary stream)**: Report Generation Engine → AMAPP API Endpoint
-  7. **PDF Report (own data only)**: AMAPP API Endpoint → CoProducer
-  8. **PDF Report (selected CoProducer data)**: AMAPP API Endpoint → AMAPP Administrator
+  1. `Request own report`: CoProducer → AMAPP API Endpoint
+  2. `Request report for specific CoProducer`: AMAPP Administrator → AMAPP API Endpoint
+  3. `Forward authorized request`: AMAPP API Endpoint → Report Generation Engine
+  4. `Query data (filtered by role)`: Report Generation Engine → Report Data DB
+  5. `Return report data`: Report Data DB → Report Generation Engine
+  6. `Generated PDF (binary stream)`: Report Generation Engine → AMAPP API Endpoint
+  7. `PDF Report (own data only)`: AMAPP API Endpoint → CoProducer
+  8. `PDF Report (selected CoProducer data)`: AMAPP API Endpoint → AMAPP Administrator
 
 This Level 1 DFD illustrates the layered architecture—separating request handling, report generation, and data persistence—to ensure clear responsibilities and secure data access.
 
@@ -845,19 +839,16 @@ This simplified context diagram focuses specifically on the purchase/reservation
 - **External Actors:**
 
   - `Consumer (Co-Producer)`: The user who interacts with the system to browse products and place purchase orders.
-
 - **Internal Components:**
 
   - `AMAP API`: The backend system that processes purchase requests, interacts with the database, and returns responses to consumers.
   - `AMAP Database`: The persistent storage for product data, orders, inventory, and payment information.
-
 - **Data Flows:**
 
   - `Purchase Request`: The `Consumer` sends a purchase request to the `AMAP API` including product selections, order details, and payment info.
   - `Data Operations`: The `AMAP API` communicates with the `AMAP Database` to store and retrieve purchase-related information.
   - `Data Results`: The `AMAP Database` responds with product data, order confirmations, and inventory status.
   - `Purchase Response`: The `AMAP API` sends a response back to the `Consumer` containing product listings, order confirmations, and payment receipts.
-
 - **Trust Boundaries:**
 
   - `Internet`: Where the external `Consumer` accesses the AMAP System.
@@ -865,7 +856,6 @@ This simplified context diagram focuses specifically on the purchase/reservation
   - `Database Server`: A protected environment where sensitive purchase and payment information is stored securely.
 
 This Level 0 DFD effectively captures the fundamental flow of the purchase process, showing how information moves between the consumer, the system, and the database in a complete transaction cycle. This representation allows stakeholders to understand the high-level purchase flow without being overwhelmed by implementation details.
-
 
 #### Level 1
 
@@ -876,7 +866,6 @@ The Level 1 Data Flow Diagram (DFD) expands the context-level view of the produc
 - **External Actors:**
 
   - `Co-Producer (Consumer)`: The user who browses available products and makes reservation requests.
-
 - **Internal Components:**
 
   - `Product Catalog`: Manages product listings and inventory information, enabling consumers to browse products.
@@ -884,7 +873,6 @@ The Level 1 Data Flow Diagram (DFD) expands the context-level view of the produc
   - `Reservation Processing`: Manages the reservation of products, ensuring they are correctly reserved for the consumer.
   - `Delivery Management`: Coordinates the logistics for delivering reserved products.
   - `AMAP DB`: The database where product, order, reservation, and delivery information are persistently stored.
-
 - **Data Flows:**
 
   - `Browse products`: The `Co-Producer` requests product information from the `Product Catalog` via the AMAP System.
@@ -893,7 +881,6 @@ The Level 1 Data Flow Diagram (DFD) expands the context-level view of the produc
   - `Process reservation`: `Reservation Processing` finalizes the reservation and allocates the products.
   - `Coordinate delivery`: `Delivery Management` arranges the delivery based on the reservation details.
   - `Data persistence`: Throughout the process, information (`Product Data`, `Order Data`, `Reservation Data`, `Delivery Data`) is stored and retrieved from the `AMAP DB`.
-
 - **Data Objects:**
 
   - `Product Data`: Information about products available for reservation.
@@ -901,7 +888,6 @@ The Level 1 Data Flow Diagram (DFD) expands the context-level view of the produc
   - `Order Data`: Detailed record of the consumer’s reservation.
   - `Reservation Data`: Confirmation and allocation of reserved products.
   - `Delivery Data`: Information related to the logistics of delivering reserved products.
-
 - **Trust Boundaries:**
 
   - `Internet`: Where the `Co-Producer` interacts with the AMAP System.
@@ -909,7 +895,6 @@ The Level 1 Data Flow Diagram (DFD) expands the context-level view of the produc
   - `Database Server`: A protected zone responsible for securely storing product, order, reservation, and delivery data.
 
 This level of detail highlights how modularization into separate processes (Catalog, Order Management, Reservation, Delivery) improves system maintainability and security while ensuring a smooth and reliable reservation experience for the consumer.
-
 
 ---
 
@@ -1086,16 +1071,17 @@ To determine the most important threats included in each STRIDE table, the follo
 
 ### Create Product
 
-| **Threat**                                    | **Targeted Element**              | **STRIDE Category**           | **Description**                                                                                                                                                            | **Mitigation**                                                                                                                                                                                                                                                               |
-| --------------------------------------------- | --------------------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **INP02 – Buffer Overflow**                   | Validate Input, Store Product, Send Response | Tampering                     | A buffer overflow is a critical vulnerability that can lead to arbitrary code execution, compromising the entire system. Because it affects both input validation and storage, it is a high-priority threat. | • Use languages or compilers with built-in bounds checking<br>• Employ safe library functions<br>• Integrate static analysis tools to detect overflow risks                                                                                                                    |
-| **INP07 – Buffer Manipulation**               | Validate Input, Store Product, Send Response | Tampering                     | Buffer manipulation can be exploited to corrupt data or execute malicious code. It’s common in systems that handle raw data buffers.                                       | • Follow secure coding practices to prevent buffer overflows<br>• Enforce strict input size limits<br>• Use memory-safe constructs and automated vulnerability scanners                                                                                                     |
-| **AC21 – Cross-Site Request Forgery (CSRF)**  | Send Response                    | Spoofing                      | CSRF allows an attacker to perform actions on behalf of an authenticated user, compromising system integrity and user trust.                                              | • Implement anti-CSRF tokens for all state-changing endpoints<br>• Validate the HTTP Referer/Origin header<br>• Require re-authentication or MFA for sensitive actions                                                                                                     |
-| **INP23 – File Content Injection**            | Store Product, Send Response     | Tampering                     | File content injection can allow remote code execution if malicious files are uploaded and later rendered or executed by the server.                                      | • Validate and sanitize all uploaded files<br>• Store files in a sandbox or restricted directory<br>• Scan uploads for malware and enforce file-type restrictions                                                                                                           |
-| **CR06 – Communication Channel Manipulation** | Submit Product, Validated Data, Save to DB, Return Result | Information Disclosure        | Manipulating the communication channel (e.g., via MITM) can expose sensitive data such as credentials or order details.                                                   | • Encrypt all communications with TLS<br>• Use strong cipher suites and certificate pinning<br>• Authenticate endpoints to prevent impersonation                                                                                                                           |
-| **AC12 – Privilege Escalation**               | Store Product, Send Response     | Elevation of Privilege        | Weak privilege controls can allow an attacker to gain full system access, compromising all data and operations.                                                            | • Enforce the principle of least privilege<br>• Separate duties across services<br>• Require multiple approvals for high-impact actions                                                                                                                               |
-| **INP08 – Format String Injection**           | Store Product, Send Response     | Tampering                     | Format string injection can be used to read or write arbitrary memory, leading to data leaks or crashes.                                                                   | • Avoid unsafe formatting functions<br>• Strictly validate and escape user input before formatting<br>• Use parameterized logging and output APIs                                                                                                                     |
-| **DE04 – Audit Log Manipulation**             | Product DB                       | Repudiation                   | If logs can be tampered with, attackers can hide malicious activity and obscure audit trails.                                                                             | • Store logs in append-only sinks<br>• Sign and timestamp log entries<br>• Restrict write access to log storage and periodically archive logs to immutable storage                                                                                                      |
+
+| **Threat**                                     | **Targeted Element**                                      | **STRIDE Category**    | **Description**                                                                                                                                                                                              | **Mitigation**                                                                                                                                                             |
+| ---------------------------------------------- | --------------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **INP02 – Buffer Overflow**                   | Validate Input, Store Product, Send Response              | Tampering              | A buffer overflow is a critical vulnerability that can lead to arbitrary code execution, compromising the entire system. Because it affects both input validation and storage, it is a high-priority threat. | • Use languages or compilers with built-in bounds checking<br>• Employ safe library functions<br>• Integrate static analysis tools to detect overflow risks             |
+| **INP07 – Buffer Manipulation**               | Validate Input, Store Product, Send Response              | Tampering              | Buffer manipulation can be exploited to corrupt data or execute malicious code. It’s common in systems that handle raw data buffers.                                                                        | • Follow secure coding practices to prevent buffer overflows<br>• Enforce strict input size limits<br>• Use memory-safe constructs and automated vulnerability scanners |
+| **AC21 – Cross-Site Request Forgery (CSRF)**  | Send Response                                             | Spoofing               | CSRF allows an attacker to perform actions on behalf of an authenticated user, compromising system integrity and user trust.                                                                                 | • Implement anti-CSRF tokens for all state-changing endpoints<br>• Validate the HTTP Referer/Origin header<br>• Require re-authentication or MFA for sensitive actions  |
+| **INP23 – File Content Injection**            | Store Product, Send Response                              | Tampering              | File content injection can allow remote code execution if malicious files are uploaded and later rendered or executed by the server.                                                                         | • Validate and sanitize all uploaded files<br>• Store files in a sandbox or restricted directory<br>• Scan uploads for malware and enforce file-type restrictions       |
+| **CR06 – Communication Channel Manipulation** | Submit Product, Validated Data, Save to DB, Return Result | Information Disclosure | Manipulating the communication channel (e.g., via MITM) can expose sensitive data such as credentials or order details.                                                                                      | • Encrypt all communications with TLS<br>• Use strong cipher suites and certificate pinning<br>• Authenticate endpoints to prevent impersonation                        |
+| **AC12 – Privilege Escalation**               | Store Product, Send Response                              | Elevation of Privilege | Weak privilege controls can allow an attacker to gain full system access, compromising all data and operations.                                                                                              | • Enforce the principle of least privilege<br>• Separate duties across services<br>• Require multiple approvals for high-impact actions                                 |
+| **INP08 – Format String Injection**           | Store Product, Send Response                              | Tampering              | Format string injection can be used to read or write arbitrary memory, leading to data leaks or crashes.                                                                                                     | • Avoid unsafe formatting functions<br>• Strictly validate and escape user input before formatting<br>• Use parameterized logging and output APIs                       |
+| **DE04 – Audit Log Manipulation**             | Product DB                                                | Repudiation            | If logs can be tampered with, attackers can hide malicious activity and obscure audit trails.                                                                                                                | • Store logs in append-only sinks<br>• Sign and timestamp log entries<br>• Restrict write access to log storage and periodically archive logs to immutable storage      |
 
 ---
 
@@ -1160,38 +1146,43 @@ To determine the most important threats included in each STRIDE table, the follo
 
 ## Risk Assessment
 
-To prioritize and manage the most critical threats identified, we follow a four-step risk-assessment process leveraging our STRIDE analysis: Risk Score = Likelihood × Impact
+To prioritize and manage the most critical threats identified, we follow a four-step risk-assessment process leveraging our STRIDE analysis:
 
 1. **Threat Identification**
    We begin with the STRIDE-based threat model, which enumerates potential attacks across Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, and Elevation of Privilege.
 2. **Scoring Criteria**Each threat is evaluated on four dimensions:
 
-   - **Severity**: the potential damage if exploited
-   - **Asset Criticality**: importance of the targeted component
-   - **Likelihood**: probability of successful exploitation
-   - **Business Impact**: the negative consequences (financial loss, service disruption, reputational damage, regulatory fines, etc.) that would occur if this threat were successfully exploited
+   - `Severity`: potential damage if exploited (1–5)
+   - `Asset Criticality`: importance of the targeted component (1–5)
+   - `Likelihood`: probability of successful exploitation given existing controls (1–5)
+   - `Business Impact`: financial, operational, reputational, or regulatory consequences (1–5)
 3. **Risk Calculation**
-   We assign values from 1 (lowest) to 5 (highest) for Likelihood and Impact, then compute a composite **Risk Score**:
+   We compute the **Risk Score** as:  Risk Score = Likelihood × ((Severity + Asset Criticality) ÷ 2)
 4. **Risk Prioritization**
-   Based on the Risk Score:
 
-- **High (15–25)**
-- **Medium (8–14)**
-- **Low (1–7)**
+- `High`: Risk Score ≥ 15
+- `Medium`: 8 ≤ Risk Score < 15
+- `Low`: Risk Score < 8
 
 ### Risk Register
 
 
-| Threat                   | Category               | Likelihood (1–5) | Impact (1–5) | Risk Score | Priority |
-| ------------------------ | ---------------------- | ----------------- | ------------- | ---------- | -------- |
-| Authentication Bypass    | Spoofing               | 4                 | 5             | 20         | High     |
-| Session Replay           | Tampering              | 3                 | 4             | 12         | Medium   |
-| Password Brute Force     | Denial of Service      | 5                 | 4             | 20         | High     |
-| LDAP Injection           | Tampering              | 3                 | 3             | 9          | Medium   |
-| Error Message Excavation | Information Disclosure | 2                 | 3             | 6          | Low      |
+| Threat                      | Category           | Likelihood | Severity | Asset Criticality | Impact (avg) | Risk Score | Priority |
+| --------------------------- | ------------------ | ---------- | -------- | ----------------- | ------------ | ---------- | -------- |
+| Authentication Bypass       | Spoofing           | 4          | 5        | 5                 | 5.0          | 20.0       | High     |
+| Password Brute Force        | Denial of Service  | 5          | 4        | 3                 | 3.5          | 17.5       | High     |
+| Authentication Abuse/Bypass | Spoofing           | 3          | 4        | 4                 | 4.0          | 12.0       | Medium   |
+| Buffer Overflow             | Tampering          | 3          | 4        | 4                 | 4.0          | 12.0       | Medium   |
+| Session Hijacking           | Spoofing           | 3          | 4        | 4                 | 4.0          | 12.0       | Medium   |
+| Cross-Site Request Forgery  | Spoofing/Tampering | 3          | 3        | 3                 | 3.0          | 9.0        | Medium   |
+| Fake Registration           | Spoofing           | 3          | 3        | 3                 | 3.0          | 9.0        | Medium   |
+| Admin Impersonation         | Spoofing           | 2          | 4        | 4                 | 4.0          | 8.0        | Medium   |
 
-> **Comment:**
-> This risk register focuses on the most critical authentication threats. “Authentication Bypass” and “Password Brute Force” score highest, driving prompt implementation of strong token validation, MFA, and rate limiting. Lower-scoring threats (e.g. “Error Message Excavation”) still warrant attention—standardizing error output and suppressing debug details will mitigate them. Adjust scores and add additional rows as you refine your analysis.
+> **Comment:**We averaged **Severity** and **Asset Criticality** to derive **Impact**, then multiplied by **Likelihood**.
+>
+> - Two **High**-priority threats (Authentication Bypass and Password Brute Force) exceed 15, indicating immediate focus on strong MFA, rate-limiting, and token validation.
+> - The remaining **Medium**-priority threats (scores 8–12) cover authorization weaknesses, buffer issues, and CSRF
+> - No threats currently fall into **Low**, but periodic review may reclassify them as controls mature.
 
 ---
 
@@ -1203,70 +1194,55 @@ The following are the identified abuse cases in the AMAPP system, along with the
 
 ![Use and Abuse Cases - Authentication](diagrams/Abuse%20Cases/auth-abuse-case.png)
 
-
 This diagram represents a security-focused approach using both **Use Cases** and **Abuse Cases** within the authentication feature of the AMAPP System. The main goal is to identify potential threats to the system and link them with appropriate countermeasures.
 
 #### **Use Cases**
 
-- **Register**  
+- **Register**
   The user creates a new account by providing required credentials and profile information.
-
-- **Log in**  
+- **Log in**
   The user submits credentials to obtain an authenticated session or a valid JWT.
-
-- **Change Password**  
+- **Change Password**
   An authenticated user updates their password to a new value.
-
-- **Recover Password**  
+- **Recover Password**
   The user initiates a password reset flow to regain access if they forget their password.
+- **Use Case Relationships**
 
-- **Use Case Relationships**  
   - After successful registration, the user is automatically logged in (Register ➔ Log in).
   - After logging in, the user may change their password (Log in ➔ Change Password).
   - If login fails, the user can initiate a password recovery process (Log in ➔ Recover Password).
 
 #### **Abuse Cases**
 
-- **Register Multiple Accounts**  
+- **Register Multiple Accounts**
   An attacker scripts mass account creation to facilitate spam or automated attacks.
-
-- **Brute Force Login Attack**  
+- **Brute Force Login Attack**
   An attacker attempts many credential guesses to gain unauthorized access.
-
-- **Unauthorized Password Change**  
+- **Unauthorized Password Change**
   An attacker tries to change another user’s password without owning a valid session.
-
-- **Password Recovery Abuse**  
+- **Password Recovery Abuse**
   An attacker exploits the password reset workflow, such as guessing tokens or abusing the reset process.
-
-- **Authentication Bypass**  
+- **Authentication Bypass**
   An attacker finds weaknesses to skip credential checks entirely (e.g., JWT forgery).
-
-- **Privilege Escalation**  
+- **Privilege Escalation**
   An attacker elevates their privileges by exploiting weak authorization checks after authentication.
 
 #### **Countermeasures**
 
-- **Apply Rate Limiting**  
+- **Apply Rate Limiting**
   Throttles registration and login endpoints to prevent mass-account creation and brute-force attacks. Mitigates abuse cases Register Multiple Accounts and Brute Force Login Attack.
-
-- **Enforce Strong Authentication**  
+- **Enforce Strong Authentication**
   Requires multi-factor authentication (MFA) on login to defeat credential-only attacks. Mitigates abuse cases Brute Force Login Attack and Authentication Bypass.
-
-- **Session Verification on Password Change**  
+- **Session Verification on Password Change**
   Ensures the session is valid and may require re-authentication before allowing a password change. Mitigates abuse case Unauthorized Password Change.
-
-- **Secure Password Recovery Workflow**  
+- **Secure Password Recovery Workflow**
   Uses time-limited, single-use tokens sent over secure channels, with strict validation. Mitigates abuse case Password Recovery Abuse.
-
-- **Validate JWT Signature and Claims**  
+- **Validate JWT Signature and Claims**
   Strictly verifies token integrity, issuer, expiry, and audience to prevent forgery. Mitigates abuse case Authentication Bypass.
-
-- **Enforce Authorization per Resource**  
+- **Enforce Authorization per Resource**
   Checks user permissions on every protected endpoint to prevent privilege escalation. Mitigates abuse case Privilege Escalation.
 
 This model provides a clear foundation for threat analysis, illustrating how the authentication flows could be exploited and what preventive measures are in place.
-
 
 ---
 
@@ -1365,42 +1341,34 @@ This diagram represents a security-focused approach using both **Use Cases** and
 
 #### **Use Cases**
 
-- **Browse product catalogs**  
+- **Browse product catalogs**
   The Co-Producer interacts with the system to view available products.
-
-- **Select products**  
+- **Select products**
   The Co-Producer chooses products from the catalog to reserve.
-
-- **Place orders**  
+- **Place orders**
   The Co-Producer submits a reservation request to place an order for selected products.
 
 #### **Abuse Cases**
 
-- **Submit fraudulent orders**  
+- **Submit fraudulent orders**
   A malicious actor submits fake orders to exploit the system.
-
-- **Perform SQL injections**  
+- **Perform SQL injections**
   An attacker attempts to inject malicious SQL queries into the system to retrieve or manipulate data.
-
-- **Intercept user credentials**  
+- **Intercept user credentials**
   A hacker intercepts sensitive data, like user credentials, during transmission to compromise accounts.
-
-- **Manipulate product prices**  
+- **Manipulate product prices**
   An attacker attempts to change product prices to their advantage.
 
 #### **Countermeasures**
 
-- **Using secure connections**  
+- **Using secure connections**
   Prevents interception of sensitive data by using encryption protocols like HTTPS.
-
-- **Two-factor authentication (2FA)**  
+- **Two-factor authentication (2FA)**
   Protects user accounts by requiring an additional verification step beyond just the password.
-
-- **Verify order details**  
+- **Verify order details**
   The system checks prices and quantities against the database to ensure accuracy and prevent manipulation.
 
 This model ensures a balanced view of normal functionality and security needs, aligning protective mechanisms with potential vulnerabilities to maintain the system’s integrity.
-
 
 ---
 
@@ -1408,67 +1376,51 @@ This model ensures a balanced view of normal functionality and security needs, a
 
 ![Use and Abuse Cases - User Management](diagrams/Abuse%20Cases/user-management-abuse-case.png)
 
-
 This diagram represents a security-focused approach using both **Use Cases** and **Abuse Cases** within the user management feature of the AMAPP System. The main goal is to identify potential threats to the system and link them with appropriate countermeasures.
 
 #### **Use Cases**
 
-- **Create/Update/Delete User Account**  
+- **Create/Update/Delete User Account**
   The administrator manages user accounts, including creating, updating, or deleting user profiles.
-
-- **Assign/Update/Retrieve Roles and Permissions**  
+- **Assign/Update/Retrieve Roles and Permissions**
   The administrator assigns or updates user roles and retrieves permissions when needed.
-
-- **Return User Data**  
+- **Return User Data**
   The system provides user information to authorized administrators.
-
-- **Return Permission/Role Data**  
+- **Return Permission/Role Data**
   The system provides details about roles and permissions to authorized administrators.
-
-- **Review Registration Requests**  
+- **Review Registration Requests**
   The administrator reviews new user registration requests for approval.
-
-- **Update Approval Status**  
+- **Update Approval Status**
   The administrator updates the approval status (e.g., accepting or rejecting registration requests).
 
 #### **Abuse Cases**
 
-- **Account Takeover**  
+- **Account Takeover**
   A malicious administrator attempts to hijack user accounts.
-
-- **Privilege Escalation**  
+- **Privilege Escalation**
   A malicious actor assigns themselves elevated roles or permissions without authorization.
-
-- **User Data Exfiltration**  
+- **User Data Exfiltration**
   A malicious actor extracts sensitive user information from the system.
-
-- **Permission Enumeration**  
+- **Permission Enumeration**
   An attacker enumerates available roles and permissions to plan privilege escalation or information gathering.
-
-- **Approve Fake Registrations**  
+- **Approve Fake Registrations**
   A malicious administrator approves fake or fraudulent user registrations.
-
-- **Tamper Approval Process**  
+- **Tamper Approval Process**
   A malicious administrator alters the approval workflow to bypass legitimate checks.
 
 #### **Countermeasures**
 
-- **Enforce Strong Authentication (MFA)**  
+- **Enforce Strong Authentication (MFA)**
   Requires multi-factor authentication to prevent account hijacking. Mitigates abuse case Account Takeover.
-
-- **Strict Role Management Policies**  
+- **Strict Role Management Policies**
   Applies strict policies for role assignment and modification, minimizing the risk of privilege escalation. Mitigates abuse case Privilege Escalation.
-
-- **Access Control and Logging**  
+- **Access Control and Logging**
   Implements strong access controls and detailed audit logs to detect and prevent data exfiltration. Mitigates abuse case User Data Exfiltration.
-
-- **Limit API Information Disclosure**  
+- **Limit API Information Disclosure**
   Reduces the amount of permission and role data exposed by the API, hindering enumeration attempts. Mitigates abuse case Permission Enumeration.
-
-- **Multi-level Registration Review**  
+- **Multi-level Registration Review**
   Enforces multiple levels of review and approval for new registrations to detect fake accounts. Mitigates abuse case Approve Fake Registrations.
-
-- **Approval Auditing and Alerts**  
+- **Approval Auditing and Alerts**
   Monitors approval actions and generates alerts for suspicious activity. Mitigates abuse case Tamper Approval Process.
 
 This model provides a clear foundation for threat analysis, illustrating how user management functionalities could be exploited and what preventive measures are in place.
