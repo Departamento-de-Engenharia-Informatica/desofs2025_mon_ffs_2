@@ -4,7 +4,7 @@ using static AMAPP.API.Constants;
 
 namespace AMAPP.API.Models
 {
-    // Order
+    // Updated Order class with Reservation instead of Payment and Delivery
     public class Order
     {
         [Key]
@@ -22,8 +22,8 @@ namespace AMAPP.API.Models
         // Order items
         public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 
-        // Payment and Delivery
-        public Payment Payment { get; set; }
-        public Delivery Delivery { get; set; }
+        // Reservation for pickup/delivery
+        public Reservation Reservation { get; set; }
     }
+
 }

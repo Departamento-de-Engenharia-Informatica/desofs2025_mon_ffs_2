@@ -19,5 +19,6 @@ namespace AMAPP.API.Models
 
         public int Quantity { get; set; }
         public double Price { get; set; }
+        public int ProducerId { get; internal set; }
     }
 }

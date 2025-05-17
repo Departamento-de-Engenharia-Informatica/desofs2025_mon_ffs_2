@@ -31,6 +31,7 @@ public class ApplicationDbContext : IdentityDbContext<User>
     // Other
     public DbSet<CheckingAccount> CheckingAccounts { get; set; }
     public DbSet<Notification> Notifications { get; set; }
+    public object CoproducerInfos { get; internal set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -97,20 +98,21 @@ public class ApplicationDbContext : IdentityDbContext<User>
             .WithMany(p => p.OrderItems)
             .HasForeignKey(oi => oi.ProductId);
         #endregion
+        /* 
+              #region PAYMENT AND DELIVERY
+              // Relationship between Order and Payment
+           modelBuilder.Entity<Payment>()
+                  .HasOne(p => p.Order)
+                  .WithOne(o => o.Payment)
+                  .HasForeignKey<Payment>(p => p.OrderId);
 
-        #region PAYMENT AND DELIVERY
-        // Relationship between Order and Payment
-        modelBuilder.Entity<Payment>()
-            .HasOne(p => p.Order)
-            .WithOne(o => o.Payment)
-            .HasForeignKey<Payment>(p => p.OrderId);
-
-        // Relationship between Order and Delivery
-        modelBuilder.Entity<Delivery>()
-            .HasOne(d => d.Order)
-            .WithOne(o => o.Delivery)
-            .HasForeignKey<Delivery>(d => d.OrderId);
-        #endregion
+              // Relationship between Order and Delivery
+              modelBuilder.Entity<Delivery>()
+                  .HasOne(d => d.Order)
+                  .WithOne(o => o.Delivery)
+                  .HasForeignKey<Delivery>(d => d.OrderId);
+              #endregion
+        */
 
         #region CHECKING ACCOUNT
         // Configuration for CheckingAccount

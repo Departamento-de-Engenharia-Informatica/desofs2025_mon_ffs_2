@@ -5,12 +5,23 @@ namespace AMAPP.API
         // Order Status
         public enum OrderStatus
         {
-            Created,
-            Confirmed,
-            Processing,
-            Ready,
-            Delivered,
-            Cancelled
+            Pending = 0,
+            Confirmed = 1,
+            Processing = 2,
+            ReadyForDelivery = 3,
+            Delivered = 4,
+            Completed = 5,
+            Cancelled = 6
+        }
+
+        public enum OrderItemStatus
+        {
+            Pending = 0,
+            Confirmed = 1,
+            Processing = 2,
+            Ready = 3,
+            Delivered = 4,
+            Cancelled = 5
         }
 
         // Payment Method
@@ -58,6 +69,12 @@ namespace AMAPP.API
             Active,
             Inactive,
             Deleted
+        }
+
+        public enum  DeliveryMethod
+        {
+            Pickup = 0,
+            HomeDelivery = 1
         }
 
         public enum DeliveryUnit { Unit, Kg, Grams, Liters }

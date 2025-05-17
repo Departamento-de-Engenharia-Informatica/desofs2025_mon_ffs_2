@@ -6,6 +6,7 @@ using AMAPP.API.DTOs.SubscriptionPayment.Validators;
 using AMAPP.API.DTOs.SubscriptionPeriod.Validators;
 using AMAPP.API.Middlewares;
 using AMAPP.API.Models;
+using AMAPP.API.Repository.OrderRepository;
 using AMAPP.API.Repository.ProducerInfoRepository;
 using AMAPP.API.Repository.ProdutoRepository;
 using AMAPP.API.Services.Implementations;
@@ -96,6 +97,8 @@ namespace AMAPP.API
             builder.Services.AddScoped<IProductService, ProductService>();
             builder.Services.AddScoped<IProductRepository, ProductRepository>();
             builder.Services.AddScoped<IProducerInfoRepository, ProducerInfoRepository>();
+            builder.Services.AddScoped<IOrderService, OrderService>();
+            builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 
             builder.Services.AddRouting(options =>
             {
