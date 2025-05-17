@@ -124,15 +124,6 @@ namespace AMAPP.API.Controllers
                     return BadRequest(new { message = "User not found" });
                 }
 
-                var isProducer = await _userManager.IsInRoleAsync(user, "Producer");
-                var isAdmin = await _userManager.IsInRoleAsync(user, "Administrator");
-
-                if (!isProducer && !isAdmin)
-                {
-                    _logger.LogWarning("User {UserId} is not a producer or admin", userId);
-                    return Forbid();
-                }
-
                 _logger.LogInformation("Creating new product for user: {UserName}", user.UserName);
 
                 // Passar o ID do usuário atual para o serviço
