@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\project\AMAPP.API.csproj" />
+    <ProjectReference Include="..\AMAPP.API\AMAPP.API.csproj" />
   </ItemGroup>
 
   <ItemGroup>
