@@ -1,95 +1,202 @@
-﻿using AMAPP.API.DTOs.Order;
+﻿using AMAPP.API.DTOs;
+using AMAPP.API.DTOs.Order;
 using AMAPP.API.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace AMAPP.API.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
-    [Authorize] // Require authentication for all actions by default
-    public class OrderController : ControllerBase
+    [ApiController]
+    [Authorize]
+    public class OrdersController : ControllerBase
     {
         private readonly IOrderService _orderService;
 
-        public OrderController(IOrderService orderService)
+        public OrdersController(IOrderService orderService)
         {
             _orderService = orderService;
         }
 
-        // ADMIN and AMAP can view all orders
+        // --------------------------
+        // GENERAL (any authenticated user)
+        // --------------------------
+
         [HttpGet]
-        [Authorize(Roles = "ADMIN,AMAP")]
-        public async Task<IActionResult> GetAllOrders()
+        public async Task<ActionResult<IEnumerable<OrderDTO>>> GetOrders([FromQuery] OrderFilterDTO filter)
         {
-            var orders = await _orderService.GetAllOrdersAsync();
+            var orders = await _orderService.GetOrdersAsync(filter);
             return Ok(orders);
         }
 
-        // ADMIN and AMAP can view any order by ID
         [HttpGet("{id}")]
-        [Authorize(Roles = "ADMIN,AMAP")]
-        public async Task<IActionResult> GetOrderById(int id)
+        [Authorize(Roles = "Administrator")]
+        public async Task<ActionResult<OrderDetailDTO>> GetOrder(int id)
         {
             var order = await _orderService.GetOrderByIdAsync(id);
-            if (order == null) return NotFound();
-            return Ok(order);
+
+            if (order == null)
+                return NotFound();
+
+            return order;
         }
 
-        // ADMIN and AMAP can filter orders
-        [HttpPost("filter")]
-        [Authorize(Roles = "ADMIN,AMAP")]
-        public async Task<IActionResult> GetFilteredOrders([FromBody] OrderFilterDTO filterDto)
+        // --------------------------
+        // COPRODUCER
+        // --------------------------
+
+        [HttpGet("Coproducer/{coproducerId}")]
+        [Authorize(Roles = "CoProducer,Administrator")]
+        public async Task<ActionResult<IEnumerable<OrderDTO>>> GetOrdersByCoproducer(int coproducerId)
         {
-            var orders = await _orderService.GetFilteredOrdersAsync(filterDto);
+            if (!await IsCurrentUserAuthorizedForCoproducer(coproducerId))
+                return Forbid();
+
+            var orders = await _orderService.GetOrdersByCoproducerAsync(coproducerId);
             return Ok(orders);
         }
 
-        // COPR can create orders
         [HttpPost]
-        [Authorize(Roles = "COPR")]
-        public async Task<IActionResult> CreateOrder([FromBody] OrderCreateDTO orderDto)
+        [Authorize(Roles = "CoProducer")]
+        public async Task<IActionResult> CreateOrder([FromBody] CreateOrderDTO createOrderDTO)
         {
-            var order = await _orderService.CreateOrderAsync(orderDto);
-            return CreatedAtAction(nameof(GetOrderById), new { id = order.Id }, order);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("User not authenticated");
+
+            try
+            {
+                var order = await _orderService.CreateOrderAsync(createOrderDTO);
+                return Ok(order);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "Error while saving order.", detail = ex.Message });
+            }
         }
 
-        // COPR can view their own orders
-        [HttpGet("coproducer/{coproducerId}")]
-        [Authorize(Roles = "COPR")]
-        public async Task<IActionResult> GetCoproducerOrders(int coproducerId)
+        [HttpPut("{id}")]
+        [Authorize(Roles = "CoProducer")]
+        public async Task<ActionResult<OrderDTO>> UpdateOrder(int id, UpdateOrderDTO updateOrderDTO)
         {
-            var orders = await _orderService.GetCoproducerOrdersAsync(coproducerId);
+            var order = await _orderService.GetOrderByIdAsync(id);
+            if (order == null)
+                return NotFound();
+
+            if (!await IsCurrentUserAuthorizedForCoproducer(order.CoproducerInfoId))
+                return Forbid();
+
+            try
+            {
+                var updatedOrder = await _orderService.UpdateOrderAsync(id, updateOrderDTO);
+                return Ok(updatedOrder);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("{id}/Items")]
+        [Authorize(Roles = "CoProducer")]
+        public async Task<ActionResult<OrderItemDTO>> AddOrderItem(int id, CreateOrderItemDTO createOrderItemDTO)
+        {
+            var order = await _orderService.GetOrderByIdAsync(id);
+            if (order == null)
+                return NotFound();
+
+            if (!await IsCurrentUserAuthorizedForCoproducer(order.CoproducerInfoId))
+                return Forbid();
+
+            try
+            {
+                var orderItem = await _orderService.AddOrderItemAsync(id, createOrderItemDTO);
+                return CreatedAtAction(nameof(GetOrder), new { id }, orderItem);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpDelete("Items/{id}")]
+        [Authorize(Roles = "CoProducer")]
+        public async Task<ActionResult> RemoveOrderItem(int id)
+        {
+            // Permission validation can be implemented here if needed
+
+            var result = await _orderService.RemoveOrderItemAsync(id);
+            if (!result)
+                return NotFound();
+
+            return NoContent();
+        }
+
+        // --------------------------
+        // PRODUCER
+        // --------------------------
+
+        [HttpGet("Producer/{producerId}")]
+        [Authorize(Roles = "Producer,Administrator")]
+        public async Task<ActionResult<IEnumerable<OrderDTO>>> GetOrdersByProducer(int producerId)
+        {
+            if (!await IsCurrentUserAuthorizedForProducer(producerId))
+                return Forbid();
+
+            var orders = await _orderService.GetOrdersByProducerAsync(producerId);
             return Ok(orders);
         }
 
-        // COPR can update their own orders
-        [HttpPut("coproducer/{id}")]
-        [Authorize(Roles = "COPR")]
-        public async Task<IActionResult> UpdateCoproducerOrder(int id, [FromBody] OrderUpdateDTO orderDto)
+        // --------------------------
+        // COPRODUCER OR PRODUCER (both can access)
+        // --------------------------
+
+        [HttpPut("Items/{id}")]
+        [Authorize(Roles = "CoProducer,Producer")]
+        public async Task<ActionResult<OrderItemDTO>> UpdateOrderItem(int id, UpdateOrderItemDTO updateOrderItemDTO)
         {
-            var order = await _orderService.UpdateCoproducerOrderAsync(id, orderDto);
-            if (order == null) return NotFound();
-            return Ok(order);
+            try
+            {
+                var orderItem = await _orderService.UpdateOrderItemAsync(id, updateOrderItemDTO);
+                return Ok(orderItem);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
-        // PROD can view their own orders
-        [HttpGet("producer/{producerId}")]
-        [Authorize(Roles = "PROD")]
-        public async Task<IActionResult> GetProducerOrders(int producerId)
+        // --------------------------
+        // HELPER METHODS
+        // --------------------------
+
+        private async Task<bool> IsCurrentUserAuthorizedForCoproducer(int coproducerId)
         {
-            var orders = await _orderService.GetProducerOrdersAsync(producerId);
-            return Ok(orders);
+            // TODO: actual verification logic
+            return true;
         }
 
-        // PROD can update order status for their products
-        [HttpPut("producer/{id}/status")]
-        [Authorize(Roles = "PROD")]
-        public async Task<IActionResult> UpdateProduceOrderStatus(int id, [FromBody] OrderStatusUpdateDTO statusDto)
+        private async Task<bool> IsCurrentUserAuthorizedForProducer(int producerId)
         {
-            var order = await _orderService.UpdateProduceOrderStatusAsync(id, statusDto);
-            if (order == null) return NotFound();
-            return Ok(order);
+            // TODO: actual verification logic
+            return true;
+        }
+
+        private int GetCurrentUserId()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                return -1;
+
+            return int.TryParse(userIdClaim.Value, out int userId) ? userId : -1;
         }
     }
 }

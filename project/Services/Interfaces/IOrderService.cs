@@ -4,28 +4,37 @@ namespace AMAPP.API.Services.Interfaces
 {
     public interface IOrderService
     {
-        // REQ-10: Display all active and completed orders
-        Task<IEnumerable<OrderDTO>> GetAllOrdersAsync();
+        // Recuperar pedidos com filtros e ordenação
+        Task<IEnumerable<OrderDTO>> GetOrdersAsync(OrderFilterDTO filter);
 
-        // REQ-11 & REQ-13: Provide detailed information for each order
-        Task<OrderDetailDTO> GetOrderByIdAsync(int id);
+        // Recuperar um pedido específico com detalhes
+        Task<OrderDetailDTO> GetOrderByIdAsync(int orderId);
 
-        // REQ-12: Allow filtering and sorting orders
-        Task<IEnumerable<OrderDTO>> GetFilteredOrdersAsync(OrderFilterDTO filterDto);
+        // Recuperar pedidos de um coprodutor específico
+        Task<IEnumerable<OrderDTO>> GetOrdersByCoproducerAsync(int coproducerId);
 
-        // REQ-21: Co-producer can make new order
-        Task<OrderDetailDTO> CreateOrderAsync(OrderCreateDTO orderDto);
+        // Recuperar pedidos que contêm produtos de um produtor específico
+        Task<IEnumerable<OrderDTO>> GetOrdersByProducerAsync(int producerId);
 
-        // REQ-22: Co-producer can see the details of their orders
-        Task<IEnumerable<OrderDTO>> GetCoproducerOrdersAsync(int coproducerId);
+        // Criar um novo pedido
+        Task<OrderDTO> CreateOrderAsync(CreateOrderDTO createOrderDTO);
 
-        // REQ-23: Co-producer can update their orders
-        Task<OrderDetailDTO> UpdateCoproducerOrderAsync(int id, OrderUpdateDTO orderDto);
+        // Atualizar um pedido existente
+        Task<OrderDTO> UpdateOrderAsync(int orderId, UpdateOrderDTO updateOrderDTO);
 
-        // REQ-24: Producer can see the list of orders for their products
-        Task<IEnumerable<OrderDTO>> GetProducerOrdersAsync(int producerId);
+        // Atualizar um item de pedido específico
+        Task<OrderItemDTO> UpdateOrderItemAsync(int orderItemId, UpdateOrderItemDTO updateOrderItemDTO);
 
-        // REQ-25: Producer can update orders that contain their products
-        Task<OrderDetailDTO> UpdateProduceOrderStatusAsync(int id, OrderStatusUpdateDTO statusDto);
+        // Adicionar um novo item a um pedido existente
+        Task<OrderItemDTO> AddOrderItemAsync(int orderId, CreateOrderItemDTO createOrderItemDTO);
+
+        // Remover um item de um pedido
+        Task<bool> RemoveOrderItemAsync(int orderItemId);
+
+        // Verificar se um coprodutor possui permissão para modificar um pedido
+        Task<bool> CanCoproducerModifyOrderAsync(int coproducerId, int orderId);
+
+        // Verificar se um produtor possui permissão para atualizar itens de um pedido
+        Task<bool> CanProducerModifyOrderItemAsync(int producerId, int orderItemId);
     }
 }
