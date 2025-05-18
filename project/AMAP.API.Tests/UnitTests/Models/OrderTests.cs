@@ -42,9 +42,7 @@ namespace AMAP.Tests.UnitTests.Models
                 OrderDate = new DateTime(2025, 5, 16),
                 DeliveryRequirements = "Entregar no portão",
                 Status = OrderStatus.Confirmed,
-                OrderItems = orderItems,
-                Payment = payment,
-                Delivery = delivery
+                OrderItems = orderItems
             };
 
             // Assert
@@ -55,8 +53,6 @@ namespace AMAP.Tests.UnitTests.Models
             Assert.Equal("Entregar no portão", order.DeliveryRequirements);
             Assert.Equal(OrderStatus.Confirmed, order.Status);
             Assert.Equal(2, order.OrderItems.Count);
-            Assert.Equal(payment, order.Payment);
-            Assert.Equal(delivery, order.Delivery);
         }
     }
 }
