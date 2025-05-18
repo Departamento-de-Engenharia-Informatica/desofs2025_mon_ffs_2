@@ -63,6 +63,8 @@ namespace AMAPP.API.Services.Implementations
                 }
             }
 
+
+            // TODO: Remover
             var producerInfo = await _producerInfoRepository.GetProducerInfoByUserIdAsync(producer.Id);
             if (producerInfo == null)
             {
