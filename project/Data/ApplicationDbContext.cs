@@ -31,6 +31,7 @@ public class ApplicationDbContext : IdentityDbContext<User>
     // Other
     public DbSet<CheckingAccount> CheckingAccounts { get; set; }
     public DbSet<Notification> Notifications { get; set; }
+    public object CoproducerInfos { get; internal set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -97,20 +98,48 @@ public class ApplicationDbContext : IdentityDbContext<User>
             .WithMany(p => p.OrderItems)
             .HasForeignKey(oi => oi.ProductId);
         #endregion
+        #region ORDER
+        // Relationship between Order and CoproducerInfo
+        modelBuilder.Entity<Order>()
+            .HasOne(o => o.CoproducerInfo)
+            .WithMany(ci => ci.Orders)
+            .HasForeignKey(o => o.CoproducerInfoId);
 
-        #region PAYMENT AND DELIVERY
-        // Relationship between Order and Payment
-        modelBuilder.Entity<Payment>()
-            .HasOne(p => p.Order)
-            .WithOne(o => o.Payment)
-            .HasForeignKey<Payment>(p => p.OrderId);
+        // Relationship between Order and OrderItems with cascade delete
+        modelBuilder.Entity<Order>()
+            .HasMany(o => o.OrderItems)
+            .WithOne(oi => oi.Order)
+            .HasForeignKey(oi => oi.OrderId)
+            .OnDelete(DeleteBehavior.Cascade);
 
-        // Relationship between Order and Delivery
-        modelBuilder.Entity<Delivery>()
-            .HasOne(d => d.Order)
-            .WithOne(o => o.Delivery)
-            .HasForeignKey<Delivery>(d => d.OrderId);
+        // Relationship between OrderItem and Product
+        modelBuilder.Entity<OrderItem>()
+            .HasOne(oi => oi.Product)
+            .WithMany(p => p.OrderItems)
+            .HasForeignKey(oi => oi.ProductId);
+
+        // Relationship between Order and Reservation with cascade delete
+        modelBuilder.Entity<Order>()
+            .HasOne(o => o.Reservation)
+            .WithOne(r => r.Order)
+            .HasForeignKey<Reservation>(r => r.OrderId)
+            .OnDelete(DeleteBehavior.Cascade);
         #endregion
+        /* 
+              #region PAYMENT AND DELIVERY
+              // Relationship between Order and Payment
+           modelBuilder.Entity<Payment>()
+                  .HasOne(p => p.Order)
+                  .WithOne(o => o.Payment)
+                  .HasForeignKey<Payment>(p => p.OrderId);
+
+              // Relationship between Order and Delivery
+              modelBuilder.Entity<Delivery>()
+                  .HasOne(d => d.Order)
+                  .WithOne(o => o.Delivery)
+                  .HasForeignKey<Delivery>(d => d.OrderId);
+              #endregion
+        */
 
         #region CHECKING ACCOUNT
         // Configuration for CheckingAccount
