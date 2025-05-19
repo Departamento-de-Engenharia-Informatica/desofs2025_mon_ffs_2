@@ -27,17 +27,17 @@ namespace AMAPP.API.Controllers
         // --------------------------
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<OrderDTO>>> GetOrders([FromQuery] OrderFilterDTO filter)
+        public async Task<ActionResult<IEnumerable<OrderDTO>>> GetOrders([FromQuery] OrderFilterDTO filter, string userId)
         {
-            var orders = await _orderService.GetOrdersAsync(filter);
+            var orders = await _orderService.GetOrdersAsync(filter, userId);
             return Ok(orders);
         }
 
         [HttpGet("{id}")]
         [Authorize(Roles = "Administrator")]
-        public async Task<ActionResult<OrderDetailDTO>> GetOrder(int id)
+        public async Task<ActionResult<OrderDetailDTO>> GetOrder(int id, string userId)
         {
-            var order = await _orderService.GetOrderByIdAsync(id);
+            var order = await _orderService.GetOrderByIdAsync(id, userId);
 
             if (order == null)
                 return NotFound();
@@ -70,7 +70,7 @@ namespace AMAPP.API.Controllers
 
             try
             {
-                var order = await _orderService.CreateOrderAsync(createOrderDTO);
+                var order = await _orderService.CreateOrderAsync(createOrderDTO, userId);
                 return Ok(order);
             }
             catch (Exception ex)
@@ -81,9 +81,9 @@ namespace AMAPP.API.Controllers
 
         [HttpPut("{id}")]
         [Authorize(Roles = "CoProducer")]
-        public async Task<ActionResult<OrderDTO>> UpdateOrder(int id, UpdateOrderDTO updateOrderDTO)
+        public async Task<ActionResult<OrderDTO>> UpdateOrder(int id, UpdateOrderDTO updateOrderDTO, string userId)
         {
-            var order = await _orderService.GetOrderByIdAsync(id);
+            var order = await _orderService.GetOrderByIdAsync(id, userId);
             if (order == null)
                 return NotFound();
 
@@ -92,7 +92,7 @@ namespace AMAPP.API.Controllers
 
             try
             {
-                var updatedOrder = await _orderService.UpdateOrderAsync(id, updateOrderDTO);
+                var updatedOrder = await _orderService.UpdateOrderAsync(id, updateOrderDTO, userId);
                 return Ok(updatedOrder);
             }
             catch (Exception ex)
@@ -103,9 +103,9 @@ namespace AMAPP.API.Controllers
 
         [HttpPost("{id}/Items")]
         [Authorize(Roles = "CoProducer")]
-        public async Task<ActionResult<OrderItemDTO>> AddOrderItem(int id, CreateOrderItemDTO createOrderItemDTO)
+        public async Task<ActionResult<OrderItemDTO>> AddOrderItem(int id, CreateOrderItemDTO createOrderItemDTO, string userId)
         {
-            var order = await _orderService.GetOrderByIdAsync(id);
+            var order = await _orderService.GetOrderByIdAsync(id, userId);
             if (order == null)
                 return NotFound();
 
@@ -114,7 +114,7 @@ namespace AMAPP.API.Controllers
 
             try
             {
-                var orderItem = await _orderService.AddOrderItemAsync(id, createOrderItemDTO);
+                var orderItem = await _orderService.AddOrderItemAsync(id, createOrderItemDTO, userId);
                 return CreatedAtAction(nameof(GetOrder), new { id }, orderItem);
             }
             catch (Exception ex)
@@ -125,11 +125,11 @@ namespace AMAPP.API.Controllers
 
         [HttpDelete("Items/{id}")]
         [Authorize(Roles = "CoProducer")]
-        public async Task<ActionResult> RemoveOrderItem(int id)
+        public async Task<ActionResult> RemoveOrderItem(int id, string userId)
         {
             // Permission validation can be implemented here if needed
 
-            var result = await _orderService.RemoveOrderItemAsync(id);
+            var result = await _orderService.RemoveOrderItemAsync(id, userId);
             if (!result)
                 return NotFound();
 
@@ -157,11 +157,11 @@ namespace AMAPP.API.Controllers
 
         [HttpPut("Items/{id}")]
         [Authorize(Roles = "CoProducer,Producer")]
-        public async Task<ActionResult<OrderItemDTO>> UpdateOrderItem(int id, UpdateOrderItemDTO updateOrderItemDTO)
+        public async Task<ActionResult<OrderItemDTO>> UpdateOrderItem(int id, UpdateOrderItemDTO updateOrderItemDTO, string userId)
         {
             try
             {
-                var orderItem = await _orderService.UpdateOrderItemAsync(id, updateOrderItemDTO);
+                var orderItem = await _orderService.UpdateOrderItemAsync(id, updateOrderItemDTO, userId);
                 return Ok(orderItem);
             }
             catch (KeyNotFoundException ex)

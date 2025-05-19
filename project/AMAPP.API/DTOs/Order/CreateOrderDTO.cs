@@ -6,6 +6,4 @@ public class CreateOrderDTO
     public string DeliveryRequirements { get; set; }
     public List<CreateOrderItemDTO> OrderItems { get; set; } = new List<CreateOrderItemDTO>();
 
-    public string UserId { get; set; }
-
 }

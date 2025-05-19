@@ -3,7 +3,12 @@ using AMAPP.API.DTOs.Order;
 using AMAPP.API.Models;
 using AMAPP.API.Services.Interfaces;
 using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using static AMAPP.API.Constants;
 
 namespace AMAPP.API.Services.Implementations
@@ -12,21 +17,45 @@ namespace AMAPP.API.Services.Implementations
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
+        private readonly UserManager<User> _userManager;
 
-        public OrderService(ApplicationDbContext context, IMapper mapper)
+        public OrderService(ApplicationDbContext context, IMapper mapper, UserManager<User> userManager)
         {
             _context = context;
             _mapper = mapper;
+            _userManager = userManager;
         }
 
-        public async Task<IEnumerable<OrderDTO>> GetOrdersAsync(OrderFilterDTO filter)
+        public async Task<IEnumerable<OrderDTO>> GetOrdersAsync(OrderFilterDTO filter, string userId = null)
         {
+            // If userId is provided, check if the user is an admin
+            bool isAdmin = false;
+            if (!string.IsNullOrEmpty(userId))
+            {
+                var user = await _userManager.FindByIdAsync(userId);
+                isAdmin = user != null && await _userManager.IsInRoleAsync(user, "Administrator");
+            }
+
             var query = _context.Orders
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.Product)
                 .Include(o => o.CoproducerInfo)
                 .Include(o => o.Reservation)
                 .AsQueryable();
+
+            // If not admin and userId is provided, only return orders they're authorized to see
+            if (!isAdmin && !string.IsNullOrEmpty(userId))
+            {
+                // Get producer and coproducer IDs for this user
+                var producerId = await GetProducerIdForUserAsync(userId);
+                var coproducerId = await GetCoproducerIdForUserAsync(userId);
+
+                // Filter to only show orders related to this user
+                query = query.Where(o =>
+                    (coproducerId > 0 && o.CoproducerInfoId == coproducerId) ||
+                    (producerId > 0 && o.OrderItems.Any(oi => oi.ProducerId == producerId))
+                );
+            }
 
             // Apply filters
             if (filter.StartDate.HasValue)
@@ -41,9 +70,6 @@ namespace AMAPP.API.Services.Implementations
             if (filter.CoproducerId.HasValue)
                 query = query.Where(o => o.CoproducerInfoId == filter.CoproducerId.Value);
 
-            // if (filter.ProductId.HasValue)
-            //     query = query.Where(o => o.OrderItems.Any(oi => oi.ProductId == filter.ProductId.Value));
-
             if (filter.ProducerId.HasValue)
                 query = query.Where(o => o.OrderItems.Any(oi => oi.ProducerId == filter.ProducerId.Value));
 
@@ -54,7 +80,7 @@ namespace AMAPP.API.Services.Implementations
             return _mapper.Map<IEnumerable<OrderDTO>>(orders);
         }
 
-        public async Task<OrderDetailDTO> GetOrderByIdAsync(int orderId)
+        public async Task<OrderDetailDTO> GetOrderByIdAsync(int orderId, string userId = null)
         {
             var order = await _context.Orders
                 .Include(o => o.OrderItems)
@@ -65,6 +91,24 @@ namespace AMAPP.API.Services.Implementations
 
             if (order == null)
                 return null;
+
+            // If userId is provided, check authorization
+            if (!string.IsNullOrEmpty(userId))
+            {
+                // Check if user is admin
+                var user = await _userManager.FindByIdAsync(userId);
+                var isAdmin = user != null && await _userManager.IsInRoleAsync(user, "Administrator");
+
+                // If not admin, check if user is authorized to see this order
+                if (!isAdmin)
+                {
+                    bool isAuthorized = await CanUserAccessOrderAsync(orderId, userId);
+                    if (!isAuthorized)
+                    {
+                        throw new UnauthorizedAccessException("You don't have permission to view this order.");
+                    }
+                }
+            }
 
             return _mapper.Map<OrderDetailDTO>(order);
         }
@@ -81,6 +125,18 @@ namespace AMAPP.API.Services.Implementations
             return _mapper.Map<IEnumerable<OrderDTO>>(orders);
         }
 
+        public async Task<IEnumerable<OrderDTO>> GetOrdersByUserIdAsync(string userId)
+        {
+            // Find coproducer info for this user
+            var coproducerInfo = await _context.CoproducersInfo
+                .FirstOrDefaultAsync(c => c.UserId == userId);
+
+            if (coproducerInfo == null)
+                return new List<OrderDTO>();
+
+            return await GetOrdersByCoproducerAsync(coproducerInfo.Id);
+        }
+
         public async Task<IEnumerable<OrderDTO>> GetOrdersByProducerAsync(int producerId)
         {
             var orders = await _context.Orders
@@ -94,66 +150,37 @@ namespace AMAPP.API.Services.Implementations
             return _mapper.Map<IEnumerable<OrderDTO>>(orders);
         }
 
-        /* Example of previous implementation for CreateOrderAsync
-
-        public async Task<OrderDTO> CreateOrderAsync(CreateOrderDTO createOrderDTO)
+        public async Task<IEnumerable<OrderDTO>> GetOrdersByProducerUserIdAsync(string userId)
         {
-            var coproducer = await _context.CoproducersInfo
-               .FirstOrDefaultAsync(c => c.Id == createOrderDTO.CoproducerInfoId);
+            // Find producer info for this user
+            var producerInfo = await _context.ProducersInfo
+                .FirstOrDefaultAsync(p => p.UserId == userId);
 
-            if (coproducer == null)
-                throw new KeyNotFoundException($"Coproducer with ID {createOrderDTO.CoproducerInfoId} not found");
+            if (producerInfo == null)
+                return new List<OrderDTO>();
 
-            // Create new order
-            var order = new Order
-            {
-                CoproducerInfoId = createOrderDTO.CoproducerInfoId,
-                OrderDate = DateTime.UtcNow,
-                DeliveryRequirements = createOrderDTO.DeliveryRequirements,
-                Status = OrderStatus.Pending,
-                OrderItems = new List<OrderItem>()
-            };
+            return await GetOrdersByProducerAsync(producerInfo.Id);
+        }
 
-            // Add order items
-            foreach (var itemDto in createOrderDTO.OrderItems)
-            {
-                var product = await _context.Products
-                    .FirstOrDefaultAsync(p => p.Id == itemDto.ProductId);
-
-                if (product == null)
-                    throw new KeyNotFoundException($"Product with ID {itemDto.ProductId} not found");
-
-                var orderItem = new OrderItem
-                {
-                    ProductId = itemDto.ProductId,
-                    Quantity = itemDto.Quantity,
-                    Price = product.ReferencePrice,
-                    ProducerId = product.ProducerInfoId
-                };
-
-                order.OrderItems.Add(orderItem);
-            }
-
-            _context.Orders.Add(order);
-            await _context.SaveChangesAsync();
-
-            return _mapper.Map<OrderDTO>(order);
-        } */
-
-        public async Task<OrderDTO> CreateOrderAsync(CreateOrderDTO createOrderDTO)
+        public async Task<OrderDTO> CreateOrderAsync(CreateOrderDTO createOrderDTO, string userId)
         {
             try
             {
+                // Validate the user exists
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user == null)
+                    throw new KeyNotFoundException("User not found.");
+
                 // Find or create CoproducerInfo by UserId
                 var coproducerInfo = await _context.CoproducersInfo
-                    .Include(c => c.User) // Include User here if you want to avoid repeating later
-                    .FirstOrDefaultAsync(c => c.UserId == createOrderDTO.UserId);
+                    .Include(c => c.User)
+                    .FirstOrDefaultAsync(c => c.UserId == userId);
 
                 if (coproducerInfo == null)
                 {
                     coproducerInfo = new CoproducerInfo
                     {
-                        UserId = createOrderDTO.UserId
+                        UserId = userId
                     };
 
                     _context.CoproducersInfo.Add(coproducerInfo);
@@ -214,8 +241,22 @@ namespace AMAPP.API.Services.Implementations
             }
         }
 
-        public async Task<OrderDTO> UpdateOrderAsync(int orderId, UpdateOrderDTO updateOrderDTO)
+        public async Task<OrderDTO> UpdateOrderAsync(int orderId, UpdateOrderDTO updateOrderDTO, string userId)
         {
+            // Check if user is admin or order owner
+            var user = await _userManager.FindByIdAsync(userId);
+            var isAdmin = user != null && await _userManager.IsInRoleAsync(user, "Administrator");
+
+            // If not admin, verify permission
+            if (!isAdmin)
+            {
+                bool canModify = await CanCoproducerModifyOrderAsync(orderId, userId);
+                if (!canModify)
+                {
+                    throw new UnauthorizedAccessException("You don't have permission to update this order.");
+                }
+            }
+
             var order = await _context.Orders
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.Product)
@@ -235,8 +276,22 @@ namespace AMAPP.API.Services.Implementations
             return _mapper.Map<OrderDTO>(order);
         }
 
-        public async Task<OrderItemDTO> UpdateOrderItemAsync(int orderItemId, UpdateOrderItemDTO updateOrderItemDTO)
+        public async Task<OrderItemDTO> UpdateOrderItemAsync(int orderItemId, UpdateOrderItemDTO updateOrderItemDTO, string userId)
         {
+            // Check if user is admin or can modify this item
+            var user = await _userManager.FindByIdAsync(userId);
+            var isAdmin = user != null && await _userManager.IsInRoleAsync(user, "Administrator");
+
+            // If not admin, verify permission
+            if (!isAdmin)
+            {
+                bool canModify = await CanProducerModifyOrderItemAsync(orderItemId, userId);
+                if (!canModify)
+                {
+                    throw new UnauthorizedAccessException("You don't have permission to update this order item.");
+                }
+            }
+
             var orderItem = await _context.OrderItems
                 .Include(oi => oi.Product)
                 .FirstOrDefaultAsync(oi => oi.Id == orderItemId);
@@ -252,8 +307,22 @@ namespace AMAPP.API.Services.Implementations
             return _mapper.Map<OrderItemDTO>(orderItem);
         }
 
-        public async Task<OrderItemDTO> AddOrderItemAsync(int orderId, CreateOrderItemDTO createOrderItemDTO)
+        public async Task<OrderItemDTO> AddOrderItemAsync(int orderId, CreateOrderItemDTO createOrderItemDTO, string userId)
         {
+            // Check if user is admin or order owner
+            var user = await _userManager.FindByIdAsync(userId);
+            var isAdmin = user != null && await _userManager.IsInRoleAsync(user, "Administrator");
+
+            // If not admin, verify permission
+            if (!isAdmin)
+            {
+                bool canModify = await CanCoproducerModifyOrderAsync(orderId, userId);
+                if (!canModify)
+                {
+                    throw new UnauthorizedAccessException("You don't have permission to modify this order.");
+                }
+            }
+
             var order = await _context.Orders
                 .FirstOrDefaultAsync(o => o.Id == orderId);
 
@@ -295,13 +364,28 @@ namespace AMAPP.API.Services.Implementations
             return _mapper.Map<OrderItemDTO>(orderItem);
         }
 
-        public async Task<bool> RemoveOrderItemAsync(int orderItemId)
+        public async Task<bool> RemoveOrderItemAsync(int orderItemId, string userId)
         {
+            // Check if user is admin
+            var user = await _userManager.FindByIdAsync(userId);
+            var isAdmin = user != null && await _userManager.IsInRoleAsync(user, "Administrator");
+
             var orderItem = await _context.OrderItems
+                .Include(oi => oi.Order) // Include the order to check ownership
                 .FirstOrDefaultAsync(oi => oi.Id == orderItemId);
 
             if (orderItem == null)
                 return false;
+
+            // If not admin, verify permission
+            if (!isAdmin)
+            {
+                bool canModify = await CanCoproducerModifyOrderAsync(orderItem.OrderId, userId);
+                if (!canModify)
+                {
+                    throw new UnauthorizedAccessException("You don't have permission to remove this order item.");
+                }
+            }
 
             _context.OrderItems.Remove(orderItem);
             await _context.SaveChangesAsync();
@@ -309,8 +393,15 @@ namespace AMAPP.API.Services.Implementations
             return true;
         }
 
-        public async Task<bool> CanCoproducerModifyOrderAsync(int coproducerId, int orderId)
+        public async Task<bool> CanCoproducerModifyOrderAsync(int orderId, string userId)
         {
+            // Find coproducer info for this user
+            var coproducerInfo = await _context.CoproducersInfo
+                .FirstOrDefaultAsync(c => c.UserId == userId);
+
+            if (coproducerInfo == null)
+                return false;
+
             var order = await _context.Orders
                 .FirstOrDefaultAsync(o => o.Id == orderId);
 
@@ -318,11 +409,18 @@ namespace AMAPP.API.Services.Implementations
                 return false;
 
             // Check if the order belongs to the coproducer
-            return order.CoproducerInfoId == coproducerId;
+            return order.CoproducerInfoId == coproducerInfo.Id;
         }
 
-        public async Task<bool> CanProducerModifyOrderItemAsync(int producerId, int orderItemId)
+        public async Task<bool> CanProducerModifyOrderItemAsync(int orderItemId, string userId)
         {
+            // Find producer info for this user
+            var producerInfo = await _context.ProducersInfo
+                .FirstOrDefaultAsync(p => p.UserId == userId);
+
+            if (producerInfo == null)
+                return false;
+
             var orderItem = await _context.OrderItems
                 .FirstOrDefaultAsync(oi => oi.Id == orderItemId);
 
@@ -330,12 +428,50 @@ namespace AMAPP.API.Services.Implementations
                 return false;
 
             // Check if the order item contains a product from the producer
-            return orderItem.ProducerId == producerId;
+            return orderItem.ProducerId == producerInfo.Id;
+        }
+
+        // New method to check if a user can access an order (as either producer or coproducer)
+        public async Task<bool> CanUserAccessOrderAsync(int orderId, string userId)
+        {
+            // Check if user is a coproducer who owns this order
+            bool isCoproducerOwner = await CanCoproducerModifyOrderAsync(orderId, userId);
+            if (isCoproducerOwner)
+                return true;
+
+            // Check if user is a producer with items in this order
+            var producerInfo = await _context.ProducersInfo
+                .FirstOrDefaultAsync(p => p.UserId == userId);
+
+            if (producerInfo == null)
+                return false;
+
+            // Check if any item in the order belongs to this producer
+            var hasItems = await _context.OrderItems
+                .AnyAsync(oi => oi.OrderId == orderId && oi.ProducerId == producerInfo.Id);
+
+            return hasItems;
+        }
+
+        public async Task<int> GetCoproducerIdForUserAsync(string userId)
+        {
+            var coproducerInfo = await _context.CoproducersInfo
+                .FirstOrDefaultAsync(c => c.UserId == userId);
+
+            return coproducerInfo?.Id ?? -1;
+        }
+
+        public async Task<int> GetProducerIdForUserAsync(string userId)
+        {
+            var producerInfo = await _context.ProducersInfo
+                .FirstOrDefaultAsync(p => p.UserId == userId);
+
+            return producerInfo?.Id ?? -1;
         }
 
         private IQueryable<Order> ApplySorting(IQueryable<Order> query, string sortBy, bool descending)
         {
-            switch (sortBy.ToLower())
+            switch (sortBy?.ToLower())
             {
                 case "date":
                 case "orderdate":
