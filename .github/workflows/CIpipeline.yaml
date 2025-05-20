@@ -21,10 +21,10 @@ jobs:
             dotnet-version: '8.0.x'
 
         - name: Restore dependencies
-          run: dotnet restore project/AMAPP.API.csproj
+          run: dotnet restore project/AMAPP.API/AMAPP.API.csproj
 
         - name: Build
-          run: dotnet build project/AMAPP.API.csproj --no-restore
+          run: dotnet build project/AMAPP.API/AMAPP.API.csproj --no-restore
 
         - name: Run tests
-          run: dotnet test project/AMAPP.API.csproj --no-build --verbosity normal
+          run: dotnet test project/AMAPP.API/AMAPP.API.csproj --no-build --verbosity normal
