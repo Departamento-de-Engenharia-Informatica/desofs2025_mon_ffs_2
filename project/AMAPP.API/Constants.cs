@@ -56,11 +56,11 @@ namespace AMAPP.API
         // Delivery Status
         public enum DeliveryStatus
         {
-            Scheduled,
-            InTransit,
-            Delivered,
-            Failed,
-            Cancelled
+            Scheduled = 0,
+            InTransit = 1,
+            Delivered = 2,
+            Failed = 3,
+            Cancelled = 4
         }
 
         // Resource Status (used for various entities)

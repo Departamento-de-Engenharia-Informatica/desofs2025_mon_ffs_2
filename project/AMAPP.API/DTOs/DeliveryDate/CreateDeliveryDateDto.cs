@@ -2,7 +2,7 @@
 
 namespace AMAPP.API.DTOs.DeliveryDate;
 
-public class CreateDeliveryDateDto
+public class CreateDeliveryDto
 {
     [Required]
     public DateTime Date { get; set; }
