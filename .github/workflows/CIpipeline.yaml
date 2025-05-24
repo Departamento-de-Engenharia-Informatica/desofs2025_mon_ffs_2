@@ -322,7 +322,6 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
       
-      
     - name: Check for exposed secrets
       uses: gitleaks/gitleaks-action@v2
       env:
