@@ -7,10 +7,12 @@ on:
     branches: [ main, develop ]
   schedule:
     - cron: '0 0 * * 0'  # Executa semanalmente aos domingos
+  workflow_dispatch: # Permite execução manual do workflow
 
 jobs:
+  # Job 1: Análise de Código com CodeQL
   analyze:
-    name: Analyze Code
+    name: CodeQL Security Analysis
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -55,6 +57,7 @@ jobs:
       # env:
       #   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  # Job 1: Análise de Código com CodeQL
   build-and-test:
     name: Build and Test
     runs-on: ubuntu-latest
@@ -91,10 +94,28 @@ jobs:
       - name: Build
         run: dotnet build --no-restore
 
-      - name: Restore dependencies
-        run: dotnet test --no-build --verbosity normal
+      - name: Run tests with coverage
+        run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
+        env:
+          ConnectionStrings__DefaultConnection: "Host=localhost;Port=5432;Database=amappdb_test;Username=postgres;Password=postgres;"
+      
+      - name: Generate coverage report
+        uses: danielpalme/ReportGenerator-GitHub-Action@5.2.0
+        with:
+          reports: './project/AMAPP.API/TestResults/**/coverage.cobertura.xml'
+          targetdir: './project/AMAPP.API/CoverageReport'
+          reporttypes: 'HtmlInline;Cobertura;TextSummary'
+      
+      - name: Upload test results and coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-and-coverage
+          path: |
+            ./project/AMAPP.API/TestResults/
+            ./project/AMAPP.API/CoverageReport/
 
-
+  # Job 3: Verificação de Dependências (SCA)
   dependency-check:
     name: Dependency Security Scan
     runs-on: ubuntu-latest
