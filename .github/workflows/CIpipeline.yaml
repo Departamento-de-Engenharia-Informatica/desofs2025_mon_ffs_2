@@ -278,14 +278,8 @@ jobs:
     
     - name: Move and rename SBOM file
       run: |
-        mv /home/runner/work/desofs2025_mon_ffs_2/desofs2025_mon_ffs_2/bom.xml ./sbom.xml
-      continue-on-error: true
-    
-    - name: Upload SBOM artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: sbom
-        path: /home/runner/work/desofs2025_mon_ffs_2/desofs2025_mon_ffs_2/bom.xml
+        mkdir -p ./project/AMAPP.API/
+        mv /home/runner/work/desofs2025_mon_ffs_2/desofs2025_mon_ffs_2/bom.xml ./project/AMAPP.API/sbom.xml
       continue-on-error: true
     
     - name: Upload dependency reports
