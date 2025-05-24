@@ -119,15 +119,37 @@ jobs:
             dotnet test --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
           fi
           
-          # Executar testes de smoke
+          #— Smoke tests
           echo "Executando testes de smoke..."
+          mkdir -p ./SmokeTestResults
+          echo "Iniciando testes de smoke em $(date)" > ./SmokeTestResults/smoke-report.txt
+
+          # start API in background
           dotnet run --no-build --urls http://localhost:5000 &
           echo "Aguardando a API iniciar..."
           sleep 10
+
+          # health endpoint
           echo "Verificando endpoint de saúde..."
-          curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/health || echo "Falha no health check"
+          HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/health)
+          echo "Status do endpoint /health: $HEALTH_STATUS" >> ./SmokeTestResults/smoke-report.txt
+          if [ "$HEALTH_STATUS" = "200" ]; then
+            echo "✅ Health check passou" >> ./SmokeTestResults/smoke-report.txt
+          else
+            echo "❌ Health check falhou" >> ./SmokeTestResults/smoke-report.txt
+          fi
+
+          # swagger endpoint
           echo "Verificando documentação Swagger..."
-          curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/swagger || echo "Falha no acesso ao Swagger"
+          SWAGGER_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/swagger)
+          echo "Status do endpoint /swagger: $SWAGGER_STATUS" >> ./SmokeTestResults/smoke-report.txt
+          if [ "$SWAGGER_STATUS" = "200" ]; then
+            echo "✅ Swagger check passou" >> ./SmokeTestResults/smoke-report.txt
+          else
+            echo "❌ Swagger check falhou" >> ./SmokeTestResults/smoke-report.txt
+          fi
+
+          # stop API
           pkill -f "dotnet run" || echo "Não foi possível encerrar a API"
           
           # Instalar e executar testes de mutação
@@ -162,6 +184,7 @@ jobs:
           path: |
             ./project/AMAPP.API/TestResults/
             ./project/AMAPP.API/CoverageReport/
+            ./project/AMAPP.API/SmokeTestResults/
 
   # Job 3: Verificação de Dependências (SCA)
   dependency-check:
