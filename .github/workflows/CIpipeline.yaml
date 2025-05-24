@@ -57,11 +57,6 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Upload SARIF
-      uses: github/codeql-action/upload-sarif@v3
-      with:
-        sarif_file: 'codeql-results.sarif'
-
   # Job 2: Análise de Código com CodeQL
   build-and-test:
     name: Build and Test
