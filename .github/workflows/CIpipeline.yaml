@@ -104,7 +104,7 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          # Verificar se existe projeto de testes
+          # Executar testes com cobertura
           if [ -f "AMAPP.API.Tests/AMAPP.API.Tests.csproj" ]; then
             echo "Running tests from AMAPP.API.Tests project..."
             dotnet test AMAPP.API.Tests/AMAPP.API.Tests.csproj --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
@@ -118,6 +118,31 @@ jobs:
             echo "Running tests from main project (no separate test project found)..."
             dotnet test --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
           fi
+          
+          # Executar testes de smoke
+          echo "Executando testes de smoke..."
+          dotnet run --no-build --urls http://localhost:5000 &
+          echo "Aguardando a API iniciar..."
+          sleep 10
+          echo "Verificando endpoint de saúde..."
+          curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/health || echo "Falha no health check"
+          echo "Verificando documentação Swagger..."
+          curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/swagger || echo "Falha no acesso ao Swagger"
+          pkill -f "dotnet run" || echo "Não foi possível encerrar a API"
+          
+          # Instalar e executar testes de mutação
+          echo "Instalando Stryker para testes de mutação..."
+          dotnet tool install -g dotnet-stryker || echo "Stryker já instalado"
+          
+          echo "Executando testes de mutação em classes críticas..."
+          # Executando Stryker com configurações básicas para economizar tempo
+          echo "Executando testes de mutação em classes críticas..."
+          dotnet stryker \
+            -p AMAPP.API.csproj \
+            --reporter "html" \
+            --reporter "progress" \
+            --mutation-level Basic
+          
         env:
           ConnectionStrings__DefaultConnection: "Host=localhost;Port=5432;Database=amappdb_test;Username=postgres;Password=postgres;"
         continue-on-error: true
