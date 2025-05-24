@@ -276,35 +276,16 @@ jobs:
         out: ./project/AMAPP.API
       continue-on-error: true
     
+    - name: Move and rename SBOM file
+      run: |
+        mv /home/runner/work/desofs2025_mon_ffs_2/desofs2025_mon_ffs_2/bom.xml ./sbom.xml
+      continue-on-error: true
+    
     - name: Upload SBOM artifact
       uses: actions/upload-artifact@v4
       with:
         name: sbom
-        path: ./project/AMAPP.API/sbom.xml
-      continue-on-error: true
-    
-    - name: Install SBOM2doc
-      run: |
-        python3 -m pip install --upgrade pip sbom2doc
-      continue-on-error: true
-    
-    - name: Convert SBOM to HTML
-      run: |
-        # criar o diretório para o relatório
-        mkdir -p ./SBOMReport
-    
-        # converter SBOM para HTML usando o caminho completo
-        sbom2doc \
-          -i /home/runner/work/desofs2025_mon_ffs_2/desofs2025_mon_ffs_2/bom.xml \
-          -f html \
-          -o ./SBOMReport/index.html
-      continue-on-error: true
-    
-    - name: Upload SBOM HTML report
-      uses: actions/upload-artifact@v4
-      with:
-        name: sbom-html-report
-        path: ./SBOMReport/
+        path: /home/runner/work/desofs2025_mon_ffs_2/desofs2025_mon_ffs_2/bom.xml
       continue-on-error: true
     
     - name: Upload dependency reports
@@ -315,8 +296,7 @@ jobs:
           ./project/AMAPP.API/vulnerable-packages.txt
           ./project/AMAPP.API/outdated-packages.txt
           ./dependency-check-reports/
-          /home/runner/work/desofs2025_mon_ffs_2/desofs2025_mon_ffs_2/bom.xml
-          ./SBOMReport/
+          ./project/AMAPP.API/sbom.xml
 
   # Job 4: Verificações de Qualidade de Código
   code-quality:
@@ -342,6 +322,7 @@ jobs:
       uses: gitleaks/gitleaks-action@v2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
       continue-on-error: true
     
   # Job 5: DAST com OWASP ZAP
