@@ -138,7 +138,6 @@ jobs:
           else
             echo "❌ Health check falhou" >> ./SmokeTestResults/smoke-report.txt
           fi
-
           # swagger endpoint
           echo "Verificando documentação Swagger..."
           SWAGGER_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/swagger)
@@ -148,8 +147,41 @@ jobs:
           else
             echo "❌ Swagger check falhou" >> ./SmokeTestResults/smoke-report.txt
           fi
-
-          # stop API
+          
+          # E2E Smoke testes
+          echo "Executando testes E2E..." >> ./SmokeTestResults/smoke-report.txt
+          
+          # Teste completo de fluxo de negócio (exemplo para uma API de recursos)
+          CREATE_RESPONSE=$(curl -s -X POST "http://localhost:5000/api/recursos" \
+            -H "Content-Type: application/json" \
+            -d '{"nome":"Recurso Teste","descricao":"Criado automaticamente"}')
+          
+          # Extrair ID do recurso criado
+          RESOURCE_ID=$(echo $CREATE_RESPONSE | grep -o '"id":"[^"]*' | cut -d'"' -f4)
+          echo "Recurso criado com ID: $RESOURCE_ID" >> ./SmokeTestResults/smoke-report.txt
+          
+          # Verificar se consegue obter o recurso
+          GET_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:5000/api/recursos/$RESOURCE_ID")
+          echo "GET recurso status: $GET_STATUS" >> ./SmokeTestResults/smoke-report.txt
+          
+          # Atualizar recurso
+          UPDATE_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X PUT "http://localhost:5000/api/recursos/$RESOURCE_ID" \
+            -H "Content-Type: application/json" \
+            -d '{"id":"'$RESOURCE_ID'","nome":"Recurso Atualizado","descricao":"Atualizado automaticamente"}')
+          echo "UPDATE recurso status: $UPDATE_STATUS" >> ./SmokeTestResults/smoke-report.txt
+          
+          # Apagar recurso
+          DELETE_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE "http://localhost:5000/api/recursos/$RESOURCE_ID")
+          echo "DELETE recurso status: $DELETE_STATUS" >> ./SmokeTestResults/smoke-report.txt
+          
+          # Verificar fluxo completo
+          if [ "$GET_STATUS" = "200" ] && [ "$UPDATE_STATUS" = "200" ] && [ "$DELETE_STATUS" = "200" ]; then
+            echo "✅ Teste E2E completo executado com sucesso" >> ./SmokeTestResults/smoke-report.txt
+          else
+            echo "❌ Falha no teste E2E" >> ./SmokeTestResults/smoke-report.txt
+          fi
+          
+          # stop API (código existente)
           pkill -f "dotnet run" || echo "Não foi possível encerrar a API"
           
           # Instalar e executar testes de mutação
