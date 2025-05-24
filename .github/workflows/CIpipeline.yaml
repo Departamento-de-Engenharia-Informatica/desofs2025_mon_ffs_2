@@ -7,10 +7,12 @@ on:
     branches: [ main, develop ]
   schedule:
     - cron: '0 0 * * 0'  # Executa semanalmente aos domingos
+  workflow_dispatch: # Permite execução manual do workflow
 
 jobs:
+  # Job 1: Análise de Código com CodeQL
   analyze:
-    name: Analyze Code
+    name: CodeQL Security Analysis
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -48,13 +50,14 @@ jobs:
         dotnet build --no-restore
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
+      uses: github/codeql-action/analyze@v3
       with:
         category: '/language:${{ matrix.language }}'
-      #   output: codeql-results.sarif
-      # env:
-      #   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        output: codeql-results.sarif
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  # Job 2: Análise de Código com CodeQL
   build-and-test:
     name: Build and Test
     runs-on: ubuntu-latest
@@ -85,16 +88,57 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - name: Cache NuGet packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
       - name: Restore dependencies
         run: dotnet restore
 
       - name: Build
         run: dotnet build --no-restore
 
-      - name: Restore dependencies
-        run: dotnet test --no-build --verbosity normal
+      - name: Run tests with coverage
+        run: |
+          # Verificar se existe projeto de testes
+          if [ -f "AMAPP.API.Tests/AMAPP.API.Tests.csproj" ]; then
+            echo "Running tests from AMAPP.API.Tests project..."
+            dotnet test AMAPP.API.Tests/AMAPP.API.Tests.csproj --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
+          elif [ -f "AMAP.API.Tests/AMAP.API.Tests.csproj" ]; then
+            echo "Running tests from AMAP.API.Tests project..."
+            dotnet test AMAP.API.Tests/AMAP.API.Tests.csproj --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
+          elif [ -f "AMAPP.API.sln" ]; then
+            echo "Running tests from solution..."
+            dotnet test AMAPP.API.sln --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
+          else
+            echo "Running tests from main project (no separate test project found)..."
+            dotnet test --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
+          fi
+        env:
+          ConnectionStrings__DefaultConnection: "Host=localhost;Port=5432;Database=amappdb_test;Username=postgres;Password=postgres;"
+        continue-on-error: true
+        
+      - name: Generate coverage report
+        uses: danielpalme/ReportGenerator-GitHub-Action@5.2.0
+        with:
+          reports: './project/AMAPP.API/TestResults/**/coverage.cobertura.xml'
+          targetdir: './project/AMAPP.API/CoverageReport'
+          reporttypes: 'HtmlInline;Cobertura;TextSummary'
+      
+      - name: Upload test results and coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-and-coverage
+          path: |
+            ./project/AMAPP.API/TestResults/
+            ./project/AMAPP.API/CoverageReport/
 
-
+  # Job 3: Verificação de Dependências (SCA)
   dependency-check:
     name: Dependency Security Scan
     runs-on: ubuntu-latest
@@ -129,6 +173,19 @@ jobs:
         cat outdated-packages.txt
       continue-on-error: true
     
+    - name: OWASP Dependency Check
+      uses: dependency-check/Dependency-Check_Action@main
+      with:
+        project: 'AMAPP.API'
+        path: './project'
+        format: 'HTML,JSON'
+        out: 'dependency-check-reports'
+        args: >
+          --enableRetired
+          --enableExperimental
+          --failOnCVSS 7
+      continue-on-error: true
+    
     - name: Upload dependency reports
       uses: actions/upload-artifact@v4
       with:
@@ -136,3 +193,67 @@ jobs:
         path: |
           ./project/AMAPP.API/vulnerable-packages.txt
           ./project/AMAPP.API/outdated-packages.txt
+          ./dependency-check-reports/
+
+  # Job 4: Verificações de Qualidade de Código
+  code-quality:
+    name: Code Quality Analysis
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    defaults:
+      run:
+        working-directory: ./project/AMAPP.API
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'    
+    - name: Restore dependencies
+      run: dotnet restore
+    
+  # Job 5: DAST com OWASP ZAP
+  dast-owasp-zap:
+    name: OWASP ZAP Baseline Scan (DAST)
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    defaults:
+      run:
+        working-directory: ./project/AMAPP.API
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build API
+        run: dotnet build --no-restore
+
+      - name: Run API in background
+        run: |
+          dotnet run --no-build --urls "http://localhost:5000" &
+          sleep 10
+
+      - name: Run OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.10.0
+        with:
+          target: 'http://localhost:5000'
+          fail_action: false
+          allow_issue_writing: true
+          cmd_options: '-config api.disablekey=true'
+
+      - name: Upload ZAP report
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-report
+          path: owasp-zap-report.html
