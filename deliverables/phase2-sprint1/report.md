@@ -77,25 +77,15 @@ This class diagram represents the **core data structure** of the AMAPP platform,
 
 ### Component Diagram
 
-![Component Diagram](./figs/diagrams/ComponentDiagram.png)
+![Component Diagram](./figs/diagrams/ComponentDiagram.jpg)
 
-<span style="color: red;">
-Alterar diagrama e explicar.
-</span>
+The component diagram illustrates the architecture of the system developed to support the AMAP initiative. The system is composed of two main subsystems: the AMAP System and the AMAP Database Server.
 
-Blablabla
+- The AMAP System includes the AMAP BackEnd component, which is responsible for handling core business logic, managing interactions with users through the AMAP API, and orchestrating internal processes such as order management, production planning, and delivery scheduling.
 
----
+- The AMAP Database Server hosts the AMAP Database component, which stores all critical data related to users, orders, producers, and inventory. Communication between the backend and the database is handled via the AmapDB_API, ensuring a secure and structured data flow.
 
-### Logical Diagram ??
-
-![Component Diagram](./figs/diagrams/ComponentDiagram.png)
-
-<span style="color: red;">
-Alterar diagrama e explicar.
-</span>
-
-Blablabla
+This architecture ensures modularity and separation of concerns, supporting maintainability and scalability. It enables efficient management of AMAP's core operations while aligning with its principles of transparency, sustainability, and local community support.
 
 ---
 
@@ -440,18 +430,70 @@ Blablabla
 
 ### Technology Used
 
-Blablabla
+The system is being developed using .NET 8, a modern and high-performance framework for building robust and scalable web APIs. This version of .NET provides improved minimal APIs, enhanced performance, and better integration with modern development tools.
+
+For data persistence, the project uses a PostgreSQL relational database. PostgreSQL was chosen for its reliability, strong support for ACID transactions, advanced querying capabilities, and scalability, making it well-suited for managing complex order and production data in the AMAP context.
+
+To test and validate the API endpoints, two tools are being used:
+
+- **Postman**: to manually test requests and automate testing collections.
+
+- **Swagger**: to provide interactive API documentation and facilitate testing during development. Swagger also serves as a reference for developers and stakeholders to understand the available endpoints and expected inputs/outputs.
+
+This technology stack ensures the system is maintainable, testable, and performant, supporting the goals of automation, transparency, and operational efficiency within the AMAP initiative.
+
+
 
 ### Structure
 
-Blablabla
+![Structure Representation](./figs/Structure.jpg)
+
+
+The project follows a modular and maintainable Onion Architecture, which emphasizes the separation of concerns and dependency inversion. This architecture places the domain and core logic at the center, with infrastructure and external dependencies in the outer layers.
+
+The solution is structured into clear and well-defined folders:
+
+- **Controllers**: Contain the API endpoints responsible for handling HTTP requests and returning appropriate responses.
+
+- **Services**: Contain the business logic of the application, implementing the use cases and interacting with repositories.
+
+- **Repository**: Encapsulates data access logic and abstracts interactions with the PostgreSQL database.
+
+- **Data / Migrations**: Responsible for managing Entity Framework configurations and database migrations.
+
+- **Models / DTOs / Profiles**: Define the domain entities, Data Transfer Objects (DTOs), and AutoMapper profiles used to map between them.
+
+- **Middlewares**: Custom middleware for handling exceptions, and request validation.
+
+- **Configurations & Utils**: Store system-wide configuration logic and utility classes.
+
+Additional files include:
+
+`appsettings.json` & `appsettings_docker_db.json`: Application configuration files for different environments.
+
+`docker-compose.yaml`: Used to orchestrate and run the PostgreSQL database in a containerized environment.
+
+`Program.cs`: The entry point of the application, where services are configured and the web host is built.
+
+#### CI/CD Integration
+
+The project also includes a GitHub Actions pipeline, which supports continuous integration and delivery workflows. This ensures that the project remains consistent, maintainable, and ready for deployment as it evolves.
+
+This architecture allows for scalability, testability, and easier maintenance, making it ideal for the long-term sustainability goals of the AMAP system.
+
 
 ### <span style="color: red;">Subdividir pelos pontos a baixo: </span>
+
+### Code Reviews
+
+To ensure a secure and robust development lifecycle, the team adopted a structured and disciplined workflow. All changes to the codebase were introduced through pull requests targeting the `development` branch, enforcing isolation and minimizing the risk of insecure or unstable code being merged prematurely. Each pull request required mandatory peer review and approval by at least one team member, ensuring that security concerns, coding standards, and potential vulnerabilities were addressed early.
+
+Once all planned features were completed and individually reviewed, a final merge into the `main` (production) branch could only occur after receiving explicit approval from all remaining three team members. This multi-level review process reinforced accountability and significantly reduced the likelihood of security flaws reaching production. These practices, combined with clear branching strategies and controlled merge permissions, contributed to a development workflow aligned with secure coding principles.
 
 <span style="color: red;">
 Developed enough functionality to showcase automation.
 Documented set of development best practices adopted.
-Evidence of security audits, code reviews, static code
+Evidence of security audits, code reviews (ISTO JÁ ESTÁ FEITO NO PARAGRAFO ANTERIOR), static code
 analysis, software composition analysis, and other relevant
 practices.
 </span>
