@@ -185,17 +185,19 @@ jobs:
           pkill -f "dotnet run" || echo "Não foi possível encerrar a API"
           
           # Instalar e executar testes de mutação
+          echo "====== INICIANDO TESTES DE MUTAÇÃO ======"
           echo "Instalando Stryker para testes de mutação..."
           dotnet tool install -g dotnet-stryker || echo "Stryker já instalado"
           
-          echo "Executando testes de mutação em classes críticas..."
-          # Executando Stryker com configurações básicas para economizar tempo
           echo "Executando testes de mutação em classes críticas..."
           dotnet stryker \
             -p AMAPP.API.csproj \
             --reporter "html" \
             --reporter "progress" \
-            --mutation-level Basic
+            --mutation-level Basic \
+            --output "MutationReports"
+          echo "✅ Testes de mutação concluídos. Relatórios gerados em ./MutationReports"
+          ls -la MutationReports || echo "Diretório MutationReports não encontrado"
           
         env:
           ConnectionStrings__DefaultConnection: "Host=localhost;Port=5432;Database=amappdb_test;Username=postgres;Password=postgres;"
@@ -217,7 +219,8 @@ jobs:
             ./project/AMAPP.API/TestResults/
             ./project/AMAPP.API/CoverageReport/
             ./project/AMAPP.API/SmokeTestResults/
-
+            ./project/AMAPP.API/MutationReports/
+            
   # Job 3: Verificação de Dependências (SCA)
   dependency-check:
     name: Dependency Security Scan
@@ -266,6 +269,28 @@ jobs:
           --failOnCVSS 7
       continue-on-error: true
     
+    - name: Install CycloneDX .NET tool
+      run: |
+        echo "====== INICIANDO INSTALAÇÃO DO CYCLONEDX ======"
+        dotnet tool install --global CycloneDX
+        echo "✅ CycloneDX instalado com sucesso"
+      continue-on-error: true
+    
+    - name: Generate SBOM
+      uses: CycloneDX/gh-dotnet-generate-sbom@v1
+      with:
+        path: ./project/AMAPP.API/AMAPP.API.csproj
+        out: ./project/AMAPP.API
+        filename: sbom.xml
+      continue-on-error: true
+    
+    - name: Upload SBOM artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: sbom
+        path: ./project/AMAPP.API/sbom.xml
+      continue-on-error: true
+    
     - name: Upload dependency reports
       uses: actions/upload-artifact@v4
       with:
@@ -274,6 +299,7 @@ jobs:
           ./project/AMAPP.API/vulnerable-packages.txt
           ./project/AMAPP.API/outdated-packages.txt
           ./dependency-check-reports/
+          ./project/AMAPP.API/sbom.xml
 
   # Job 4: Verificações de Qualidade de Código
   code-quality:
@@ -294,6 +320,12 @@ jobs:
         dotnet-version: '8.0.x'    
     - name: Restore dependencies
       run: dotnet restore
+      
+    - name: Check for exposed secrets
+      uses: gitleaks/gitleaks-action@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      continue-on-error: true
     
   # Job 5: DAST com OWASP ZAP
   dast-owasp-zap:
