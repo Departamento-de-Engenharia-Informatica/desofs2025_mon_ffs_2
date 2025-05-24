@@ -57,11 +57,10 @@ Blablabla
 
 ### Domain Model
 
-![Domain Model](../phase1/diagrams/Domain%20Model/domain_model_diagram.png)
+![Domain Model](./diagrams/Domain%20Model/domain_model_diagram.png)
 
 <span style="color: red;">
-Para enquadrar.
-Mantivemos a estrutura do Domain Model.
+Alteramos o domain model, retiramos os Payments.
 </span>
 
 This class diagram represents the **core data structure** of the AMAPP platform, outlining the main entities involved in the management of orders between co-producers and producers.
@@ -77,7 +76,7 @@ This class diagram represents the **core data structure** of the AMAPP platform,
 
 ### Component Diagram
 
-![Component Diagram](./figs/diagrams/ComponentDiagram.jpg)
+![Component Diagram](./diagrams/Component%20Diagram/ComponentDiagram.jpg)
 
 The component diagram illustrates the architecture of the system developed to support the AMAP initiative. The system is composed of two main subsystems: the AMAP System and the AMAP Database Server.
 
@@ -90,11 +89,6 @@ This architecture ensures modularity and separation of concerns, supporting main
 ---
 
 ### Application Users
-
-<span style="color: red;">
-Para enquadrar.
-Mantivemos a estrutura do Domain Model.
-</span>
 
 #### Producer
 
@@ -112,10 +106,10 @@ These users oversee the operational management of the system within AMAP. Acting
 
 ### Use Cases
 
-![Use Cases Diagram](./figs/diagrams/UseCases.png)
+![Use Cases Diagram](./diagrams/UseCases/UseCases.png)
 
 <span style="color: red;">
-Alterar diagrama e explicar.
+Alteraçoes: Eliminamos payments e producer com permissoes para UC08 e UC09.
 </span>
 
 Blablabla
@@ -148,68 +142,59 @@ Blablabla
 - **REQ-08**: Update existing product information.
 - **REQ-09**: Deactivate products from the catalog.
 
-#### UC04 - View Orders
+#### UC04 - Manage AMAP Details
 
-- **REQ-10**: Display all active and completed orders.
-- **REQ-11**: Provide detailed information for each order.
-- **REQ-12**: Allow filtering and sorting orders by date, status, product, co-producer or producer.
-- **REQ-13**: Provide detailed information for each order.
+- **REQ-10**: View current AMAP information.
+- **REQ-11**: Update location details and contact information.
 
-#### UC05 - Manage AMAP Details
+#### UC05 - Login
 
-- **REQ-14**: View current AMAP information.
-- **REQ-15**: Update location details and contact information.
+- **REQ-12**: Authenticate users based on entered credentials and role privileges.
+- **REQ-13**: Recover user account password via a recovery link or code sent to a registered email or phone number.
 
-#### UC06 - Login
+#### UC06 - Register
 
-- **REQ-16**: Authenticate users based on entered credentials and role privileges.
-- **REQ-17**: Recover user account password via a recovery link or code sent to a registered email or phone number.
+- **REQ-14**: Create a new user account.
 
-#### UC07 - Register
+#### UC07 - View/Search Products
 
-- **REQ-18**: Create a new user account.
+- **REQ-15**: View list of products from the AMAP, with filtering options for product type, producer, and availability.
+- **REQ-16**: View detailed information about a product, including information about the producer, type, and availability.
 
-#### UC08 - View/Search Products
+#### UC08 - View Order History
 
-- **REQ-19**: View list of products from the AMAP, with filtering options for product type, producer, and availability.
-- **REQ-20**: View detailed information about a product, including information about the producer, type, and availability.
+- **REQ-17**: Provides access to a comprehensive history of all past orders within the AMAP, including key details such as requested products and order status. It also allows the actor to filter the history by parameters like product, date, or status to easily locate specific orders.
 
-#### UC09 - Manage Orders
+#### UC09 - View Delivery
 
-- **REQ-21**: Co-producer can make new order.
-- **REQ-22**: Co-producer can see the details of their orders.
-- **REQ-23**: Co-producer can update their orders.
-- **REQ-24**: Producer can see the list of orders for their products.
-- **REQ-25**: Producer can update orders that contain their products.
+- **REQ-18**: Access detailed information about scheduled deliveries, including date, address, and delivered products, and can filter deliveries by criteria such as date or delivery status.
+- **REQ-19**: View detailed information about the status of each delivery, such as "pending", "in progress", or "completed".
 
-#### UC10 - View Order History
+#### UC10 - View Orders
 
-- **REQ-26**: Provides access to a comprehensive history of all past orders within the AMAP, including key details such as requested products and order status. It also allows the actor to filter the history by parameters like product, date, or status to easily locate specific orders.
+- **REQ-20**: Display all active and completed orders.
+- **REQ-21**: Provide detailed information for each order.
+- **REQ-22**: Allow filtering and sorting orders by date, status, product, co-producer or producer.
+- **REQ-23**: Provide detailed information for each order.
 
-#### UC11 - View Delivery
+#### UC11 - Manage Orders
 
-- **REQ-27**: Access detailed information about scheduled deliveries, including date, address, and delivered products, and can filter deliveries by criteria such as date or delivery status.
-- **REQ-28**: View detailed information about the status of each delivery, such as "pending", "in progress", or "completed".
+- **REQ-24**: Co-producer can make new order.
+- **REQ-25**: Co-producer can see the details of their orders.
+- **REQ-26**: Co-producer can update their orders.
+- **REQ-27**: Producer can see the list of orders for their products.
+- **REQ-28**: Producer can update orders that contain their products.
 
-#### UC12 - View Order Payments
+#### UC12 - Manage Profile
 
-- **REQ-29**: Co-producer has access to the history of all payments made within the system, displaying relevant details such as date, amount paid, and payment status, and allow filtering of the payment history by date, amount, and payment status.
-- **REQ-30**: AMAP Admin can access the payment history of each co-producer.
-
-#### UC13 - Manage Profile
-
-- **REQ-31**: The actor is capable of viewing and editing profile details, including address, contact information, and other personal data.
-- **REQ-32**: The actor can upload important documents, such as organic certification or other credentials, to verify their qualifications.
+- **REQ-29**: The actor is capable of viewing and editing profile details, including address, contact information, and other personal data.
+- **REQ-30**: The actor can upload important documents, such as organic certification or other credentials, to verify their qualifications.
 
 ---
 
 ### Non-Functional Requirements
 
-<span style="color: red;">
-Fazer alterações se necessário.
-</span>
-
-Blablabla
+The non-functional requirements define quality attributes and technical constraints that the AMAPP system must meet, ensuring robustness, performance, and ease of use and maintenance.
 
 #### 1. Performance
 
@@ -481,8 +466,13 @@ The project also includes a GitHub Actions pipeline, which supports continuous i
 
 This architecture allows for scalability, testability, and easier maintenance, making it ideal for the long-term sustainability goals of the AMAP system.
 
+### Best Practices Adopted
 
-### <span style="color: red;">Subdividir pelos pontos a baixo: </span>
+Blablabla
+
+### Security Audits
+
+Blablabla
 
 ### Code Reviews
 
@@ -490,13 +480,17 @@ To ensure a secure and robust development lifecycle, the team adopted a structur
 
 Once all planned features were completed and individually reviewed, a final merge into the `main` (production) branch could only occur after receiving explicit approval from all remaining three team members. This multi-level review process reinforced accountability and significantly reduced the likelihood of security flaws reaching production. These practices, combined with clear branching strategies and controlled merge permissions, contributed to a development workflow aligned with secure coding principles.
 
-<span style="color: red;">
-Developed enough functionality to showcase automation.
-Documented set of development best practices adopted.
-Evidence of security audits, code reviews (ISTO JÁ ESTÁ FEITO NO PARAGRAFO ANTERIOR), static code
-analysis, software composition analysis, and other relevant
-practices.
-</span>
+### Static Code Analysis
+
+Blablabla
+
+### Software Composition Analysis
+
+Blablabla
+
+### Other Relevant Practices
+
+Blablabla
 
 ---
 
@@ -504,13 +498,29 @@ practices.
 
 Blablabla
 
-### <span style="color: red;">Subdividir pelos pontos a baixo: </span>
+### Inventory of Components
 
-<span style="color: red;">
-Inventory of components, execution of test plans, dynamic
-analysis, conguration validation, artifact scanning, and
-other relevant practices.
-</span>
+Blablabla
+
+### Execution of Test Plans
+
+Blablabla
+
+### Dynamic Analysis
+
+Blablabla
+
+### Configuration Validation
+
+Blablabla
+
+### Artifact Scanning
+
+Blablabla
+
+### Other Relevant Practices
+
+Blablabla
 
 ---
 
@@ -518,11 +528,9 @@ other relevant practices.
 
 Blablabla
 
-### <span style="color: red;">Subdividir pelos pontos a baixo: </span>
+### Automated Practices
 
-<span style="color: red;">
-Most practices are automated.
-</span>
+Blablabla
 
 ---
 
