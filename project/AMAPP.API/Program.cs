@@ -24,6 +24,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
 using System.Text;
+using AMAPP.API.Repository.ReservationRepository;
+using QuestPDF.Infrastructure;
 
 namespace AMAPP.API
 {
@@ -32,6 +34,8 @@ namespace AMAPP.API
         public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            
+            QuestPDF.Settings.License = LicenseType.Community;
             AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
             var configuration = builder.Configuration;
 
@@ -102,6 +106,9 @@ namespace AMAPP.API
             builder.Services.AddScoped<IOrderRepository, OrderRepository>();
             builder.Services.AddScoped<IDeliveryService, DeliveryService>();
             builder.Services.AddScoped<IDeliveryRepository, DeliveryRepository>();
+            builder.Services.AddScoped<IReservationService, ReservationService>();
+            builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
+            builder.Services.AddScoped<IReportService, ReportService>();
 
             builder.Services.AddRouting(options =>
             {
