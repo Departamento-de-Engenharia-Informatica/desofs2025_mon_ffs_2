@@ -269,19 +269,16 @@ jobs:
           --failOnCVSS 7
       continue-on-error: true
     
-    - name: Install CycloneDX .NET tool
-      run: |
-        echo "====== INICIANDO INSTALAÇÃO DO CYCLONEDX ======"
-        dotnet tool install --global CycloneDX
-        echo "✅ CycloneDX instalado com sucesso"
-      continue-on-error: true
-    
     - name: Generate SBOM
       uses: CycloneDX/gh-dotnet-generate-sbom@v1
       with:
         path: ./project/AMAPP.API/AMAPP.API.csproj
         out: ./project/AMAPP.API
-        filename: sbom.xml
+      continue-on-error: true
+    
+    - name: Move and rename SBOM file
+      run: |
+        mv /home/runner/work/desofs2025_mon_ffs_2/desofs2025_mon_ffs_2/bom.xml ./sbom.xml
       continue-on-error: true
     
     - name: Upload SBOM artifact
