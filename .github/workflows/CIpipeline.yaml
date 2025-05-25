@@ -244,8 +244,25 @@ jobs:
           vuln-type: 'os,library'
           scanners: 'vuln,secret,misconfig'
           severity: 'MEDIUM,HIGH,CRITICAL'
-
-      
+          
+      - name: Debug: verify Trivy SARIF
+        run: |
+          echo "PWD: $(pwd)"
+          echo "Listing workspace root:"
+          ls -lah .
+          echo "Listing published output dir:"
+          ls -lah ./project/AMAPP.API/bin/Release/net8.0
+          if [ -f trivy-results.sarif ]; then
+            echo "✅ trivy-results.sarif FOUND"
+            jq '.runs[].tool.driver.name, (.runs[].results | length)' trivy-results.sarif
+          else
+            echo "❌ trivy-results.sarif NOT FOUND"
+            exit 1
+          fi
+        shell: bash
+        env:
+          TZ: UTC
+    
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
         with:
@@ -253,8 +270,8 @@ jobs:
           category: Trivy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-
+          
+          
   # Job 3: Verificação de Dependências (SCA)
   dependency-check:
     name: Dependency Security Scan
