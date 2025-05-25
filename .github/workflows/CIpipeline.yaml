@@ -221,6 +221,19 @@ jobs:
             ./project/AMAPP.API/SmokeTestResults/
             ./project/AMAPP.API/MutationReports/
             
+      - name: Publish for scanning
+        run: |
+          dotnet publish AMAPP.API.csproj \
+            --configuration Release \
+            --framework net8.0 \
+            --output ./bin/Release/net8.0
+  
+      - name: Upload build output
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: ./bin/Release/net8.0
+            
   # Job 3: Verificação de Dependências (SCA)
   dependency-check:
     name: Dependency Security Scan
@@ -297,7 +310,39 @@ jobs:
 
         mv "$SRC" "$PROJDIR/sbom.xml"
         echo "✅ SBOM moved to project/AMAPP.API/sbom.xml"
+        
+    - name: Download build output
+      uses: actions/download-artifact@v4
+      with:
+        name: build-output
+        path: ./bin/Release/net8.0
 
+    - name: Scan build artifacts
+      run: |
+        # Install Syft
+        curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh \
+          | sh -s -- -b /usr/local/bin
+    
+        # Generate SBOM from the downloaded output
+        syft ./bin/Release/net8.0 -o json > artifact-sbom.json
+    
+        # Install Grype
+        curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh \
+          | sh -s -- -b /usr/local/bin
+    
+        # Scan SBOM for vulnerabilities
+        grype sbom:artifact-sbom.json -o json \
+          > artifact-vulnerabilities.json
+      continue-on-error: true
+    
+    - name: Summarize artifact vulnerabilities
+      run: |
+        echo "Resumo de vulnerabilidades encontradas:" > vulnerability-summary.txt
+        jq -r '.matches | length' artifact-vulnerabilities.json >> vulnerability-summary.txt
+        jq -r '.matches[] | select(.vulnerability.severity == "Critical") | .vulnerability.id' artifact-vulnerabilities.json | sort | uniq | wc -l | xargs -I{} echo "Vulnerabilidades críticas: {}" >> vulnerability-summary.txt
+        cat vulnerability-summary.txt
+      continue-on-error: true
+    
     - name: Upload dependency reports
       uses: actions/upload-artifact@v4
       with:
@@ -307,6 +352,9 @@ jobs:
           ./project/AMAPP.API/outdated-packages.txt
           ./dependency-check-reports/
           ./project/AMAPP.API/sbom.xml
+          ./project/AMAPP.API/artifact-sbom.json
+          ./project/AMAPP.API/artifact-vulnerabilities.json
+          ./project/AMAPP.API/vulnerability-summary.txt
 
   # Job 4: Verificações de Qualidade de Código
   code-quality:
