@@ -411,7 +411,37 @@ Blablabla
 
 ## Development
 
-Blablabla
+During the first sprint, the development team laid the system’s foundation by implementing core domain aggregates such as Product, Order, Delivery, and Users. These aggregates encapsulate essential business logic and are key to the platform’s operations.
+
+The project follows Onion Architecture, promoting separation of concerns, maintainability, testability, and security. The structure includes:
+
+- Domain models
+
+- DTOs with input validation
+
+- Mapping profiles between DTOs and domain models
+
+- Repositories for data persistence
+
+- Services with business logic
+
+- Controllers for REST API interactions
+
+From a security perspective, several measures have been applied:
+
+- Input Validation: DTOs enforce strict validation rules to block malformed or malicious input.
+
+- JWT Authentication: Stateless token-based authentication ensures secure identity and access control.
+
+- Test Coverage: Unit and integration tests validate component behavior and interactions.
+
+- Secure CI/CD Pipeline: Includes code reviews, SAST, DAST, SCA, and automated security testing.
+
+- Secret Management: GitLeaks is integrated to detect hardcoded secrets in source control.
+
+- Dependency Scanning: Regular analysis for vulnerabilities in third-party libraries.
+
+- Monitoring & Alerts: Early detection of runtime issues in production environments.
 
 ### Technology Used
 
