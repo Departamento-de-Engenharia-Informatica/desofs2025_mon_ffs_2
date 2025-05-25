@@ -402,3 +402,6 @@ FodyWeavers.xsd
 *.sln.iml
 # JetBrains Pycharm
 .idea/
+
+# Remove coverage report folder
+**/coverage-report/
