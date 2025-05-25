@@ -62,9 +62,9 @@ jobs:
     name: Build and Test
     runs-on: ubuntu-latest
     permissions:
-      contents: read          # already implicit
+      contents: read
       security-events: write
-    
+
     defaults:
       run:
         working-directory: ./project/AMAPP.API
@@ -236,7 +236,7 @@ jobs:
         uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: 'fs'                          
-          scan-ref: './bin/Release/net8.0'         # Adicione o ./ para garantir consistência
+          scan-ref: './project/AMAPP.API/bin/Release/net8.0'         # Adicione o ./ para garantir consistência
           format: 'sarif'                          
           output: 'trivy-results.sarif'           # Salvar no diretório atual
           exit-code: '0'
