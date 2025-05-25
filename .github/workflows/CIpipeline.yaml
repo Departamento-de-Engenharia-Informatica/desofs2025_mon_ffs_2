@@ -232,7 +232,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-output
-          path: bin/Release/net8.0
+          path: ./project/AMAPP.API/bin/Release/net8.0
+
             
   # Job 3: Verificação de Dependências (SCA)
   dependency-check:
@@ -315,7 +316,13 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: build-output
-        path: bin/Release/net8.0
+        path: ./project/AMAPP.API/bin/Release/net8.0
+      continue-on-error: true
+
+    - name: List downloaded files
+      run: |
+        echo "Listing downloaded build artifacts..."
+        ls -R ./project/AMAPP.API/bin/Release/net8.0
 
     - name: Scan build artifacts
       run: |
