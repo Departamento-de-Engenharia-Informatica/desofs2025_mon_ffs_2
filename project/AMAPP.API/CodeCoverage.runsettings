@@ -1,48 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RunSettings>
-    <DataCollectionRunSettings>
-    <DataCollectors>
-        <DataCollector friendlyName="XPlat code coverage">
-        <Configuration>
-            <Format>cobertura,opencover</Format>
-                  
-            <!-- EXCLUIR arquivos que não precisam cobertura -->
-            <Exclude>
-            <!-- Entity Framework e Data -->
-            <ExcludeByFile>**/Data/ApplicationDbContext.cs</ExcludeByFile>
-            <ExcludeByFile>**/Migrations/**</ExcludeByFile>
-                    
-            <!-- Models (apenas properties) -->
-            <!-- <ExcludeByFile>**/Models/**/*.cs</ExcludeByFile> -->
-                    
-            <!-- Configuração e inicialização -->
-            <ExcludeByFile>**/Program.cs</ExcludeByFile>
-            <ExcludeByFile>**/Constants.cs</ExcludeByFile>
-                    
-            <!-- Arquivos gerados e testes -->
-            <ExcludeByFile>**/bin/**</ExcludeByFile>
-            <ExcludeByFile>**/obj/**</ExcludeByFile>
-            <ExcludeByFile>**/*.Tests/**</ExcludeByFile>
-            <ExcludeByFile>**/*Test*.cs</ExcludeByFile>
-            </Exclude>
-                  
-            <!-- INCLUIR apenas código de negócio -->
-            <Include>
-            <IncludeByFile>**/Controllers/**/*.cs</IncludeByFile>
-            <IncludeByFile>**/Services/**/*.cs</IncludeByFile>
-            <IncludeByFile>**/Repositories/**/*.cs</IncludeByFile>
-            <IncludeByFile>**/Business/**/*.cs</IncludeByFile>
-            <IncludeByFile>**/Validators/**/*.cs</IncludeByFile>
-            <IncludeByFile>**/Helpers/**/*.cs</IncludeByFile>
-            </Include>
-                  
-            <ExcludeByAttribute>
-            <Attribute>System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute</Attribute>
-            <Attribute>System.ObsoleteAttribute</Attribute>
-            <Attribute>System.Diagnostics.DebuggerNonUserCodeAttribute</Attribute>
-            </ExcludeByAttribute>
-        </Configuration>
-        </DataCollector>
-    </DataCollectors>
-    </DataCollectionRunSettings>
+	<DataCollectionRunSettings>
+		<DataCollectors>
+			<DataCollector friendlyName="XPlat Code Coverage">
+				<Configuration>
+					<Format>cobertura,opencover</Format>
+
+					<!-- EXCLUIR arquivos que nÃ£o precisam cobertura -->
+					<Exclude>
+						<!-- Entity Framework e Data -->
+						<ExcludeByFile>**/Data/ApplicationDbContext.cs</ExcludeByFile>
+						<ExcludeByFile>**/Migrations/**</ExcludeByFile>
+
+						<!-- Models (apenas properties) -->
+						<!-- <ExcludeByFile>**/Models/**/*.cs</ExcludeByFile> -->
+
+						<!-- ConfiguraÃ§Ã£o e inicializaÃ§Ã£o -->
+						<ExcludeByFile>**/Program.cs</ExcludeByFile>
+						<ExcludeByFile>**/Constants.cs</ExcludeByFile>
+
+						<!-- Arquivos gerados e testes -->
+						<ExcludeByFile>**/bin/**</ExcludeByFile>
+						<ExcludeByFile>**/obj/**</ExcludeByFile>
+						<ExcludeByFile>**/*.Tests/**</ExcludeByFile>
+						<ExcludeByFile>**/*Test*.cs</ExcludeByFile>
+					</Exclude>
+
+					<!-- INCLUIR apenas cÃ³digo de negÃ³cio -->
+					<Include>
+						<IncludeByFile>**/Controllers/**/*.cs</IncludeByFile>
+						<IncludeByFile>**/Services/**/*.cs</IncludeByFile>
+						<IncludeByFile>**/Repositories/**/*.cs</IncludeByFile>
+						<IncludeByFile>**/Business/**/*.cs</IncludeByFile>
+						<IncludeByFile>**/Validators/**/*.cs</IncludeByFile>
+						<IncludeByFile>**/Helpers/**/*.cs</IncludeByFile>
+					</Include>
+
+					<ExcludeByAttribute>
+						<Attribute>System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute</Attribute>
+						<Attribute>System.ObsoleteAttribute</Attribute>
+						<Attribute>System.Diagnostics.DebuggerNonUserCodeAttribute</Attribute>
+					</ExcludeByAttribute>
+				</Configuration>
+			</DataCollector>
+		</DataCollectors>
+	</DataCollectionRunSettings>
 </RunSettings>
