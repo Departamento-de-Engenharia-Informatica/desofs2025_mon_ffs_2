@@ -107,16 +107,16 @@ jobs:
           # Executar testes com cobertura
           if [ -f "AMAPP.API.Tests/AMAPP.API.Tests.csproj" ]; then
             echo "Running tests from AMAPP.API.Tests project..."
-            dotnet test AMAPP.API.Tests/AMAPP.API.Tests.csproj --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
+            dotnet test AMAPP.API.Tests/AMAPP.API.Tests.csproj --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults --settings CodeCoverage.runsettings
           elif [ -f "AMAP.API.Tests/AMAP.API.Tests.csproj" ]; then
             echo "Running tests from AMAP.API.Tests project..."
-            dotnet test AMAP.API.Tests/AMAP.API.Tests.csproj --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
+            dotnet test AMAP.API.Tests/AMAP.API.Tests.csproj --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults --settings CodeCoverage.runsettings
           elif [ -f "AMAPP.API.sln" ]; then
             echo "Running tests from solution..."
-            dotnet test AMAPP.API.sln --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
+            dotnet test AMAPP.API.sln --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults --settings CodeCoverage.runsettings
           else
             echo "Running tests from main project (no separate test project found)..."
-            dotnet test --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
+            dotnet test --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults --settings CodeCoverage.runsettings
           fi
           
           #— Smoke tests
