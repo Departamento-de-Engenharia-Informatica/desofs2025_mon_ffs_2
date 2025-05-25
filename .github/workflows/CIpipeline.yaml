@@ -246,13 +246,6 @@ jobs:
           scanners: 'vuln,secret,misconfig'
           severity: 'MEDIUM,HIGH,CRITICAL'
           
-      - name: “Debug trivy-results.sarif”
-        run: |
-          ls -lah .
-          jq '.runs[].tool.driver.name, (.runs[].results|length)' trivy-results.sarif || echo "no SARIF!"
-        shell: bash
-
-      
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
         with:
