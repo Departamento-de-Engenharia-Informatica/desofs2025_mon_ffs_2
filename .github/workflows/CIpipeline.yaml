@@ -232,34 +232,28 @@ jobs:
             --framework net8.0 \
             --output ./bin/Release/net8.0
   
-      - name: Scan .NET build output with Trivy
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          scan-type: fs
-          scan-ref: './project/AMAPP.API/bin/Release/net8.0'
-          format: sarif
-          output: trivy-results.sarif
-          exit-code: 0
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          scanners: 'vuln,secret,misconfig'
-          severity: 'MEDIUM,HIGH,CRITICAL'
-      
-      - name: Debug verify Trivy SARIF
+      - name: Install Trivy CLI
         run: |
-          echo "PWD: $(pwd)"
-          echo "--- Listing project root ---"
-          ls -lah .
-          echo "--- Listing published output dir ---"
-          ls -lah bin/Release/net8.0
-          if [ -f trivy-results.sarif ]; then
-            echo "✅ trivy-results.sarif FOUND"
-            jq '.runs[].tool.driver.name, (.runs[].results | length)' trivy-results.sarif
-          else
-            echo "❌ trivy-results.sarif NOT FOUND"
-            exit 1
-          fi
+          curl -sSfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+      
+      - name: Scan .NET build output with Trivy (manual SARIF)
+        run: |
+          trivy fs ./project/AMAPP.API/bin/Release/net8.0 \
+            --format sarif \
+            --ignore-unfixed \
+            --vuln-type os,library \
+            --scanners vuln,secret,misconfig \
+            --exit-code 0 \
+            > trivy-results.sarif
         shell: bash
+
+      
+      - name: “Debug trivy-results.sarif”
+        run: |
+          ls -lah .
+          jq '.runs[].tool.driver.name, (.runs[].results|length)' trivy-results.sarif || echo "no SARIF!"
+        shell: bash
+
       
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
@@ -268,6 +262,7 @@ jobs:
           category: 'Trivy'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
           
           
