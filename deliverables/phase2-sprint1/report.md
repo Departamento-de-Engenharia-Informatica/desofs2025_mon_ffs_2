@@ -84,7 +84,7 @@ Paulo Abreu - 1240481 <br>
       - [Job Setup and Configuration](#job-setup-and-configuration-3)
       - [Job Execution Steps](#job-execution-steps-3)
   - [Relevant Practices Adopted](#relevant-practices-adopted)
-    - [Default Branch: `development`](#default-branch-development)
+    - [Default Branch: `develop`](#default-branch-development)
     - [Branch Protection Rules](#branch-protection-rules)
   - [ASVS](#asvs)
     - [Subdividir pelos pontos a baixo: ](#subdividir-pelos-pontos-a-baixo-)
