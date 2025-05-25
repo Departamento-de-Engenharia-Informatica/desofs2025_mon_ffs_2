@@ -83,7 +83,11 @@ Blablabla
 
 ### Project description
 
-Blablabla
+This product is designed to enhance the AMAP (Associação para a Mobilização de Alimentos e Produtos) initiative, a Portuguese organization that connects local producers directly with consumers. AMAP's core model is based on pre-ordering, where consumers place orders before the production cycle begins, ensuring that only the requested products are produced. This reduces food waste, supports local agriculture, and promotes sustainability. AMAP’s principles include sustainability, transparency, local consumption, and community engagement.
+
+The primary objectives of AMAP are to promote sustainable agricultural practices, provide consumers with transparency about the food they purchase, support local economies, and foster community ties between consumers and producers. The system being specified will automate processes like order management, production planning, inventory tracking, and delivery logistics, improving efficiency while maintaining AMAP's core values.
+
+This system will ensure a seamless flow from order to delivery, improving overall operational efficiency. This will help the AMAP to better manage its processes and provide a more transparent and sustainable service to its consumers.
 
 ---
 
@@ -91,18 +95,15 @@ Blablabla
 
 ![Domain Model](./diagrams/Domain%20Model/domain_model_diagram.png)
 
-<span style="color: red;">
-Alteramos o domain model, retiramos os Payments.
-</span>
-
 This class diagram represents the **core data structure** of the AMAPP platform, outlining the main entities involved in the management of orders between co-producers and producers.
 
 - The base class `User` is extended by three user types: `Producer`, `AMAPAdministrator`, and `CoProducer`, each with specific roles.
 - Producers can **create products**, which are tracked in an associated `Inventory` component.
 - Co-producers can **place orders** (`Order`), which consist of multiple `OrderItem` elements, each linked to a specific product.
-- Orders can be linked to **payments** and **deliveries**, managed by the `Payment` and `Delivery` classes respectively.
-- The `AMAPAdministrator` manages delivery dates and logistics.
+- Orders are associated with **delivery logistics**, managed through the `Delivery` class, under the supervision of the `AMAPAdministrator`.
 - Inventory updates are reflected based on `OrderItem` activity.
+
+> Although a `Payment` class was initially considered, it was excluded from the current version as payments in AMAP are typically handled in person. Implementing digital payments is planned as a **future enhancement**, but it is not part of the **Minimum Viable Product (MVP)** and is therefore placed in the project’s backlog.
 
 ---
 
@@ -140,21 +141,15 @@ These users oversee the operational management of the system within AMAP. Acting
 
 ![Use Cases Diagram](./diagrams/UseCases/UseCases.png)
 
-<span style="color: red;">
-Alteraçoes: Eliminamos payments e producer com permissoes para UC08 e UC09.
-</span>
+The use case diagram above illustrates the interactions between the main actors of the AMAP system and its functionalities. The identified actors are: Unauthenticated User, Co-Producer, Producer, and AMAP Administrator. Each actor interacts with the system through specific use cases that reflect their roles and responsibilities within the platform. This diagram provides a high-level view of the system's functional scope and user access paths.
 
-Blablabla
+> The `Payment` use cases were also removed from the diagram, as payment handling is currently done in person. This decision aligns with the previously mentioned rationale: digital payments are not part of the MVP and are planned as a future enhancement.
 
 ---
 
 ### Functional Requirements
 
-<span style="color: red;">
-Fazer alterações se necessário.
-</span>
-
-Blablabla
+The functional requirements listed below are organized by use case and describe the essential system functionalities expected to be implemented. Each requirement corresponds to an action or capability that the system must support to fulfill user needs, aligned with their roles and privileges. These requirements serve as the foundation for the system’s behavior and guide the development and testing phases.
 
 #### UC01 - Manage Users/Roles
 
@@ -282,19 +277,9 @@ The non-functional requirements define quality attributes and technical constrai
 
 ### Security Requirements
 
-<span style="color: red;">
-Fazer alterações se necessário.
-Verificar se faz sentido manter.
-</span>
-
-Blablabla
+This report pulls together AMAPP’s security requirements by CIA (confidentiality, integrity, availability), includes a checklist mapped to functional/non-functional specs, and uses PyTM-generated DFDs, abuse cases, and CAPEC/CWE threat reports to cover every risk.
 
 #### Functional Security Requirements (CIA-Based)
-
-
-<span style="color: red;">
-Fazer alterações se necessário.
-</span>
 
 ##### Confidentiality
 
@@ -319,11 +304,6 @@ Fazer alterações se necessário.
 
 #### Non-Functional Security Requirements
 
-
-<span style="color: red;">
-Fazer alterações se necessário.
-</span>
-
 - NFS01: System uptime must be ≥ 99.5% under load.
 - NFS02: The system must scale horizontally without compromising security.
 - NFS03: Audit logs must ensure integrity via hashing or signing.
@@ -336,72 +316,12 @@ Fazer alterações se necessário.
 
 ---
 
-### Secure Development Requirements
-
-<span style="color: red;">
-Verificar se faz sentido manter.
-</span>
-
-Blablabla
-
-#### 1. Secure Coding Guidelines
-
-- Follow recognized standards such as [OWASP Secure Coding Practices](https://owasp.org/www-project-secure-coding-practices-quick-reference-guide/), CERT Secure Coding Standards, or Microsoft's Secure Coding Guidelines.
-- Apply best practices:
-  - Strict input validation.
-  - Strong authentication and secure session management.
-  - Proper use of cryptography.
-  - Secure error and exception handling (e.g., no stack trace exposure).
-  - Principle of least privilege.
-
-#### 2. Dependency Management
-
-- Monitor third-party libraries and frameworks.
-- Quickly update vulnerable dependencies.
-- Avoid using unmaintained or suspicious packages.
-
-#### 3. Secure Code Review
-
-- Perform security-focused code reviews for all new code and major changes.
-- Use automated tools (e.g., SonarQube) to assist but not replace manual review.
-- Focus areas:
-  - Critical components like authentication, authorization, and data access.
-  - Common vulnerability patterns (SQL Injection, XSS, CSRF, etc.).
-  - Business logic errors that could be exploited.
-
-#### 4. Static Application Security Testing (SAST)
-
-- Use static code analysis tools (e.g., SonarQube) integrated in CI/CD pipelines to detect vulnerabilities early.
-
-#### 5. Secure Build and Deployment
-
-- Ensure builds are automated, reproducible, and conducted in controlled environments.
-- Prevent secret exposure (keys, passwords) in repositories or pipelines.
-
-#### 6. Logging and Monitoring
-
-- Implement secure logging of security-relevant events (e.g., logins, unauthorized access attempts, critical errors).
-- Ensure logs do not contain sensitive information (e.g., passwords, credit card numbers).
-
-#### 7. Development of Automated Security Tests
-
-- Create and maintain automated security tests as part of the development lifecycle.
-- Integrate security tests into the CI/CD pipeline to continuously validate code security.
-- Cover common vulnerabilities such as injection flaws, authentication issues, and access control weaknesses.
-- Include unit tests focused on validating security-related functions.
-- Implement integration tests to verify secure interactions between different components.
-- Develop end-to-end tests to simulate real-world security scenarios and verify protection mechanisms.
-
----
-
 ## Risk Assessment
 
 <span style="color: red;">
 Threats mais importantes, importante referir quais foram implementadas no sprint1.
 Salientar se verificarmos se que algum nao vai ser implementado.
 </span>
-
-Blablabla
 
 1. **Threat Identification**
    We begin with the STRIDE-based threat model, which enumerates potential attacks across Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, and Elevation of Privilege.
