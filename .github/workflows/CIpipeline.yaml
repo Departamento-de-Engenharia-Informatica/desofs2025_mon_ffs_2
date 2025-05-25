@@ -235,20 +235,20 @@ jobs:
       - name: Scan .NET build output with Trivy
         uses: aquasecurity/trivy-action@0.28.0
         with:
-          scan-type: 'fs'                            # Filesystem mode
-          scan-ref: 'bin/Release/net8.0'             # Caminho relativo ao working-directory
-          format: 'sarif'                            # Output as SARIF
-          output: '../trivy-results.sarif'           # Arquivo de saída um nível acima
-          exit-code: '0'                             
-          ignore-unfixed: true                      
-          vuln-type: 'os,library'                   
-          scanners: 'vuln,secret,misconfig'          
-          severity: 'MEDIUM,HIGH,CRITICAL'           
+          scan-type: 'fs'                          
+          scan-ref: './bin/Release/net8.0'         # Adicione o ./ para garantir consistência
+          format: 'sarif'                          
+          output: 'trivy-results.sarif'           # Salvar no diretório atual
+          exit-code: '0'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          scanners: 'vuln,secret,misconfig'
+          severity: 'MEDIUM,HIGH,CRITICAL'
       
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: '../trivy-results.sarif'       # Caminho relativo ao working-directory
+          sarif_file: 'trivy-results.sarif'       # Usar o arquivo do diretório atual
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
