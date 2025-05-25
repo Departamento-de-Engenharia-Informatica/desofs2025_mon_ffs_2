@@ -232,22 +232,20 @@ jobs:
             --framework net8.0 \
             --output ./bin/Release/net8.0
   
-      - name: Install Trivy CLI
-        run: |
-          curl -sSfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
-      
-      - name: Scan .NET build output with Trivy (manual SARIF)
-        run: |
-          trivy fs ./project/AMAPP.API/bin/Release/net8.0 \
-            --format sarif \
-            --ignore-unfixed \
-            --vuln-type os,library \
-            --scanners vuln,secret,misconfig \
-            --exit-code 0 \
-            > trivy-results.sarif
-        shell: bash
-
-      
+      - name: Scan .NET build output with Trivy (template mode)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: './project/AMAPP.API/bin/Release/net8.0'
+          format: template                # ← template mode always writes SARIF
+          template: '@/contrib/sarif.tpl'
+          output: 'trivy-results.sarif'
+          exit-code: '0'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          scanners: 'vuln,secret,misconfig'
+          severity: 'MEDIUM,HIGH,CRITICAL'
+          
       - name: “Debug trivy-results.sarif”
         run: |
           ls -lah .
@@ -262,10 +260,7 @@ jobs:
           category: 'Trivy'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-
-          
-          
+ 
   # Job 3: Verificação de Dependências (SCA)
   dependency-check:
     name: Dependency Security Scan
