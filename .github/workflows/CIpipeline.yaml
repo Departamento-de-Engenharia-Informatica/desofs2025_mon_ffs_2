@@ -235,21 +235,24 @@ jobs:
       - name: Scan .NET build output with Trivy
         uses: aquasecurity/trivy-action@0.28.0
         with:
-          scan-type: 'fs'                          
-          scan-ref: './project/AMAPP.API/bin/Release/net8.0'         # Adicione o ./ para garantir consistência
+          scan-type: 'fs'
+          scan-ref: './project/AMAPP.API/bin/Release/net8.0'
           format: 'template'
           template: '@/contrib/sarif.tpl'
-          output: 'trivy-results.sarif'
+          output: './project/AMAPP.API/trivy-results.sarif'
           exit-code: '0'
           ignore-unfixed: true
           vuln-type: 'os,library'
           scanners: 'vuln,secret,misconfig'
           severity: 'MEDIUM,HIGH,CRITICAL'
       
+      - name: List SARIF files
+        run: ls -l ./project/AMAPP.API/trivy-results.sarif
+      
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: './project/AMAPP.API/trivy-results.sarif'
           category: 'Trivy'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
