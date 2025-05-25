@@ -237,8 +237,9 @@ jobs:
         with:
           scan-type: 'fs'                          
           scan-ref: './project/AMAPP.API/bin/Release/net8.0'         # Adicione o ./ para garantir consistência
-          format: 'sarif'                          
-          output: 'trivy-results.sarif'           # Salvar no diretório atual
+          format: 'template'
+          template: '@/contrib/sarif.tpl'
+          output: 'trivy-results.sarif'
           exit-code: '0'
           ignore-unfixed: true
           vuln-type: 'os,library'
@@ -248,7 +249,7 @@ jobs:
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: 'trivy-results.sarif'       # Usar o arquivo do diretório atual
+          sarif_file: 'trivy-results.sarif'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
