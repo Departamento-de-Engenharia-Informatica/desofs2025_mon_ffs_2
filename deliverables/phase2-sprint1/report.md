@@ -20,62 +20,98 @@ Paulo Abreu - 1240481 <br>
 
 ## Table of Contents
 
-- [Introduction](#introduction)
-- [Project Analysis](#project-analysis)
-  - [Project description](#project-description)
-  - [Domain Model](#domain-model)
-  - [Component Diagram](#component-diagram)
-  - [Application Users](#application-users)
-    - [Producer](#producer)
-    - [Co-Producer](#co-producer)
-    - [AMAP Administrators](#amap-administrators)
-  - [Use Cases](#use-cases)
-  - [Functional Requirements](#functional-requirements)
-    - [UC01 - Manage Users/Roles](#uc01---manage-usersroles)
-    - [UC02 - Manage Delivery Settings](#uc02---manage-delivery-settings)
-    - [UC03 - Manage Products](#uc03---manage-products)
-    - [UC04 - Manage AMAP Details](#uc04---manage-amap-details)
-    - [UC05 - Login](#uc05---login)
-    - [UC06 - Register](#uc06---register)
-    - [UC07 - View/Search Products](#uc07---viewsearch-products)
-    - [UC08 - View Order History](#uc08---view-order-history)
-    - [UC09 - View Delivery](#uc09---view-delivery)
-    - [UC10 - View Order Payments](#uc10---view-order-payments)
-    - [UC11 - Manage Orders](#uc11---manage-orders)
-    - [UC12 - Manage Profile](#uc12---manage-profile)
-  - [Non-Functional Requirements](#non-functional-requirements)
-    - [1. Performance](#1-performance)
-    - [2. Avalability](#2-availability)
-    - [3. Scalability](#3-scalability)
-    - [4. Security](#4-security)
-    - [5. Reliability and Integrity](#5-reliability-and-integrity)
-    - [6. Maintainability](#6-maintainability)
-    - [7. Portability](#7-portability)
-    - [8. Monitoring and Alerts](#8-monitoring-and-alerts)
-  - [Security Requirements](#security-requirements)
-  - [Secure Development Requirements](#secure-development-requirements)
-- [Risk Assessment](#risk-assessment)
-  - [Risk Register](#risk-register)
-- [Development](#development)
-  - [Technology Used](#technology-used)
-  - [Structure](#structure)
-- [Pipeline](#pipeline)
+- [Phase 2: Sprint 1](#phase-2-sprint-1)
+  - [Table of Contents](#table-of-contents)
+  - [Introduction](#introduction)
+    - [Objectives](#objectives)
+    - [Scope](#scope)
+  - [Project Analysis](#project-analysis)
+    - [Project description](#project-description)
+    - [Domain Model](#domain-model)
+    - [Component Diagram](#component-diagram)
+    - [Application Users](#application-users)
+      - [Producer](#producer)
+      - [Co-Producer](#co-producer)
+      - [AMAP Administrators](#amap-administrators)
+    - [Use Cases](#use-cases)
+    - [Functional Requirements](#functional-requirements)
+      - [UC01 - Manage Users/Roles](#uc01---manage-usersroles)
+      - [UC02 - Manage Delivery Settings](#uc02---manage-delivery-settings)
+      - [UC03 - Manage Products](#uc03---manage-products)
+      - [UC04 - Manage AMAP Details](#uc04---manage-amap-details)
+      - [UC05 - Login](#uc05---login)
+      - [UC06 - Register](#uc06---register)
+      - [UC07 - View/Search Products](#uc07---viewsearch-products)
+      - [UC08 - View Order History](#uc08---view-order-history)
+      - [UC09 - View Delivery](#uc09---view-delivery)
+      - [UC10 - View Orders](#uc10---view-orders)
+      - [UC11 - Manage Orders](#uc11---manage-orders)
+      - [UC12 - Manage Profile](#uc12---manage-profile)
+    - [Non-Functional Requirements](#non-functional-requirements)
+      - [1. Performance](#1-performance)
+      - [2. Availability](#2-availability)
+      - [3. Scalability](#3-scalability)
+      - [4. Security](#4-security)
+      - [5. Reliability and Integrity](#5-reliability-and-integrity)
+      - [6. Maintainability](#6-maintainability)
+      - [7. Portability](#7-portability)
+      - [8. Monitoring and Alerts](#8-monitoring-and-alerts)
+    - [Security Requirements](#security-requirements)
+      - [Functional Security Requirements (CIA-Based)](#functional-security-requirements-cia-based)
+        - [Confidentiality](#confidentiality)
+        - [Integrity](#integrity)
+        - [Availability](#availability)
+      - [Non-Functional Security Requirements](#non-functional-security-requirements)
+  - [Risk Assessment](#risk-assessment)
+    - [Risk Register](#risk-register)
+  - [Development](#development)
+    - [Technology Used](#technology-used)
+    - [Structure](#structure)
+  - [Pipeline](#pipeline)
     - [Job 1: Code Analysis (SAST with CodeQL)](#job-1-code-analysis-sast-with-codeql)
+      - [Job Setup and Configuration](#job-setup-and-configuration)
+      - [Job Execution Steps](#job-execution-steps)
     - [Job 2: Build and Test](#job-2-build-and-test)
+      - [Job Setup and Configuration](#job-setup-and-configuration-1)
+      - [Job Execution Steps](#job-execution-steps-1)
+      - [Test and Verification Stage](#test-and-verification-stage)
+      - [Coverage Report Generation](#coverage-report-generation)
     - [Job 3: Dependency Security Scan (SCA)](#job-3-dependency-security-scan-sca)
     - [Job 4: Code Quality Analysis](#job-4-code-quality-analysis)
+      - [Job Setup and Configuration](#job-setup-and-configuration-2)
+      - [Job Execution Steps](#job-execution-steps-2)
     - [Job 5: OWASP ZAP Baseline Scan (DAST)](#job-5-owasp-zap-baseline-scan-dast)
-- [Relevant Practices Adopted](#relevant-practices-adopted)
-  - [Default Branch](#default-branch)
-  - [Branch Protection Rules](#branch-protection-rules)
-- [ASVS](#asvs)
-- [Conclusion](#conclusion)
+      - [Job Setup and Configuration](#job-setup-and-configuration-3)
+      - [Job Execution Steps](#job-execution-steps-3)
+  - [Relevant Practices Adopted](#relevant-practices-adopted)
+    - [Default Branch: `development`](#default-branch-development)
+    - [Branch Protection Rules](#branch-protection-rules)
+  - [ASVS](#asvs)
+    - [Subdividir pelos pontos a baixo: ](#subdividir-pelos-pontos-a-baixo-)
+  - [Conclusion](#conclusion)
+      - [Sprint Achievements](#sprint-achievements)
+      - [Key Accomplishments](#key-accomplishments)
+      - [Risk Mitigation Progress](#risk-mitigation-progress)
+      - [Areas for Future Enhancement](#areas-for-future-enhancement)
+      - [Final Assessment](#final-assessment)
 
 ---
 
 ## Introduction
 
-Blablabla 
+This report documents the work carried out during **Phase 2: Sprint 1** of the AMAPP project, as part of the DESOFS course. Following Phase 1's security analysis and design, this sprint focuses on **implementation and testing** with emphasis on DevSecOps practices.
+
+### Objectives
+
+The primary objectives include:
+- **Development**: Building core functionality following secure coding practices
+- **DevSecOps Pipeline**: Implementing CI/CD with integrated security testing (SAST, DAST, SCA)
+- **Quality Assurance**: Code reviews, automated testing, and security validation
+- **ASVS Compliance**: Demonstrating adherence to security standards through practical implementation
+
+### Scope
+
+This three-week sprint delivers sufficient functionality to showcase security automation capabilities, including automated security scanning, comprehensive testing strategies, and secure development practices with full documentation and traceability between security requirements and implemented controls.
 
 ---
 
@@ -876,6 +912,37 @@ documented security requirements and tests.
 
 ## Conclusion
 
-Blablabla
+#### Sprint Achievements
+
+Phase 2: Sprint 1 successfully established a solid foundation for secure software development within the AMAPP project. The team accomplished the primary objectives by implementing core system functionality while integrating comprehensive security measures throughout the development lifecycle.
+
+#### Key Accomplishments
+
+**Development and Security Integration**: The implementation of core domain aggregates (Product, Order, Delivery, Users) following Onion Architecture principles demonstrates our commitment to maintainable and secure code. The integration of JWT authentication, input validation through DTOs, and proper data mapping ensures a robust security posture from the ground up.
+
+**DevSecOps Pipeline**: The establishment of a comprehensive CI/CD pipeline with five distinct security-focused jobs represents a significant achievement. The integration of SAST (CodeQL), DAST (OWASP ZAP), SCA (dependency scanning), code quality analysis (Gitleaks), and comprehensive testing validates our security-first approach to development.
+
+**Testing Strategy**: The implementation of multiple testing layers—unit tests with coverage reporting, smoke tests, end-to-end API validation, and mutation testing with Stryker—ensures both functional correctness and security resilience.
+
+**Security Practices**: The adoption of branch protection rules, mandatory code reviews, secret detection, and automated vulnerability scanning demonstrates mature security practices that will serve as the foundation for future development sprints.
+
+#### Risk Mitigation Progress
+
+Several high-priority threats identified in Phase 1 have been addressed through practical implementation:
+- **Authentication Bypass** mitigation through JWT implementation and proper token validation
+- **Password Brute Force** protection via secure authentication mechanisms
+- **Input Validation** controls preventing injection attacks through DTO validation
+
+#### Areas for Future Enhancement
+
+While this sprint established a strong security foundation, future sprints will focus on:
+- Enhanced monitoring and logging capabilities
+- Implementation of additional ASVS requirements
+- Expansion of API functionality while maintaining security standards
+- Performance optimization without compromising security controls
+
+#### Final Assessment
+
+Phase 2: Sprint 1 successfully demonstrates the team's ability to translate security requirements into practical implementations. The combination of secure development practices, automated security testing, and comprehensive documentation provides a solid platform for the continued development of the AMAPP system. The work completed aligns with industry best practices and academic requirements, positioning the team well for the final sprint and overall project success.
 
 ---
