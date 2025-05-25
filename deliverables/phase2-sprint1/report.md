@@ -95,10 +95,6 @@ This system will ensure a seamless flow from order to delivery, improving overal
 
 ![Domain Model](./diagrams/Domain%20Model/domain_model_diagram.png)
 
-<span style="color: red;">
-Alteramos o domain model, retiramos os Payments.
-</span>
-
 This class diagram represents the **core data structure** of the AMAPP platform, outlining the main entities involved in the management of orders between co-producers and producers.
 
 - The base class `User` is extended by three user types: `Producer`, `AMAPAdministrator`, and `CoProducer`, each with specific roles.
@@ -281,19 +277,9 @@ The non-functional requirements define quality attributes and technical constrai
 
 ### Security Requirements
 
-<span style="color: red;">
-Fazer alterações se necessário.
-Verificar se faz sentido manter.
-</span>
-
-Blablabla
+This report pulls together AMAPP’s security requirements by CIA (confidentiality, integrity, availability), includes a checklist mapped to functional/non-functional specs, and uses PyTM-generated DFDs, abuse cases, and CAPEC/CWE threat reports to cover every risk.
 
 #### Functional Security Requirements (CIA-Based)
-
-
-<span style="color: red;">
-Fazer alterações se necessário.
-</span>
 
 ##### Confidentiality
 
@@ -318,11 +304,6 @@ Fazer alterações se necessário.
 
 #### Non-Functional Security Requirements
 
-
-<span style="color: red;">
-Fazer alterações se necessário.
-</span>
-
 - NFS01: System uptime must be ≥ 99.5% under load.
 - NFS02: The system must scale horizontally without compromising security.
 - NFS03: Audit logs must ensure integrity via hashing or signing.
@@ -335,72 +316,12 @@ Fazer alterações se necessário.
 
 ---
 
-### Secure Development Requirements
-
-<span style="color: red;">
-Verificar se faz sentido manter.
-</span>
-
-Blablabla
-
-#### 1. Secure Coding Guidelines
-
-- Follow recognized standards such as [OWASP Secure Coding Practices](https://owasp.org/www-project-secure-coding-practices-quick-reference-guide/), CERT Secure Coding Standards, or Microsoft's Secure Coding Guidelines.
-- Apply best practices:
-  - Strict input validation.
-  - Strong authentication and secure session management.
-  - Proper use of cryptography.
-  - Secure error and exception handling (e.g., no stack trace exposure).
-  - Principle of least privilege.
-
-#### 2. Dependency Management
-
-- Monitor third-party libraries and frameworks.
-- Quickly update vulnerable dependencies.
-- Avoid using unmaintained or suspicious packages.
-
-#### 3. Secure Code Review
-
-- Perform security-focused code reviews for all new code and major changes.
-- Use automated tools (e.g., SonarQube) to assist but not replace manual review.
-- Focus areas:
-  - Critical components like authentication, authorization, and data access.
-  - Common vulnerability patterns (SQL Injection, XSS, CSRF, etc.).
-  - Business logic errors that could be exploited.
-
-#### 4. Static Application Security Testing (SAST)
-
-- Use static code analysis tools (e.g., SonarQube) integrated in CI/CD pipelines to detect vulnerabilities early.
-
-#### 5. Secure Build and Deployment
-
-- Ensure builds are automated, reproducible, and conducted in controlled environments.
-- Prevent secret exposure (keys, passwords) in repositories or pipelines.
-
-#### 6. Logging and Monitoring
-
-- Implement secure logging of security-relevant events (e.g., logins, unauthorized access attempts, critical errors).
-- Ensure logs do not contain sensitive information (e.g., passwords, credit card numbers).
-
-#### 7. Development of Automated Security Tests
-
-- Create and maintain automated security tests as part of the development lifecycle.
-- Integrate security tests into the CI/CD pipeline to continuously validate code security.
-- Cover common vulnerabilities such as injection flaws, authentication issues, and access control weaknesses.
-- Include unit tests focused on validating security-related functions.
-- Implement integration tests to verify secure interactions between different components.
-- Develop end-to-end tests to simulate real-world security scenarios and verify protection mechanisms.
-
----
-
 ## Risk Assessment
 
 <span style="color: red;">
 Threats mais importantes, importante referir quais foram implementadas no sprint1.
 Salientar se verificarmos se que algum nao vai ser implementado.
 </span>
-
-Blablabla
 
 1. **Threat Identification**
    We begin with the STRIDE-based threat model, which enumerates potential attacks across Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, and Elevation of Privilege.
