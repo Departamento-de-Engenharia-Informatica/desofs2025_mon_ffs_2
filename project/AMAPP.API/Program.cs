@@ -44,15 +44,25 @@ namespace AMAPP.API
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseNpgsql(configuration.GetConnectionString("PostgreSQLConnection")));
 
+            // Configuração do Identity com validações de senha
             builder.Services.AddIdentity<User, IdentityRole>(options =>
             {
-                options.SignIn.RequireConfirmedAccount = false; // Alterar para true se for necess�ria confirma��o por email
+                // Configurações básicas de senha
+                options.Password.RequiredLength = 12; // Mínimo 12 caracteres
+                options.Password.RequiredUniqueChars = 3; // Pelo menos 3 caracteres únicos
+                options.Password.RequireNonAlphanumeric = true; // Requer caracteres especiais
+                options.Password.RequireLowercase = true; // Requer minúsculas
+                options.Password.RequireUppercase = true; // Requer maiúsculas
+                options.Password.RequireDigit = true; // Requer dígitos
+
+                // Configurações de conta
                 options.User.RequireUniqueEmail = true;
-                options.Password.RequireDigit = false;
-                options.Password.RequiredLength = 6;
-                options.Password.RequireNonAlphanumeric = false;
-                options.Password.RequireUppercase = false;
-                options.Password.RequireLowercase = false;
+                options.SignIn.RequireConfirmedEmail = false; // Ajuste conforme necessário
+
+                // Configurações de lockout
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.AllowedForNewUsers = true;
             }).AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
 
             builder.Services.AddAuthentication(auth =>
