@@ -25,18 +25,50 @@ Paulo Abreu - 1240481 <br>
   - [Project description](#project-description)
   - [Domain Model](#domain-model)
   - [Component Diagram](#component-diagram)
-  - [Logical Diagram ??](#logical-diagram-)
   - [Application Users](#application-users)
     - [Producer](#producer)
     - [Co-Producer](#co-producer)
     - [AMAP Administrators](#amap-administrators)
   - [Use Cases](#use-cases)
   - [Functional Requirements](#functional-requirements)
+    - [UC01 - Manage Users/Roles](#uc01---manage-usersroles)
+    - [UC02 - Manage Delivery Settings](#uc02---manage-delivery-settings)
+    - [UC03 - Manage Products](#uc03---manage-products)
+    - [UC04 - Manage AMAP Details](#uc04---manage-amap-details)
+    - [UC05 - Login](#uc05---login)
+    - [UC06 - Register](#uc06---register)
+    - [UC07 - View/Search Products](#uc07---viewsearch-products)
+    - [UC08 - View Order History](#uc08---view-order-history)
+    - [UC09 - View Delivery](#uc09---view-delivery)
+    - [UC10 - View Order Payments](#uc10---view-order-payments)
+    - [UC11 - Manage Orders](#uc11---manage-orders)
+    - [UC12 - Manage Profile](#uc12---manage-profile)
   - [Non-Functional Requirements](#non-functional-requirements)
+    - [1. Performance](#1-performance)
+    - [2. Avalability](#2-availability)
+    - [3. Scalability](#3-scalability)
+    - [4. Security](#4-security)
+    - [5. Reliability and Integrity](#5-reliability-and-integrity)
+    - [6. Maintainability](#6-maintainability)
+    - [7. Portability](#7-portability)
+    - [8. Monitoring and Alerts](#8-monitoring-and-alerts)
   - [Security Requirements](#security-requirements)
   - [Secure Development Requirements](#secure-development-requirements)
 - [Risk Assessment](#risk-assessment)
   - [Risk Register](#risk-register)
+- [Development](#development)
+  - [Technology Used](#technology-used)
+  - [Structure](#structure)
+- [Pipeline](#pipeline)
+    - [Job 1: Code Analysis (SAST with CodeQL)](#job-1-code-analysis-sast-with-codeql)
+    - [Job 2: Build and Test](#job-2-build-and-test)
+    - [Job 3: Dependency Security Scan (SCA)](#job-3-dependency-security-scan-sca)
+    - [Job 4: Code Quality Analysis](#job-4-code-quality-analysis)
+    - [Job 5: OWASP ZAP Baseline Scan (DAST)](#job-5-owasp-zap-baseline-scan-dast)
+- [Relevant Practices Adopted](#relevant-practices-adopted)
+  - [Default Branch](#default-branch)
+  - [Branch Protection Rules](#branch-protection-rules)
+- [ASVS](#asvs)
 - [Conclusion](#conclusion)
 
 ---
@@ -411,7 +443,37 @@ Blablabla
 
 ## Development
 
-Blablabla
+During the first sprint, the development team laid the system’s foundation by implementing core domain aggregates such as Product, Order, Delivery, and Users. These aggregates encapsulate essential business logic and are key to the platform’s operations.
+
+The project follows Onion Architecture, promoting separation of concerns, maintainability, testability, and security. The structure includes:
+
+- Domain models
+
+- DTOs with input validation
+
+- Mapping profiles between DTOs and domain models
+
+- Repositories for data persistence
+
+- Services with business logic
+
+- Controllers for REST API interactions
+
+From a security perspective, several measures have been applied:
+
+- Input Validation: DTOs enforce strict validation rules to block malformed or malicious input.
+
+- JWT Authentication: Stateless token-based authentication ensures secure identity and access control.
+
+- Test Coverage: Unit and integration tests validate component behavior and interactions.
+
+- Secure CI/CD Pipeline: Includes code reviews, SAST, DAST, SCA, and automated security testing.
+
+- Secret Management: GitLeaks is integrated to detect hardcoded secrets in source control.
+
+- Dependency Scanning: Regular analysis for vulnerabilities in third-party libraries.
+
+- Monitoring & Alerts: Early detection of runtime issues in production environments.
 
 ### Technology Used
 
@@ -427,12 +489,9 @@ To test and validate the API endpoints, two tools are being used:
 
 This technology stack ensures the system is maintainable, testable, and performant, supporting the goals of automation, transparency, and operational efficiency within the AMAP initiative.
 
-
-
 ### Structure
 
 ![Structure Representation](./figs/Structure.jpg)
-
 
 The project follows a modular and maintainable Onion Architecture, which emphasizes the separation of concerns and dependency inversion. This architecture places the domain and core logic at the center, with infrastructure and external dependencies in the outer layers.
 
@@ -460,77 +519,425 @@ Additional files include:
 
 `Program.cs`: The entry point of the application, where services are configured and the web host is built.
 
-#### CI/CD Integration
-
-The project also includes a GitHub Actions pipeline, which supports continuous integration and delivery workflows. This ensures that the project remains consistent, maintainable, and ready for deployment as it evolves.
-
+`CIpipeline.yaml`:
+The project also includes a GitHub Actions pipeline, which supports continuous integration and delivery workflows. This ensures that the project remains consistent, maintainable, and ready for deployment as it evolves.  
 This architecture allows for scalability, testability, and easier maintenance, making it ideal for the long-term sustainability goals of the AMAP system.
 
-### Best Practices Adopted
+---
 
-Blablabla
+## Pipeline 
 
-### Security Audits
+The pipeline consists of five main steps, each designed to ensure the quality and reliability of the software throughout the development process.
 
-Blablabla
+### Job 1: Code Analysis (SAST with CodeQL)
 
-### Code Reviews
+This job is responsible for performing **Static Application Security Testing (SAST)** using **GitHub CodeQL**. It scans the source code for potential security vulnerabilities and bad coding practices.
+
+#### Job Setup and Configuration
+
+The first part of the job configures the environment and strategy to ensure consistent and secure execution of the pipeline:
+
+```yaml
+name: CodeQL Security Analysis
+runs-on: ubuntu-latest
+
+defaults:
+  run:
+    working-directory: ./project/AMAPP.API
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+strategy:
+  fail-fast: false
+  matrix:
+    language: [ 'csharp' ]
+```
+
+- `runs-on: ubuntu-latest`: Uses the latest stable Ubuntu environment as the base machine for running all steps.
+
+- `working-directory: ./project/AMAPP.API`: Sets the default working directory to the `AMAPP.API` folder, so all commands run in the context of the main backend project.
+
+- `permissions`: Grants limited read access to repository content and the ability to write security findings as GitHub Security Events.  
+This is required for CodeQL to upload results to the repository's **Security** tab.
+
+- `strategy`:Defines a matrix configuration, allowing the job to be easily extended to analyze multiple languages.
+
+  - `fail-fast: false` ensures that if one language fails (in multi-language scenarios), the rest can still complete.
+  - Currently set to run the analysis for **C#**, as defined by `language: ['csharp']`.
+
+#### Job Execution Steps
+
+```yaml
+steps:
+  - name: Checkout repository
+    uses: actions/checkout@v3
+
+  - name: Initialize CodeQL
+    uses: github/codeql-action/init@v3
+    with:
+      languages: ${{ matrix.language }}
+      # config-file: .github/codeql/codeql-config.yml
+
+  - name: Setup .NET
+    uses: actions/setup-dotnet@v3
+    with:
+      dotnet-version: '8.0.x'
+
+  - name: Build
+    run: |
+      dotnet restore
+      dotnet build --no-restore
+
+  - name: Perform CodeQL Analysis
+    uses: github/codeql-action/analyze@v3
+    with:
+      category: '/language:${{ matrix.language }}'
+      output: codeql-results.sarif
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+- **Checkout Repository**: Retrieves the latest source code from the repository so the pipeline can analyze the most recent version of the project.
+
+- **Step 2: Initialize CodeQL**: Initializes CodeQL for the specified language (csharp), preparing the environment for static security analysis.
+
+- **Setup .NET SDK**: Installs the required .NET 8.0 SDK so the application can be built and analyzed.
+
+- **Build the Project**: Restores NuGet dependencies and builds the application.
+A successful build is necessary for CodeQL to inspect the generated binaries and perform its analysis correctly.
+
+- **Run CodeQL Analysis**: Runs the CodeQL static analysis and generates a report in SARIF format.
+The report is uploaded to the repository's Security tab using the GITHUB_TOKEN, making any potential vulnerabilities visible directly in GitHub's security interface.
+
+---
+
+### Job 2: Build and Test
+
+This job is responsible for building the application, executing unit and integration tests with code coverage, performing smoke and E2E (end-to-end) API tests, and running mutation tests using Stryker.
+
+#### Job Setup and Configuration
+
+```yaml
+name: Build and Test
+runs-on: ubuntu-latest
+
+defaults:
+  run:
+    working-directory: ./project/AMAPP.API
+
+services:
+  postgres:
+    image: postgres:latest
+    ports:
+      - 5432:5432
+    env:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: amappdb_test
+    options: >-
+      --health-cmd pg_isready
+      --health-interval 10s
+      --health-timeout 5s
+      --health-retries 5
+```
+
+- `runs-on: ubuntu-latest`: Executes the workflow using the latest Ubuntu runner.
+
+- `working-directory: ./project/AMAPP.API`: All steps are scoped to the backend folder AMAPP.API.
+
+- `services`: Starts a PostgreSQL container with default credentials to support database operations during tests.
+
+#### Job Execution Steps
+
+```yaml
+steps:
+  - name: Checkout Repository
+    uses: actions/checkout@v3
+
+  - name: Setup .NET
+    uses: actions/setup-dotnet@v3
+    with:
+      dotnet-version: '8.0.x'
+
+  - name: Cache NuGet Packages
+    uses: actions/cache@v3
+    with:
+      path: ~/.nuget/packages
+      key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+      restore-keys: |
+        ${{ runner.os }}-nuget-
+
+  - name: Restore Dependencies
+    run: dotnet restore
+
+  - name: Build the Application
+    run: dotnet build --no-restore
+```
+
+- **Checkout Repository:** Clones the project from GitHub to the runner.
+- **Setup .NET:**: Installs the required .NET 8.0 SDK to support build and test execution.
+- **Cache NuGet Packages:** Speeds up workflow by caching previously downloaded packages.
+- **Restore Dependencies:** Ensures all required libraries are available.
+- **Build:**: Compiles the source code without restoring packages again.
+
+#### Test and Verification Stage
+
+- **1. Unit Tests with Coverage:** 
+  ```yaml
+  dotnet test AMAPP.API.Tests/AMAPP.API.Tests.csproj --collect:"XPlat Code Coverage"
+  ```
+  - Runs unit tests with code coverage.
+  - Results directory: ./TestResults.
+
+
+- **2. Smoke Tests (API Health & Swagger):**
+  ```yaml
+  dotnet run --no-build --urls http://localhost:5000 &
+  sleep 10
+  curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/health
+  curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/swagger
+  ```
+    - Starts the API locally.
+    - Makes curl requests to /health and /swagger endpoints to ensure the API is working.
+
+
+- **3. E2E Test (Business Flow)**
+  ```yaml
+  # Create
+  curl -X POST http://localhost:5000/api/recursos ...
+    
+  # Extract ID
+  RESOURCE_ID=$(...)
+    
+  # Read
+  curl http://localhost:5000/api/recursos/$RESOURCE_ID
+    
+  # Update
+  curl -X PUT http://localhost:5000/api/recursos/$RESOURCE_ID ...
+    
+  # Delete
+  curl -X DELETE http://localhost:5000/api/recursos/$RESOURCE_ID
+  ```
+    - Creates, reads, updates, and deletes a resource to validate the complete API workflow.
+
+- **5. Mutation Testing (Stryker):**
+  ```yaml
+  dotnet tool install -g dotnet-stryker
+  dotnet stryker -p AMAPP.API.csproj --mutation-level Basic --output "MutationReports"
+  ```
+    - Installs Stryker (if necessary).
+    - Runs mutation tests on the main project and generates a report in ./MutationReports.
+
+#### Coverage Report Generation
+
+```yaml
+- name: Generate Coverage Report
+  uses: danielpalme/ReportGenerator-GitHub-Action@5.2.0
+  with:
+    reports: './project/AMAPP.API/TestResults/**/coverage.cobertura.xml'
+    targetdir: './project/AMAPP.API/TestResults/CoverageReport'
+    reporttypes: 'HtmlInline_AzurePipelines;Cobertura'
+```
+
+- **Test execution:** Runs the main test suite and collects .NET code coverage data.
+
+- **Smoke tests:** Validates that the app runs and responds on health and Swagger endpoints.
+
+- **E2E tests:** Performs full CRUD operations via API and verifies response statuses.
+
+- **Mutation testing:** Uses Stryker.NET to mutate source code and validate test resilience.
+
+- **Coverage report:** Generates an HTML and Cobertura report from collected results.
+
+---
+
+### Job 3: Dependency Security Scan (SCA)
+
+This job performs **Software Composition Analysis (SCA)** using:
+
+- `dotnet list package --vulnerable`
+- `dotnet list package --outdated`
+
+The results are saved and uploaded as artifacts:
+
+- `vulnerable-packages.txt`
+- `outdated-packages.txt`
+
+---
+
+### Job 4: Code Quality Analysis
+
+This job is responsible for verifying the **code quality** of the project. It ensures that dependencies are correctly restored and uses **Gitleaks** to scan the repository for any accidentally exposed secrets, such as API keys or credentials.
+
+#### Job Setup and Configuration
+
+The job runs on a Ubuntu machine and only starts after the `build-and-test` job completes successfully. It is scoped to the `AMAPP.API` project directory.
+
+```yaml
+name: Code Quality Analysis
+runs-on: ubuntu-latest
+needs: build-and-test
+
+defaults:
+  run:
+    working-directory: ./project/AMAPP.API
+``` 
+
+- `runs-on: ubuntu-latest`: Specifies the use of the latest Ubuntu environment.
+
+- `needs: build-and-test`: Ensures this job only runs after the `build-and-test` job completes.
+
+- `working-directory`: Sets the default directory for all commands to the backend project folder (`./project/AMAPP.API`).
+
+#### Job Execution Steps
+
+```yaml
+steps:
+  - name: Checkout repository
+    uses: actions/checkout@v3
+    with:
+      fetch-depth: 0
+
+  - name: Setup .NET
+    uses: actions/setup-dotnet@v4
+    with:
+      dotnet-version: '8.0.x'
+
+  - name: Restore dependencies
+    run: dotnet restore
+
+  - name: Check for exposed secrets
+    uses: gitleaks/gitleaks-action@v2
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+    continue-on-error: true
+    with:
+      args: --report-format sarif --exit-code 2
+```
+
+- **Checkout Repository**: Fetches the complete Git history to allow Gitleaks to scan past commits.
+
+- **Setup .NET SDK**: Installs the .NET 8.0 SDK required for restoring and building the project.
+
+- **Restore Dependencies**: Ensures that all required NuGet packages are downloaded before analysis.
+
+- **Check for Exposed Secrets**: Uses Gitleaks to perform a security scan for sensitive information.  
+  The step continues even if secrets are found (`continue-on-error: true`) to allow the workflow to complete and still report issues.
+
+---
+
+### Job 5: OWASP ZAP Baseline Scan (DAST)
+
+This job is responsible for performing **Dynamic Application Security Testing (DAST)** using **OWASP ZAP**. It scans the running API application for common web vulnerabilities from an external perspective, simulating real-world attack scenarios.
+
+#### Job Setup and Configuration
+
+```yaml
+name: OWASP ZAP Baseline Scan (DAST)
+runs-on: ubuntu-latest
+needs: build-and-test
+
+defaults:
+  run:
+    working-directory: ./project/AMAPP.API
+```
+
+- `runs-on: ubuntu-latest`: Uses the latest stable Ubuntu environment to execute the job.
+
+- `needs: build-and-test`: Ensures this job is only triggered after the build and test job completes successfully.
+
+- `working-directory`: All steps will be executed within the backend folder of the project (`./project/AMAPP.API`).
+
+#### Job Execution Steps
+
+```yaml
+steps:
+  - name: Checkout repository
+    uses: actions/checkout@v4
+
+  - name: Setup .NET
+    uses: actions/setup-dotnet@v4
+    with:
+      dotnet-version: '8.0.x'
+
+  - name: Restore dependencies
+    run: dotnet restore
+
+  - name: Build API
+    run: dotnet build --no-restore
+
+  - name: Run API in background
+    run: |
+      dotnet run --no-build --urls "http://localhost:5000" &
+      sleep 10
+
+  - name: Run OWASP ZAP Baseline Scan
+    uses: zaproxy/action-baseline@v0.10.0
+    with:
+      target: 'http://localhost:5000'
+      fail_action: false
+      allow_issue_writing: true
+      cmd_options: '-config api.disablekey=true'
+
+  - name: Upload ZAP report
+    uses: actions/upload-artifact@v4
+    with:
+      name: zap-report
+      path: owasp-zap-report.html
+```
+
+- **Checkout Repository**: Retrieves the latest version of the codebase from the GitHub repository.
+
+- **Setup .NET SDK**: Installs the .NET 8.0 SDK required to build and run the project.
+
+- **Restore Dependencies**: Downloads all required NuGet packages so the project can be compiled successfully.
+
+- **Build API**: Builds the API application to ensure it compiles correctly before running it for scanning.
+
+- **Run API in Background**: Launches the API locally at `http://localhost:5000`, allowing ZAP to access and analyze it. A delay (`sleep 10`) ensures the server has time to start.
+
+- **Run OWASP ZAP Baseline Scan**: Executes a baseline scan with OWASP ZAP against the running API.
+
+    - `fail_action: false`: Ensures that the workflow doesn’t fail even if vulnerabilities are found.
+
+    - `allow_issue_writing: true`: Enables ZAP to generate detailed reports with found issues.
+
+    - `-config api.disablekey=true`: Disables the API key requirement for simplicity during scan.
+
+- **Upload ZAP Report**: Uploads the generated HTML report (`owasp-zap-report.html`) as an artifact, so it can be downloaded and reviewed after the workflow finishes.
+
+---
+
+## Relevant Practices Adopted
 
 To ensure a secure and robust development lifecycle, the team adopted a structured and disciplined workflow. All changes to the codebase were introduced through pull requests targeting the `development` branch, enforcing isolation and minimizing the risk of insecure or unstable code being merged prematurely. Each pull request required mandatory peer review and approval by at least one team member, ensuring that security concerns, coding standards, and potential vulnerabilities were addressed early.
 
 Once all planned features were completed and individually reviewed, a final merge into the `main` (production) branch could only occur after receiving explicit approval from all remaining three team members. This multi-level review process reinforced accountability and significantly reduced the likelihood of security flaws reaching production. These practices, combined with clear branching strategies and controlled merge permissions, contributed to a development workflow aligned with secure coding principles.
 
-### Static Code Analysis
+### Default Branch: `development`
 
-Blablabla
+The `develop` branch is set as the default branch of the repository. This ensures that all new features and tests are first integrated in a development environment, before being promoted to the `main` (production) branch.  
+This practice follows common Git workflows such as Git Flow, providing a clear separation between development and production environments.
 
-### Software Composition Analysis
-
-Blablabla
-
-### Other Relevant Practices
-
-Blablabla
+![Default branch](./figs/branch-develop.PNG)
 
 ---
 
-## Build and Test
+### Branch Protection Rules
 
-Blablabla
+To ensure the stability and security of the codebase, several protection rules have been applied to the main branches:
 
-### Inventory of Components
+- **Restrict Deletions**: Prevents protected branches from being deleted, avoiding accidental loss of critical code.
+- **Require Pull Request Before Merge**: All changes must be submitted through a pull request before they can be merged into a protected branch. This promotes code review and prevents direct pushes.
+- **Block Force Pushes**: Force pushes are disabled, protecting the integrity of the branch history and preventing unwanted overwrites.
 
-Blablabla
+Each of these rules is enforced at the repository level and contributes to better version control practices and team collaboration.
 
-### Execution of Test Plans
-
-Blablabla
-
-### Dynamic Analysis
-
-Blablabla
-
-### Configuration Validation
-
-Blablabla
-
-### Artifact Scanning
-
-Blablabla
-
-### Other Relevant Practices
-
-Blablabla
-
----
-
-## Pipeline automation
-
-Blablabla
-
-### Automated Practices
-
-Blablabla
+![Branch protection rules](./figs/rulesets.PNG)
 
 ---
 
