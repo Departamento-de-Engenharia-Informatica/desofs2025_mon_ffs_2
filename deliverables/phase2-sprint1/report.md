@@ -25,18 +25,50 @@ Paulo Abreu - 1240481 <br>
   - [Project description](#project-description)
   - [Domain Model](#domain-model)
   - [Component Diagram](#component-diagram)
-  - [Logical Diagram ??](#logical-diagram-)
   - [Application Users](#application-users)
     - [Producer](#producer)
     - [Co-Producer](#co-producer)
     - [AMAP Administrators](#amap-administrators)
   - [Use Cases](#use-cases)
   - [Functional Requirements](#functional-requirements)
+    - [UC01 - Manage Users/Roles](#uc01---manage-usersroles)
+    - [UC02 - Manage Delivery Settings](#uc02---manage-delivery-settings)
+    - [UC03 - Manage Products](#uc03---manage-products)
+    - [UC04 - Manage AMAP Details](#uc04---manage-amap-details)
+    - [UC05 - Login](#uc05---login)
+    - [UC06 - Register](#uc06---register)
+    - [UC07 - View/Search Products](#uc07---viewsearch-products)
+    - [UC08 - View Order History](#uc08---view-order-history)
+    - [UC09 - View Delivery](#uc09---view-delivery)
+    - [UC10 - View Order Payments](#uc10---view-order-payments)
+    - [UC11 - Manage Orders](#uc11---manage-orders)
+    - [UC12 - Manage Profile](#uc12---manage-profile)
   - [Non-Functional Requirements](#non-functional-requirements)
+    - [1. Performance](#1-performance)
+    - [2. Avalability](#2-availability)
+    - [3. Scalability](#3-scalability)
+    - [4. Security](#4-security)
+    - [5. Reliability and Integrity](#5-reliability-and-integrity)
+    - [6. Maintainability](#6-maintainability)
+    - [7. Portability](#7-portability)
+    - [8. Monitoring and Alerts](#8-monitoring-and-alerts)
   - [Security Requirements](#security-requirements)
   - [Secure Development Requirements](#secure-development-requirements)
 - [Risk Assessment](#risk-assessment)
   - [Risk Register](#risk-register)
+- [Development](#development)
+  - [Technology Used](#technology-used)
+  - [Structure](#structure)
+- [Pipeline](#pipeline)
+    - [Job 1: Code Analysis (SAST with CodeQL)](#job-1-code-analysis-sast-with-codeql)
+    - [Job 2: Build and Test](#job-2-build-and-test)
+    - [Job 3: Dependency Security Scan (SCA)](#job-3-dependency-security-scan-sca)
+    - [Job 4: Code Quality Analysis](#job-4-code-quality-analysis)
+    - [Job 5: OWASP ZAP Baseline Scan (DAST)](#job-5-owasp-zap-baseline-scan-dast)
+- [Relevant Practices Adopted](#relevant-practices-adopted)
+  - [Default Branch](#default-branch)
+  - [Branch Protection Rules](#branch-protection-rules)
+- [ASVS](#asvs)
 - [Conclusion](#conclusion)
 
 ---
@@ -491,14 +523,6 @@ Additional files include:
 The project also includes a GitHub Actions pipeline, which supports continuous integration and delivery workflows. This ensures that the project remains consistent, maintainable, and ready for deployment as it evolves.  
 This architecture allows for scalability, testability, and easier maintenance, making it ideal for the long-term sustainability goals of the AMAP system.
 
-### Authentication
-
-Blablabla
-
-### Input Validation (Apenas Products)
-
-Blablabla
-
 ---
 
 ## Pipeline 
@@ -888,14 +912,32 @@ steps:
 
 ---
 
-## Revelant Practices Adopted
-
-### Code Reviews
+## Relevant Practices Adopted
 
 To ensure a secure and robust development lifecycle, the team adopted a structured and disciplined workflow. All changes to the codebase were introduced through pull requests targeting the `development` branch, enforcing isolation and minimizing the risk of insecure or unstable code being merged prematurely. Each pull request required mandatory peer review and approval by at least one team member, ensuring that security concerns, coding standards, and potential vulnerabilities were addressed early.
 
 Once all planned features were completed and individually reviewed, a final merge into the `main` (production) branch could only occur after receiving explicit approval from all remaining three team members. This multi-level review process reinforced accountability and significantly reduced the likelihood of security flaws reaching production. These practices, combined with clear branching strategies and controlled merge permissions, contributed to a development workflow aligned with secure coding principles.
 
+### Default Branch: `development`
+
+The `develop` branch is set as the default branch of the repository. This ensures that all new features and tests are first integrated in a development environment, before being promoted to the `main` (production) branch.  
+This practice follows common Git workflows such as Git Flow, providing a clear separation between development and production environments.
+
+![Default branch](./figs/branch-develop.PNG)
+
+---
+
+### Branch Protection Rules
+
+To ensure the stability and security of the codebase, several protection rules have been applied to the main branches:
+
+- **Restrict Deletions**: Prevents protected branches from being deleted, avoiding accidental loss of critical code.
+- **Require Pull Request Before Merge**: All changes must be submitted through a pull request before they can be merged into a protected branch. This promotes code review and prevents direct pushes.
+- **Block Force Pushes**: Force pushes are disabled, protecting the integrity of the branch history and preventing unwanted overwrites.
+
+Each of these rules is enforced at the repository level and contributes to better version control practices and team collaboration.
+
+![Branch protection rules](./figs/rulesets.PNG)
 
 ---
 
