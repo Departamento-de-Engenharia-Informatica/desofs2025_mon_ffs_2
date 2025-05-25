@@ -60,11 +60,11 @@ Paulo Abreu - 1240481 <br>
   - [Technology Used](#technology-used)
   - [Structure](#structure)
 - [Pipeline](#pipeline)
-    - [Job 1: Code Analysis (SAST with CodeQL)](#job-1-code-analysis-sast-with-codeql)
-    - [Job 2: Build and Test](#job-2-build-and-test)
-    - [Job 3: Dependency Security Scan (SCA)](#job-3-dependency-security-scan-sca)
-    - [Job 4: Code Quality Analysis](#job-4-code-quality-analysis)
-    - [Job 5: OWASP ZAP Baseline Scan (DAST)](#job-5-owasp-zap-baseline-scan-dast)
+  - [Job 1: Code Analysis (SAST with CodeQL)](#job-1-code-analysis-sast-with-codeql)
+  - [Job 2: Build and Test](#job-2-build-and-test)
+  - [Job 3: Dependency Security Scan (SCA)](#job-3-dependency-security-scan-sca)
+  - [Job 4: Code Quality Analysis](#job-4-code-quality-analysis)
+  - [Job 5: OWASP ZAP Baseline Scan (DAST)](#job-5-owasp-zap-baseline-scan-dast)
 - [Relevant Practices Adopted](#relevant-practices-adopted)
   - [Default Branch](#default-branch)
   - [Branch Protection Rules](#branch-protection-rules)
@@ -75,7 +75,7 @@ Paulo Abreu - 1240481 <br>
 
 ## Introduction
 
-Blablabla 
+Blablabla
 
 ---
 
@@ -327,10 +327,10 @@ Salientar se verificarmos se que algum nao vai ser implementado.
    We begin with the STRIDE-based threat model, which enumerates potential attacks across Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, and Elevation of Privilege.
 2. **Scoring Criteria**Each threat is evaluated on four dimensions:
 
-   - `Severity`: potential damage if exploited (1–5)
-   - `Asset Criticality`: importance of the targeted component (1–5)
-   - `Likelihood`: probability of successful exploitation given existing controls (1–5)
-   - `Business Impact`: financial, operational, reputational, or regulatory consequences (1–5)
+  - `Severity`: potential damage if exploited (1–5)
+  - `Asset Criticality`: importance of the targeted component (1–5)
+  - `Likelihood`: probability of successful exploitation given existing controls (1–5)
+  - `Business Impact`: financial, operational, reputational, or regulatory consequences (1–5)
 3. **Risk Calculation**
    We compute the **Risk Score** as:  Risk Score = Likelihood × ((Severity + Asset Criticality) ÷ 2)
 4. **Risk Prioritization**
@@ -445,7 +445,7 @@ This architecture allows for scalability, testability, and easier maintenance, m
 
 ---
 
-## Pipeline 
+## Pipeline
 
 The pipeline consists of five main steps, each designed to ensure the quality and reliability of the software throughout the development process.
 
@@ -481,7 +481,7 @@ strategy:
 - `working-directory: ./project/AMAPP.API`: Sets the default working directory to the `AMAPP.API` folder, so all commands run in the context of the main backend project.
 
 - `permissions`: Grants limited read access to repository content and the ability to write security findings as GitHub Security Events.  
-This is required for CodeQL to upload results to the repository's **Security** tab.
+  This is required for CodeQL to upload results to the repository's **Security** tab.
 
 - `strategy`:Defines a matrix configuration, allowing the job to be easily extended to analyze multiple languages.
 
@@ -527,10 +527,10 @@ steps:
 - **Setup .NET SDK**: Installs the required .NET 8.0 SDK so the application can be built and analyzed.
 
 - **Build the Project**: Restores NuGet dependencies and builds the application.
-A successful build is necessary for CodeQL to inspect the generated binaries and perform its analysis correctly.
+  A successful build is necessary for CodeQL to inspect the generated binaries and perform its analysis correctly.
 
 - **Run CodeQL Analysis**: Runs the CodeQL static analysis and generates a report in SARIF format.
-The report is uploaded to the repository's Security tab using the GITHUB_TOKEN, making any potential vulnerabilities visible directly in GitHub's security interface.
+  The report is uploaded to the repository's Security tab using the GITHUB_TOKEN, making any potential vulnerabilities visible directly in GitHub's security interface.
 
 ---
 
@@ -543,6 +543,9 @@ This job is responsible for building the application, executing unit and integra
 ```yaml
 name: Build and Test
 runs-on: ubuntu-latest
+permissions:
+  contents: read
+  security-events: write
 
 defaults:
   run:
@@ -605,7 +608,7 @@ steps:
 
 #### Test and Verification Stage
 
-- **1. Unit Tests with Coverage:** 
+- **1. Unit Tests with Coverage:**
   ```yaml
   dotnet test AMAPP.API.Tests/AMAPP.API.Tests.csproj --collect:"XPlat Code Coverage"
   ```
@@ -620,8 +623,8 @@ steps:
   curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/health
   curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/swagger
   ```
-    - Starts the API locally.
-    - Makes curl requests to /health and /swagger endpoints to ensure the API is working.
+  - Starts the API locally.
+  - Makes curl requests to /health and /swagger endpoints to ensure the API is working.
 
 
 - **3. E2E Test (Business Flow)**
@@ -641,15 +644,15 @@ steps:
   # Delete
   curl -X DELETE http://localhost:5000/api/recursos/$RESOURCE_ID
   ```
-    - Creates, reads, updates, and deletes a resource to validate the complete API workflow.
+  - Creates, reads, updates, and deletes a resource to validate the complete API workflow.
 
 - **5. Mutation Testing (Stryker):**
   ```yaml
   dotnet tool install -g dotnet-stryker
   dotnet stryker -p AMAPP.API.csproj --mutation-level Basic --output "MutationReports"
   ```
-    - Installs Stryker (if necessary).
-    - Runs mutation tests on the main project and generates a report in ./MutationReports.
+  - Installs Stryker (if necessary).
+  - Runs mutation tests on the main project and generates a report in ./MutationReports.
 
 #### Coverage Report Generation
 
@@ -676,15 +679,127 @@ steps:
 
 ### Job 3: Dependency Security Scan (SCA)
 
-This job performs **Software Composition Analysis (SCA)** using:
+This job is responsible for performing a **Software Composition Analysis (SCA)** to identify vulnerable and outdated dependencies within the project. It uses various tools to scan NuGet packages, generate reports, and produce a Software Bill of Materials (SBOM).
 
-- `dotnet list package --vulnerable`
-- `dotnet list package --outdated`
+#### Job Setup and Configuration
 
-The results are saved and uploaded as artifacts:
+The initial setup configures the environment and working directory to ensure consistent execution:
 
-- `vulnerable-packages.txt`
-- `outdated-packages.txt`
+```yaml
+name: Dependency Security Scan
+runs-on: ubuntu-latest
+needs: build-and-test
+defaults:
+  run:
+    working-directory: ./project/AMAPP.API
+```
+
+- `runs-on: ubuntu-latest`: Uses the latest Ubuntu environment to run the job.
+
+- `needs: build-and-test`: Ensures this job runs only after the successful completion of the build and test job.
+
+- `working-directory: ./project/AMAPP.API`: Sets the default directory context to the main backend project folder.
+
+#### Job Execution Steps
+
+```yaml
+steps:
+  - name: Checkout repository
+    uses: actions/checkout@v4
+
+  - name: Setup .NET
+    uses: actions/setup-dotnet@v4
+    with:
+      dotnet-version: '8.0.x'
+
+  - name: Restore dependencies
+    run: dotnet restore
+
+  - name: List vulnerable packages
+    run: |
+      echo "Checking for vulnerable NuGet packages..."
+      dotnet list package --vulnerable --include-transitive > vulnerable-packages.txt
+      cat vulnerable-packages.txt
+    continue-on-error: true
+
+  - name: Check for outdated packages
+    run: |
+      echo "Checking for outdated packages..."
+      dotnet list package --outdated > outdated-packages.txt
+      cat outdated-packages.txt
+    continue-on-error: true
+
+  - name: OWASP Dependency Check
+    uses: dependency-check/Dependency-Check_Action@main
+    with:
+      project: 'AMAPP.API'
+      path: './project'
+      format: 'HTML,JSON'
+      out: 'dependency-check-reports'
+      args: >
+        --enableRetired
+        --enableExperimental
+        --failOnCVSS 7
+    continue-on-error: true
+
+  - name: Generate SBOM
+    uses: CycloneDX/gh-dotnet-generate-sbom@v1
+    continue-on-error: true
+    with:
+      path: ./project/AMAPP.API/AMAPP.API.csproj
+      out: ./project/AMAPP.API
+
+  - name: Normalize SBOM filename
+    continue-on-error: true
+    run: |
+      #!/usr/bin/env bash
+      WORKDIR="$GITHUB_WORKSPACE"
+      PROJDIR="$WORKDIR/project/AMAPP.API"
+      mkdir -p "$PROJDIR"
+
+      # look for bom.xml in either location
+      if [[ -f "$WORKDIR/bom.xml" ]]; then
+        SRC="$WORKDIR/bom.xml"
+      elif [[ -f "$PROJDIR/bom.xml" ]]; then
+        SRC="$PROJDIR/bom.xml"
+      else
+        echo "⚠️ SBOM not found; creating empty placeholder"
+        echo '<?xml version="1.0"?><bom></bom>' > "$PROJDIR/sbom.xml"
+        exit 0
+      fi
+
+      mv "$SRC" "$PROJDIR/sbom.xml"
+      echo "✅ SBOM moved to project/AMAPP.API/sbom.xml"
+
+  - name: Upload dependency reports
+    uses: actions/upload-artifact@v4
+    with:
+      name: dependency-reports
+      path: |
+        ./project/AMAPP.API/vulnerable-packages.txt
+        ./project/AMAPP.API/outdated-packages.txt
+        ./dependency-check-reports/
+        ./project/AMAPP.API/sbom.xml
+```
+
+- **Checkout repository**: Retrieves the latest source code to perform dependency scanning on the current project state.
+
+- **Setup .NET SDK**: Installs .NET 8.0 SDK to enable restore and analysis of project dependencies.
+
+- **Restore dependencies**: Runs `dotnet restore` to fetch all project dependencies.
+
+- **List vulnerable packages**: Checks for NuGet packages with known vulnerabilities, including transitive dependencies, and outputs the results to `vulnerable-packages.txt`. The step continues even if vulnerabilities are found.
+
+- **Check for outdated packages**: Lists packages that have newer versions available, outputting results to `outdated-packages.txt`.
+
+- **OWASP Dependency Check**: Executes a detailed scan using the OWASP Dependency-Check tool to identify vulnerable components, generating reports in HTML and JSON formats. The scan is configured to fail the build if vulnerabilities with CVSS score ≥ 7 are detected, but errors don’t stop the workflow.
+
+- **Generate SBOM**: Produces a Software Bill of Materials (SBOM) in CycloneDX format for tracking component provenance.
+
+- **Normalize SBOM filename**: Moves or creates the `sbom.xml` file to a consistent project location, ensuring subsequent steps can find it reliably.
+
+- **Upload dependency reports**: Archives all generated vulnerability and dependency reports as build artifacts for later review.
+
 
 ---
 
@@ -822,11 +937,11 @@ steps:
 
 - **Run OWASP ZAP Baseline Scan**: Executes a baseline scan with OWASP ZAP against the running API.
 
-    - `fail_action: false`: Ensures that the workflow doesn’t fail even if vulnerabilities are found.
+  - `fail_action: false`: Ensures that the workflow doesn’t fail even if vulnerabilities are found.
 
-    - `allow_issue_writing: true`: Enables ZAP to generate detailed reports with found issues.
+  - `allow_issue_writing: true`: Enables ZAP to generate detailed reports with found issues.
 
-    - `-config api.disablekey=true`: Disables the API key requirement for simplicity during scan.
+  - `-config api.disablekey=true`: Disables the API key requirement for simplicity during scan.
 
 - **Upload ZAP Report**: Uploads the generated HTML report (`owasp-zap-report.html`) as an artifact, so it can be downloaded and reviewed after the workflow finishes.
 
