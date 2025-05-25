@@ -83,7 +83,11 @@ Blablabla
 
 ### Project description
 
-Blablabla
+This product is designed to enhance the AMAP (Associação para a Mobilização de Alimentos e Produtos) initiative, a Portuguese organization that connects local producers directly with consumers. AMAP's core model is based on pre-ordering, where consumers place orders before the production cycle begins, ensuring that only the requested products are produced. This reduces food waste, supports local agriculture, and promotes sustainability. AMAP’s principles include sustainability, transparency, local consumption, and community engagement.
+
+The primary objectives of AMAP are to promote sustainable agricultural practices, provide consumers with transparency about the food they purchase, support local economies, and foster community ties between consumers and producers. The system being specified will automate processes like order management, production planning, inventory tracking, and delivery logistics, improving efficiency while maintaining AMAP's core values.
+
+This system will ensure a seamless flow from order to delivery, improving overall operational efficiency. This will help the AMAP to better manage its processes and provide a more transparent and sustainable service to its consumers.
 
 ---
 
@@ -100,9 +104,10 @@ This class diagram represents the **core data structure** of the AMAPP platform,
 - The base class `User` is extended by three user types: `Producer`, `AMAPAdministrator`, and `CoProducer`, each with specific roles.
 - Producers can **create products**, which are tracked in an associated `Inventory` component.
 - Co-producers can **place orders** (`Order`), which consist of multiple `OrderItem` elements, each linked to a specific product.
-- Orders can be linked to **payments** and **deliveries**, managed by the `Payment` and `Delivery` classes respectively.
-- The `AMAPAdministrator` manages delivery dates and logistics.
+- Orders are associated with **delivery logistics**, managed through the `Delivery` class, under the supervision of the `AMAPAdministrator`.
 - Inventory updates are reflected based on `OrderItem` activity.
+
+> Although a `Payment` class was initially considered, it was excluded from the current version as payments in AMAP are typically handled in person. Implementing digital payments is planned as a **future enhancement**, but it is not part of the **Minimum Viable Product (MVP)** and is therefore placed in the project’s backlog.
 
 ---
 
@@ -140,21 +145,15 @@ These users oversee the operational management of the system within AMAP. Acting
 
 ![Use Cases Diagram](./diagrams/UseCases/UseCases.png)
 
-<span style="color: red;">
-Alteraçoes: Eliminamos payments e producer com permissoes para UC08 e UC09.
-</span>
+The use case diagram above illustrates the interactions between the main actors of the AMAP system and its functionalities. The identified actors are: Unauthenticated User, Co-Producer, Producer, and AMAP Administrator. Each actor interacts with the system through specific use cases that reflect their roles and responsibilities within the platform. This diagram provides a high-level view of the system's functional scope and user access paths.
 
-Blablabla
+> The `Payment` use cases were also removed from the diagram, as payment handling is currently done in person. This decision aligns with the previously mentioned rationale: digital payments are not part of the MVP and are planned as a future enhancement.
 
 ---
 
 ### Functional Requirements
 
-<span style="color: red;">
-Fazer alterações se necessário.
-</span>
-
-Blablabla
+The functional requirements listed below are organized by use case and describe the essential system functionalities expected to be implemented. Each requirement corresponds to an action or capability that the system must support to fulfill user needs, aligned with their roles and privileges. These requirements serve as the foundation for the system’s behavior and guide the development and testing phases.
 
 #### UC01 - Manage Users/Roles
 
