@@ -273,22 +273,17 @@ jobs:
       uses: CycloneDX/gh-dotnet-generate-sbom@v1
       with:
         path: ./project/AMAPP.API/AMAPP.API.csproj
-        out: ./project/AMAPP.API
+        out: ./project/AMAPP.API/sbom.xml
       continue-on-error: true
-    
-    - name: Move and rename SBOM file
+
+    - name: Ensure SBOM exists
       run: |
-        mkdir -p ./project/AMAPP.API/
-        ls -la /home/runner/work/desofs2025_mon_ffs_2/desofs2025_mon_ffs_2/
-        if [ -f "/home/runner/work/desofs2025_mon_ffs_2/desofs2025_mon_ffs_2/bom.xml" ]; then
-          mv /home/runner/work/desofs2025_mon_ffs_2/desofs2025_mon_ffs_2/bom.xml ./project/AMAPP.API/sbom.xml
-          echo "SBOM file movido com sucesso"
-        else
-          echo "AVISO: Arquivo SBOM não encontrado no local esperado"
-          echo "<?xml version=\"1.0\"?><bom></bom>" > ./project/AMAPP.API/sbom.xml
+        # if generation failed or the file is missing for any reason, stub an empty BOM
+        if [ ! -f project/AMAPP.API/sbom.xml ]; then
+          echo "Warning: SBOM not found; creating empty placeholder"
+          echo '<?xml version="1.0"?><bom></bom>' > project/AMAPP.API/sbom.xml
         fi
-      continue-on-error: true
-    
+
     - name: Upload dependency reports
       uses: actions/upload-artifact@v4
       with:
@@ -297,7 +292,7 @@ jobs:
           ./project/AMAPP.API/vulnerable-packages.txt
           ./project/AMAPP.API/outdated-packages.txt
           ./dependency-check-reports/
-          /home/runner/work/desofs2025_mon_ffs_2/desofs2025_mon_ffs_2/project/AMAPP.API/sbom.xml
+          ./project/AMAPP.API/sbom.xml
 
   # Job 4: Verificações de Qualidade de Código
   code-quality:
