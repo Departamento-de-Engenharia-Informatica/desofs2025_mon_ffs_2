@@ -61,6 +61,10 @@ jobs:
   build-and-test:
     name: Build and Test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
     defaults:
       run:
         working-directory: ./project/AMAPP.API
@@ -221,6 +225,35 @@ jobs:
             ./project/AMAPP.API/SmokeTestResults/
             ./project/AMAPP.API/MutationReports/
             
+      - name: Publish for scanning
+        run: |
+          dotnet publish AMAPP.API.csproj \
+            --configuration Release \
+            --framework net8.0 \
+            --output ./bin/Release/net8.0
+  
+      - name: Scan .NET build output with Trivy (template mode)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: './project/AMAPP.API/bin/Release/net8.0'
+          format: template                # ← template mode always writes SARIF
+          template: '@/contrib/sarif.tpl'
+          output: 'trivy-results.sarif'
+          exit-code: '0'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          scanners: 'vuln,secret,misconfig'
+          severity: 'MEDIUM,HIGH,CRITICAL'
+          
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+          category: 'Trivy'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+ 
   # Job 3: Verificação de Dependências (SCA)
   dependency-check:
     name: Dependency Security Scan
@@ -297,7 +330,7 @@ jobs:
 
         mv "$SRC" "$PROJDIR/sbom.xml"
         echo "✅ SBOM moved to project/AMAPP.API/sbom.xml"
-
+        
     - name: Upload dependency reports
       uses: actions/upload-artifact@v4
       with:
