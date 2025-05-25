@@ -271,18 +271,27 @@ jobs:
     
     - name: Generate SBOM
       uses: CycloneDX/gh-dotnet-generate-sbom@v1
+      continue-on-error: true      
       with:
         path: ./project/AMAPP.API/AMAPP.API.csproj
-        out: ./project/AMAPP.API/sbom.xml
-      continue-on-error: true
+        out: ./project/AMAPP.API
 
-    - name: Ensure SBOM exists
+    - name: Normalize SBOM filename
+      continue-on-error: true      
       run: |
-        # if generation failed or the file is missing for any reason, stub an empty BOM
-        if [ ! -f project/AMAPP.API/sbom.xml ]; then
-          echo "Warning: SBOM not found; creating empty placeholder"
+        set -e
+        if [[ -f "$GITHUB_WORKSPACE/bom.xml" ]]; then
+          SRC="$GITHUB_WORKSPACE/bom.xml"
+        elif [[ -f "$GITHUB_WORKSPACE/project/AMAPP.API/bom.xml" ]]; then
+          SRC="$GITHUB_WORKSPACE/project/AMAPP.API/bom.xml"
+        else
+          echo "⚠️ SBOM not found; creating empty placeholder"
           echo '<?xml version="1.0"?><bom></bom>' > project/AMAPP.API/sbom.xml
+          exit 0
         fi
+        mkdir -p project/AMAPP.API
+        mv "$SRC" project/AMAPP.API/sbom.xml
+        echo "✅ SBOM moved to project/AMAPP.API/sbom.xml"
 
     - name: Upload dependency reports
       uses: actions/upload-artifact@v4
