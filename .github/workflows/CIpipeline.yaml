@@ -245,7 +245,7 @@ jobs:
           scanners: 'vuln,secret,misconfig'
           severity: 'MEDIUM,HIGH,CRITICAL'
       
-      - name: Debug: verify Trivy SARIF
+      - name: Debug verify Trivy SARIF
         run: |
           echo "PWD: $(pwd)"
           echo "--- Listing project root ---"
