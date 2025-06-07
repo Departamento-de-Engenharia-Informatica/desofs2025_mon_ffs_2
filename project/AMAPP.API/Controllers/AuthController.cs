@@ -3,6 +3,7 @@ using AMAPP.API.DTOs.Auth;
 using AMAPP.API.Models;
 using AMAPP.API.Services.Implementations;
 using AMAPP.API.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
@@ -10,6 +11,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using MimeKit;
 using System.Net.Mail;
+using System.Security.Claims;
 using System.Text;
 
 namespace AMAPP.API.Controllers
@@ -20,21 +22,20 @@ namespace AMAPP.API.Controllers
     {
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly IJwtService _jwtService;
         private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
-        private readonly string role;
         private readonly TokenService _tokenService;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(UserManager<User> userManager, RoleManager<IdentityRole> roleManager, IJwtService jwtService, IEmailService emailService, IConfiguration configuration, TokenService tokenService)
+        public AuthController(UserManager<User> userManager, RoleManager<IdentityRole> roleManager, IEmailService emailService, IConfiguration configuration, TokenService tokenService, ILogger<AuthController> logger)
         {
             _userManager = userManager;
             _roleManager = roleManager;
-            _jwtService = jwtService;
+
             _emailService = emailService;
-            role = "PROD";
             _configuration = configuration;
             _tokenService = tokenService;
+            _logger = logger;
         }
 
         [HttpPost("register")]
@@ -75,20 +76,7 @@ namespace AMAPP.API.Controllers
                 return BadRequest(result.Errors);
             }
 
-            // Send email to confirme account
-            //var confirmEmailToken = await _userManager.GenerateEmailConfirmationTokenAsync(newUser);
-            //var encodedEmailToken = Encoding.UTF8.GetBytes(confirmEmailToken);
-            //var validEmailToken = WebEncoders.Base64UrlEncode(encodedEmailToken);
-
-            //var url = $"{_configuration["AppUrl"]}/api/auth/confirmemail?useremail={newUser.Email}&token={validEmailToken}";
-
-            //var mailAdress = new MailboxAddress(newUser.UserName, newUser.Email);
-            //string subject = "Confirm your email account";
-            //string body = $"<p>Please confirm your email by <a href='{url}'>Click here</a></p>";
-
-            //await _emailService.SendEmailAsync(new MessageDto(mailAdress, subject, body));
-
-            await _userManager.AddToRoleAsync(newUser, role);
+            await _userManager.AddToRoleAsync(newUser, "ADMIN");
 
             return Created("", newUser.Email);
         }
@@ -100,27 +88,53 @@ namespace AMAPP.API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Login(LoginRequestDto loginRequest)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                return BadRequest("Bad credentials");
-            }
-            var user = await _userManager.FindByEmailAsync(loginRequest.Email);
-
-            if (user != null && await _userManager.CheckPasswordAsync(user, loginRequest.Password))
-            {
-                var roles = await _userManager.GetRolesAsync(user);
-                var token = _tokenService.GenerateToken(user, roles.ToList());
-
-                var loginResponse = new LoginResponseDto
+                if (!ModelState.IsValid)
                 {
-                    Token = token,
-                    Expiration = DateTime.UtcNow.AddMinutes(1)
-                };
+                    _logger.LogWarning("Tentativa de login com dados inválidos para email: {Email}",
+                            loginRequest.Email);
+                    return BadRequest("Bad credentials");
+                }
+                var user = await _userManager.FindByEmailAsync(loginRequest.Email);
 
-                return Ok(loginResponse);
+                if (user != null && await _userManager.CheckPasswordAsync(user, loginRequest.Password))
+                {
+                    // Verificar se conta está bloqueada
+                    if (await _userManager.IsLockedOutAsync(user))
+                    {
+                        _logger.LogWarning("Tentativa de login em conta bloqueada: {UserId}", user.Id);
+                        return Unauthorized("Conta temporariamente bloqueada devido a tentativas falhadas");
+                    }
+
+                    var roles = await _userManager.GetRolesAsync(user);
+                    var token = _tokenService.GenerateToken(user, roles.ToList());
+
+                    var expirationMinutes = _configuration.GetValue<int>("JwtSettings:ExpiryMinutes", 60);
+                    var loginResponse = new LoginResponseDto
+                    {
+                        Token = token,
+                        Expiration = DateTime.UtcNow.AddMinutes(expirationMinutes)
+                    };
+
+                    _logger.LogInformation("Login bem-sucedido para utilizador: {UserId}, Email: {Email}",
+                        user.Id, user.Email);
+
+                    return Ok(loginResponse);
+                }
+
+                _logger.LogWarning("Tentativa de login falhada para email: {Email} de IP: {IP}",
+                    loginRequest.Email,
+                    HttpContext.Connection.RemoteIpAddress);
+
+                return Unauthorized("Invalid Authentication");
             }
-
-            return Unauthorized("Invalid Authentication");
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro durante login para email: {Email}", loginRequest.Email);
+                return StatusCode(500, "Erro interno do servidor");
+            }
+            
         }
 
         [HttpGet("confirmemail")]
@@ -129,29 +143,87 @@ namespace AMAPP.API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> ConfirmEmail(string userEmail, string token)
         {
-            if (string.IsNullOrWhiteSpace(userEmail) || string.IsNullOrWhiteSpace(token))
+            try
             {
-                return BadRequest();
-            }
-            var user = await _userManager.FindByEmailAsync(userEmail);
+                if (string.IsNullOrWhiteSpace(userEmail) || string.IsNullOrWhiteSpace(token))
+                {
+                    return BadRequest("Email e token são obrigatórios");
+                }
 
-            if (user == default)
+                var user = await _userManager.FindByEmailAsync(userEmail);
+
+                if (user == default)
+                {
+                    _logger.LogWarning("Tentativa de confirmação de email para utilizador inexistente: {Email}", userEmail);
+                    return NotFound("Utilizador não encontrado");
+                }
+
+                var decodedToken = WebEncoders.Base64UrlDecode(token);
+                string normalToken = Encoding.UTF8.GetString(decodedToken);
+
+
+                var result = await _userManager.ConfirmEmailAsync(user, normalToken);
+
+                if (!result.Succeeded)
+                {
+                    _logger.LogWarning("Falha na confirmação de email para utilizador: {UserId}", user.Id);
+                    return BadRequest("Token inválido ou expirado");
+                }
+
+                _logger.LogInformation("Email confirmado com sucesso para utilizador: {UserId}", user.Id);
+                return Ok("Email confirmado com sucesso");
+            }
+            catch (Exception ex)
             {
-                return NotFound();
+                _logger.LogError(ex, "Erro durante confirmação de email para: {Email}", userEmail);
+                return StatusCode(500, "Erro interno do servidor");
             }
+            
+        }
 
-            var decodedToken = WebEncoders.Base64UrlDecode(token);
-            string normalToken = Encoding.UTF8.GetString(decodedToken);
-
-
-            var result = await _userManager.ConfirmEmailAsync(user, normalToken);
-
-            if (!result.Succeeded)
+        [HttpPost("change-password")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> ChangePassword(ChangePasswordDto changePasswordDto)
+        {
+            try
             {
-                return BadRequest();
-            }
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
 
-            return Ok("Email account confirmed");
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized();
+                }
+
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    return NotFound("Utilizador não encontrado");
+                }
+
+                var result = await _userManager.ChangePasswordAsync(user,
+                    changePasswordDto.CurrentPassword, changePasswordDto.NewPassword);
+
+                if (!result.Succeeded)
+                {
+                    _logger.LogWarning("Falha na mudança de password para utilizador: {UserId}", user.Id);
+                    return BadRequest(result.Errors.Select(e => e.Description));
+                }
+
+                _logger.LogInformation("Password alterada com sucesso para utilizador: {UserId}", user.Id);
+
+                return Ok(new { Message = "Password alterada com sucesso" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro durante mudança de password");
+                return StatusCode(500, "Erro interno do servidor");
+            }
         }
 
         [HttpGet("forgetpassword")]
@@ -188,33 +260,44 @@ namespace AMAPP.API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> ResetEmail(ResetEmailRequestDto request)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                return BadRequest();
-            }
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
 
-            if (!request.Password.Equals(request.ConfirmPassword))
+                if (!request.Password.Equals(request.ConfirmPassword))
+                {
+                    return BadRequest("The password's are not the same");
+                }
+
+                var user = await _userManager.FindByEmailAsync(request.Email);
+                if (user == default)
+                {
+                    return NotFound("Utilizador não encontrado");
+                }
+
+                var decodedToken = WebEncoders.Base64UrlDecode(request.Token);
+                string normalToken = Encoding.UTF8.GetString(decodedToken);
+
+                var result = await _userManager.ResetPasswordAsync(user, request.Token, request.Password);
+
+                if (!result.Succeeded)
+                {
+                    _logger.LogWarning("Falha no reset de password para utilizador: {UserId}", user.Id);
+                    return BadRequest();
+                }
+
+                _logger.LogInformation("Password redefinida com sucesso para utilizador: {UserId}", user.Id);
+                return Ok("Password redefinida com sucesso");
+            }
+            catch (Exception ex)
             {
-                return BadRequest("The password's are not the same");
+                _logger.LogError(ex, "Erro durante reset de password");
+                return StatusCode(500, "Erro interno do servidor");
             }
-
-            var user = await _userManager.FindByEmailAsync(request.Email);
-            if (user == default)
-            {
-                return NotFound();
-            }
-
-            var decodedToken = WebEncoders.Base64UrlDecode(request.Token);
-            string normalToken = Encoding.UTF8.GetString(decodedToken);
-
-            var result = await _userManager.ResetPasswordAsync(user, request.Token, request.Password);
-
-            if (!result.Succeeded)
-            {
-                return BadRequest();
-            }
-
-            return Ok("Password changed");
+           
         }
     }
 }
