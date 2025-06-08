@@ -5,6 +5,8 @@ using AMAPP.API.Repository.ProdutoRepository;
 using AMAPP.API.Services.Interfaces;
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
+using AMAPP.API.Utils;
+
 
 namespace AMAPP.API.Services.Implementations
 {
@@ -48,21 +50,20 @@ namespace AMAPP.API.Services.Implementations
             if (producer == null)
                 throw new KeyNotFoundException("Producer not found.");
 
+            // REPLACE your existing image validation with this secure validation:
+            byte[]? photoBytes = null;
             if (productDto.Photo != null)
             {
-                if (productDto.Photo.Length > 5 * 1024 * 1024) // 5 MB limit
+                try
                 {
-                    throw new ArgumentException("Photo size exceeds the 5MB limit.");
+                    // This method does all the security validation and processing
+                    photoBytes = await ImageSecurityHelper.ValidateAndProcessImageAsync(productDto.Photo);
                 }
-
-                var validFormats = new[] { ".jpg", ".jpeg", ".png" };
-                var fileExtension = Path.GetExtension(productDto.Photo.FileName).ToLower();
-                if (!validFormats.Contains(fileExtension))
+                catch (ArgumentException ex)
                 {
-                    throw new ArgumentException("Invalid photo format. Only JPG and PNG are allowed.");
+                    throw new ArgumentException($"Image validation failed: {ex.Message}");
                 }
             }
-
 
             // TODO: Remover
             var producerInfo = await _producerInfoRepository.GetProducerInfoByUserIdAsync(producer.Id);
@@ -76,16 +77,17 @@ namespace AMAPP.API.Services.Implementations
                 await _producerInfoRepository.AddAsync(producerInfo);
             }
 
+            // REMOVE this old code block - no longer needed:
             // Convert the uploaded image to a byte array
-            byte[]? photoBytes = null;
-            if (productDto.Photo != null)
-            {
-                using (var memoryStream = new MemoryStream())
-                {
-                    await productDto.Photo.CopyToAsync(memoryStream);
-                    photoBytes = memoryStream.ToArray();
-                }
-            }
+            // byte[]? photoBytes = null;
+            // if (productDto.Photo != null)
+            // {
+            //     using (var memoryStream = new MemoryStream())
+            //     {
+            //         await productDto.Photo.CopyToAsync(memoryStream);
+            //         photoBytes = memoryStream.ToArray();
+            //     }
+            // }
 
             var product = _mapper.Map<Product>(productDto);
 
@@ -117,32 +119,48 @@ namespace AMAPP.API.Services.Implementations
                 }
             }
 
-            // Resto do código de validação e atualização
+            // REPLACE your existing image validation with this secure validation:
+            byte[]? photoBytes = existingProduct.Photo; // Keep existing photo by default
             if (productDto.Photo != null)
             {
-                if (productDto.Photo.Length > 5 * 1024 * 1024) // 5 MB limit
+                try
                 {
-                    throw new ArgumentException("Photo size exceeds the 5MB limit.");
+                    // This method does all the security validation and processing
+                    photoBytes = await ImageSecurityHelper.ValidateAndProcessImageAsync(productDto.Photo);
                 }
-
-                var validFormats = new[] { ".jpg", ".jpeg", ".png" };
-                var fileExtension = Path.GetExtension(productDto.Photo.FileName).ToLower();
-                if (!validFormats.Contains(fileExtension))
+                catch (ArgumentException ex)
                 {
-                    throw new ArgumentException("Invalid photo format. Only JPG and PNG are allowed.");
+                    throw new ArgumentException($"Image validation failed: {ex.Message}");
                 }
             }
 
+            // REMOVE this old code block - no longer needed:
+            // if (productDto.Photo != null)
+            // {
+            //     if (productDto.Photo.Length > 5 * 1024 * 1024) // 5 MB limit
+            //     {
+            //         throw new ArgumentException("Photo size exceeds the 5MB limit.");
+            //     }
+            //
+            //     var validFormats = new[] { ".jpg", ".jpeg", ".png" };
+            //     var fileExtension = Path.GetExtension(productDto.Photo.FileName).ToLower();
+            //     if (!validFormats.Contains(fileExtension))
+            //     {
+            //         throw new ArgumentException("Invalid photo format. Only JPG and PNG are allowed.");
+            //     }
+            // }
+
+            // REMOVE this old code block too:
             // Convert the uploaded image to a byte array
-            byte[]? photoBytes = null;
-            if (productDto.Photo != null)
-            {
-                using (var memoryStream = new MemoryStream())
-                {
-                    await productDto.Photo.CopyToAsync(memoryStream);
-                    photoBytes = memoryStream.ToArray();
-                }
-            }
+            // byte[]? photoBytes = null;
+            // if (productDto.Photo != null)
+            // {
+            //     using (var memoryStream = new MemoryStream())
+            //     {
+            //         await productDto.Photo.CopyToAsync(memoryStream);
+            //         photoBytes = memoryStream.ToArray();
+            //     }
+            // }
 
             _mapper.Map(productDto, existingProduct);
 

@@ -20,62 +20,97 @@ Paulo Abreu - 1240481 <br>
 
 ## Table of Contents
 
-- [Introduction](#introduction)
-- [Project Analysis](#project-analysis)
-  - [Project description](#project-description)
-  - [Domain Model](#domain-model)
-  - [Component Diagram](#component-diagram)
-  - [Application Users](#application-users)
-    - [Producer](#producer)
-    - [Co-Producer](#co-producer)
-    - [AMAP Administrators](#amap-administrators)
-  - [Use Cases](#use-cases)
-  - [Functional Requirements](#functional-requirements)
-    - [UC01 - Manage Users/Roles](#uc01---manage-usersroles)
-    - [UC02 - Manage Delivery Settings](#uc02---manage-delivery-settings)
-    - [UC03 - Manage Products](#uc03---manage-products)
-    - [UC04 - Manage AMAP Details](#uc04---manage-amap-details)
-    - [UC05 - Login](#uc05---login)
-    - [UC06 - Register](#uc06---register)
-    - [UC07 - View/Search Products](#uc07---viewsearch-products)
-    - [UC08 - View Order History](#uc08---view-order-history)
-    - [UC09 - View Delivery](#uc09---view-delivery)
-    - [UC10 - View Order Payments](#uc10---view-order-payments)
-    - [UC11 - Manage Orders](#uc11---manage-orders)
-    - [UC12 - Manage Profile](#uc12---manage-profile)
-  - [Non-Functional Requirements](#non-functional-requirements)
-    - [1. Performance](#1-performance)
-    - [2. Avalability](#2-availability)
-    - [3. Scalability](#3-scalability)
-    - [4. Security](#4-security)
-    - [5. Reliability and Integrity](#5-reliability-and-integrity)
-    - [6. Maintainability](#6-maintainability)
-    - [7. Portability](#7-portability)
-    - [8. Monitoring and Alerts](#8-monitoring-and-alerts)
-  - [Security Requirements](#security-requirements)
-  - [Secure Development Requirements](#secure-development-requirements)
-- [Risk Assessment](#risk-assessment)
-  - [Risk Register](#risk-register)
-- [Development](#development)
-  - [Technology Used](#technology-used)
-  - [Structure](#structure)
-- [Pipeline](#pipeline)
+- [Phase 2: Sprint 1](#phase-2-sprint-1)
+  - [Table of Contents](#table-of-contents)
+  - [Introduction](#introduction)
+    - [Objectives](#objectives)
+    - [Scope](#scope)
+  - [Project Analysis](#project-analysis)
+    - [Project description](#project-description)
+    - [Domain Model](#domain-model)
+    - [Component Diagram](#component-diagram)
+    - [Application Users](#application-users)
+      - [Producer](#producer)
+      - [Co-Producer](#co-producer)
+      - [AMAP Administrators](#amap-administrators)
+    - [Use Cases](#use-cases)
+    - [Functional Requirements](#functional-requirements)
+      - [UC01 - Manage Users/Roles](#uc01---manage-usersroles)
+      - [UC02 - Manage Delivery Settings](#uc02---manage-delivery-settings)
+      - [UC03 - Manage Products](#uc03---manage-products)
+      - [UC04 - Manage AMAP Details](#uc04---manage-amap-details)
+      - [UC05 - Login](#uc05---login)
+      - [UC06 - Register](#uc06---register)
+      - [UC07 - View/Search Products](#uc07---viewsearch-products)
+      - [UC08 - View Order History](#uc08---view-order-history)
+      - [UC09 - View Delivery](#uc09---view-delivery)
+      - [UC10 - View Orders](#uc10---view-orders)
+      - [UC11 - Manage Orders](#uc11---manage-orders)
+      - [UC12 - Manage Profile](#uc12---manage-profile)
+    - [Non-Functional Requirements](#non-functional-requirements)
+      - [1. Performance](#1-performance)
+      - [2. Availability](#2-availability)
+      - [3. Scalability](#3-scalability)
+      - [4. Security](#4-security)
+      - [5. Reliability and Integrity](#5-reliability-and-integrity)
+      - [6. Maintainability](#6-maintainability)
+      - [7. Portability](#7-portability)
+      - [8. Monitoring and Alerts](#8-monitoring-and-alerts)
+    - [Security Requirements](#security-requirements)
+      - [Functional Security Requirements (CIA-Based)](#functional-security-requirements-cia-based)
+        - [Confidentiality](#confidentiality)
+        - [Integrity](#integrity)
+        - [Availability](#availability)
+      - [Non-Functional Security Requirements](#non-functional-security-requirements)
+  - [Risk Assessment](#risk-assessment)
+    - [Risk Register](#risk-register)
+  - [Development](#development)
+    - [Technology Used](#technology-used)
+    - [Structure](#structure)
+  - [Pipeline](#pipeline)
     - [Job 1: Code Analysis (SAST with CodeQL)](#job-1-code-analysis-sast-with-codeql)
+      - [Job Setup and Configuration](#job-setup-and-configuration)
+      - [Job Execution Steps](#job-execution-steps)
     - [Job 2: Build and Test](#job-2-build-and-test)
+      - [Job Setup and Configuration](#job-setup-and-configuration-1)
+      - [Job Execution Steps](#job-execution-steps-1)
+      - [Test and Verification Stage](#test-and-verification-stage)
+      - [Coverage Report Generation](#coverage-report-generation)
     - [Job 3: Dependency Security Scan (SCA)](#job-3-dependency-security-scan-sca)
     - [Job 4: Code Quality Analysis](#job-4-code-quality-analysis)
+      - [Job Setup and Configuration](#job-setup-and-configuration-2)
+      - [Job Execution Steps](#job-execution-steps-2)
     - [Job 5: OWASP ZAP Baseline Scan (DAST)](#job-5-owasp-zap-baseline-scan-dast)
-- [Relevant Practices Adopted](#relevant-practices-adopted)
-  - [Default Branch](#default-branch)
-  - [Branch Protection Rules](#branch-protection-rules)
-- [ASVS](#asvs)
-- [Conclusion](#conclusion)
-
+      - [Job Setup and Configuration](#job-setup-and-configuration-3)
+      - [Job Execution Steps](#job-execution-steps-3)
+  - [Relevant Practices Adopted](#relevant-practices-adopted)
+    - [Default Branch: `develop`](#default-branch-development)
+    - [Branch Protection Rules](#branch-protection-rules)
+  - [ASVS](#asvs)
+    - [Subdividir pelos pontos a baixo: ](#subdividir-pelos-pontos-a-baixo-)
+  - [Conclusion](#conclusion)
+      - [Sprint Achievements](#sprint-achievements)
+      - [Key Accomplishments](#key-accomplishments)
+      - [Risk Mitigation Progress](#risk-mitigation-progress)
+      - [Areas for Future Enhancement](#areas-for-future-enhancement)
+      - [Final Assessment](#final-assessment)
 ---
 
 ## Introduction
 
-Blablabla 
+This report documents the work carried out during **Phase 2: Sprint 1** of the AMAPP project, as part of the DESOFS course. Following Phase 1's security analysis and design, this sprint focuses on **implementation and testing** with emphasis on DevSecOps practices.
+
+### Objectives
+
+The primary objectives include:
+- **Development**: Building core functionality following secure coding practices
+- **DevSecOps Pipeline**: Implementing CI/CD with integrated security testing (SAST, DAST, SCA)
+- **Quality Assurance**: Code reviews, automated testing, and security validation
+- **ASVS Compliance**: Demonstrating adherence to security standards through practical implementation
+
+### Scope
+
+This three-week sprint delivers sufficient functionality to showcase security automation capabilities, including automated security scanning, comprehensive testing strategies, and secure development practices with full documentation and traceability between security requirements and implemented controls.
 
 ---
 
@@ -327,10 +362,10 @@ Salientar se verificarmos se que algum nao vai ser implementado.
    We begin with the STRIDE-based threat model, which enumerates potential attacks across Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, and Elevation of Privilege.
 2. **Scoring Criteria**Each threat is evaluated on four dimensions:
 
-   - `Severity`: potential damage if exploited (1–5)
-   - `Asset Criticality`: importance of the targeted component (1–5)
-   - `Likelihood`: probability of successful exploitation given existing controls (1–5)
-   - `Business Impact`: financial, operational, reputational, or regulatory consequences (1–5)
+  - `Severity`: potential damage if exploited (1–5)
+  - `Asset Criticality`: importance of the targeted component (1–5)
+  - `Likelihood`: probability of successful exploitation given existing controls (1–5)
+  - `Business Impact`: financial, operational, reputational, or regulatory consequences (1–5)
 3. **Risk Calculation**
    We compute the **Risk Score** as:  Risk Score = Likelihood × ((Severity + Asset Criticality) ÷ 2)
 4. **Risk Prioritization**
@@ -445,7 +480,7 @@ This architecture allows for scalability, testability, and easier maintenance, m
 
 ---
 
-## Pipeline 
+## Pipeline
 
 The pipeline consists of five main steps, each designed to ensure the quality and reliability of the software throughout the development process.
 
@@ -481,7 +516,7 @@ strategy:
 - `working-directory: ./project/AMAPP.API`: Sets the default working directory to the `AMAPP.API` folder, so all commands run in the context of the main backend project.
 
 - `permissions`: Grants limited read access to repository content and the ability to write security findings as GitHub Security Events.  
-This is required for CodeQL to upload results to the repository's **Security** tab.
+  This is required for CodeQL to upload results to the repository's **Security** tab.
 
 - `strategy`:Defines a matrix configuration, allowing the job to be easily extended to analyze multiple languages.
 
@@ -527,10 +562,10 @@ steps:
 - **Setup .NET SDK**: Installs the required .NET 8.0 SDK so the application can be built and analyzed.
 
 - **Build the Project**: Restores NuGet dependencies and builds the application.
-A successful build is necessary for CodeQL to inspect the generated binaries and perform its analysis correctly.
+  A successful build is necessary for CodeQL to inspect the generated binaries and perform its analysis correctly.
 
 - **Run CodeQL Analysis**: Runs the CodeQL static analysis and generates a report in SARIF format.
-The report is uploaded to the repository's Security tab using the GITHUB_TOKEN, making any potential vulnerabilities visible directly in GitHub's security interface.
+  The report is uploaded to the repository's Security tab using the GITHUB_TOKEN, making any potential vulnerabilities visible directly in GitHub's security interface.
 
 ---
 
@@ -543,6 +578,9 @@ This job is responsible for building the application, executing unit and integra
 ```yaml
 name: Build and Test
 runs-on: ubuntu-latest
+permissions:
+  contents: read
+  security-events: write
 
 defaults:
   run:
@@ -605,7 +643,7 @@ steps:
 
 #### Test and Verification Stage
 
-- **1. Unit Tests with Coverage:** 
+- **1. Unit Tests with Coverage:**
   ```yaml
   dotnet test AMAPP.API.Tests/AMAPP.API.Tests.csproj --collect:"XPlat Code Coverage"
   ```
@@ -620,8 +658,8 @@ steps:
   curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/health
   curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/swagger
   ```
-    - Starts the API locally.
-    - Makes curl requests to /health and /swagger endpoints to ensure the API is working.
+  - Starts the API locally.
+  - Makes curl requests to /health and /swagger endpoints to ensure the API is working.
 
 
 - **3. E2E Test (Business Flow)**
@@ -641,15 +679,15 @@ steps:
   # Delete
   curl -X DELETE http://localhost:5000/api/recursos/$RESOURCE_ID
   ```
-    - Creates, reads, updates, and deletes a resource to validate the complete API workflow.
+  - Creates, reads, updates, and deletes a resource to validate the complete API workflow.
 
 - **5. Mutation Testing (Stryker):**
   ```yaml
   dotnet tool install -g dotnet-stryker
   dotnet stryker -p AMAPP.API.csproj --mutation-level Basic --output "MutationReports"
   ```
-    - Installs Stryker (if necessary).
-    - Runs mutation tests on the main project and generates a report in ./MutationReports.
+  - Installs Stryker (if necessary).
+  - Runs mutation tests on the main project and generates a report in ./MutationReports.
 
 #### Coverage Report Generation
 
@@ -676,15 +714,127 @@ steps:
 
 ### Job 3: Dependency Security Scan (SCA)
 
-This job performs **Software Composition Analysis (SCA)** using:
+This job is responsible for performing a **Software Composition Analysis (SCA)** to identify vulnerable and outdated dependencies within the project. It uses various tools to scan NuGet packages, generate reports, and produce a Software Bill of Materials (SBOM).
 
-- `dotnet list package --vulnerable`
-- `dotnet list package --outdated`
+#### Job Setup and Configuration
 
-The results are saved and uploaded as artifacts:
+The initial setup configures the environment and working directory to ensure consistent execution:
 
-- `vulnerable-packages.txt`
-- `outdated-packages.txt`
+```yaml
+name: Dependency Security Scan
+runs-on: ubuntu-latest
+needs: build-and-test
+defaults:
+  run:
+    working-directory: ./project/AMAPP.API
+```
+
+- `runs-on: ubuntu-latest`: Uses the latest Ubuntu environment to run the job.
+
+- `needs: build-and-test`: Ensures this job runs only after the successful completion of the build and test job.
+
+- `working-directory: ./project/AMAPP.API`: Sets the default directory context to the main backend project folder.
+
+#### Job Execution Steps
+
+```yaml
+steps:
+  - name: Checkout repository
+    uses: actions/checkout@v4
+
+  - name: Setup .NET
+    uses: actions/setup-dotnet@v4
+    with:
+      dotnet-version: '8.0.x'
+
+  - name: Restore dependencies
+    run: dotnet restore
+
+  - name: List vulnerable packages
+    run: |
+      echo "Checking for vulnerable NuGet packages..."
+      dotnet list package --vulnerable --include-transitive > vulnerable-packages.txt
+      cat vulnerable-packages.txt
+    continue-on-error: true
+
+  - name: Check for outdated packages
+    run: |
+      echo "Checking for outdated packages..."
+      dotnet list package --outdated > outdated-packages.txt
+      cat outdated-packages.txt
+    continue-on-error: true
+
+  - name: OWASP Dependency Check
+    uses: dependency-check/Dependency-Check_Action@main
+    with:
+      project: 'AMAPP.API'
+      path: './project'
+      format: 'HTML,JSON'
+      out: 'dependency-check-reports'
+      args: >
+        --enableRetired
+        --enableExperimental
+        --failOnCVSS 7
+    continue-on-error: true
+
+  - name: Generate SBOM
+    uses: CycloneDX/gh-dotnet-generate-sbom@v1
+    continue-on-error: true
+    with:
+      path: ./project/AMAPP.API/AMAPP.API.csproj
+      out: ./project/AMAPP.API
+
+  - name: Normalize SBOM filename
+    continue-on-error: true
+    run: |
+      #!/usr/bin/env bash
+      WORKDIR="$GITHUB_WORKSPACE"
+      PROJDIR="$WORKDIR/project/AMAPP.API"
+      mkdir -p "$PROJDIR"
+
+      # look for bom.xml in either location
+      if [[ -f "$WORKDIR/bom.xml" ]]; then
+        SRC="$WORKDIR/bom.xml"
+      elif [[ -f "$PROJDIR/bom.xml" ]]; then
+        SRC="$PROJDIR/bom.xml"
+      else
+        echo "⚠️ SBOM not found; creating empty placeholder"
+        echo '<?xml version="1.0"?><bom></bom>' > "$PROJDIR/sbom.xml"
+        exit 0
+      fi
+
+      mv "$SRC" "$PROJDIR/sbom.xml"
+      echo "✅ SBOM moved to project/AMAPP.API/sbom.xml"
+
+  - name: Upload dependency reports
+    uses: actions/upload-artifact@v4
+    with:
+      name: dependency-reports
+      path: |
+        ./project/AMAPP.API/vulnerable-packages.txt
+        ./project/AMAPP.API/outdated-packages.txt
+        ./dependency-check-reports/
+        ./project/AMAPP.API/sbom.xml
+```
+
+- **Checkout repository**: Retrieves the latest source code to perform dependency scanning on the current project state.
+
+- **Setup .NET SDK**: Installs .NET 8.0 SDK to enable restore and analysis of project dependencies.
+
+- **Restore dependencies**: Runs `dotnet restore` to fetch all project dependencies.
+
+- **List vulnerable packages**: Checks for NuGet packages with known vulnerabilities, including transitive dependencies, and outputs the results to `vulnerable-packages.txt`. The step continues even if vulnerabilities are found.
+
+- **Check for outdated packages**: Lists packages that have newer versions available, outputting results to `outdated-packages.txt`.
+
+- **OWASP Dependency Check**: Executes a detailed scan using the OWASP Dependency-Check tool to identify vulnerable components, generating reports in HTML and JSON formats. The scan is configured to fail the build if vulnerabilities with CVSS score ≥ 7 are detected, but errors don’t stop the workflow.
+
+- **Generate SBOM**: Produces a Software Bill of Materials (SBOM) in CycloneDX format for tracking component provenance.
+
+- **Normalize SBOM filename**: Moves or creates the `sbom.xml` file to a consistent project location, ensuring subsequent steps can find it reliably.
+
+- **Upload dependency reports**: Archives all generated vulnerability and dependency reports as build artifacts for later review.
+
 
 ---
 
@@ -822,11 +972,11 @@ steps:
 
 - **Run OWASP ZAP Baseline Scan**: Executes a baseline scan with OWASP ZAP against the running API.
 
-    - `fail_action: false`: Ensures that the workflow doesn’t fail even if vulnerabilities are found.
+  - `fail_action: false`: Ensures that the workflow doesn’t fail even if vulnerabilities are found.
 
-    - `allow_issue_writing: true`: Enables ZAP to generate detailed reports with found issues.
+  - `allow_issue_writing: true`: Enables ZAP to generate detailed reports with found issues.
 
-    - `-config api.disablekey=true`: Disables the API key requirement for simplicity during scan.
+  - `-config api.disablekey=true`: Disables the API key requirement for simplicity during scan.
 
 - **Upload ZAP Report**: Uploads the generated HTML report (`owasp-zap-report.html`) as an artifact, so it can be downloaded and reviewed after the workflow finishes.
 
@@ -876,6 +1026,37 @@ documented security requirements and tests.
 
 ## Conclusion
 
-Blablabla
+#### Sprint Achievements
+
+Phase 2: Sprint 1 successfully established a solid foundation for secure software development within the AMAPP project. The team accomplished the primary objectives by implementing core system functionality while integrating comprehensive security measures throughout the development lifecycle.
+
+#### Key Accomplishments
+
+**Development and Security Integration**: The implementation of core domain aggregates (Product, Order, Delivery, Users) following Onion Architecture principles demonstrates our commitment to maintainable and secure code. The integration of JWT authentication, input validation through DTOs, and proper data mapping ensures a robust security posture from the ground up.
+
+**DevSecOps Pipeline**: The establishment of a comprehensive CI/CD pipeline with five distinct security-focused jobs represents a significant achievement. The integration of SAST (CodeQL), DAST (OWASP ZAP), SCA (dependency scanning), code quality analysis (Gitleaks), and comprehensive testing validates our security-first approach to development.
+
+**Testing Strategy**: The implementation of multiple testing layers—unit tests with coverage reporting, smoke tests, end-to-end API validation, and mutation testing with Stryker—ensures both functional correctness and security resilience.
+
+**Security Practices**: The adoption of branch protection rules, mandatory code reviews, secret detection, and automated vulnerability scanning demonstrates mature security practices that will serve as the foundation for future development sprints.
+
+#### Risk Mitigation Progress
+
+Several high-priority threats identified in Phase 1 have been addressed through practical implementation:
+- **Authentication Bypass** mitigation through JWT implementation and proper token validation
+- **Password Brute Force** protection via secure authentication mechanisms
+- **Input Validation** controls preventing injection attacks through DTO validation
+
+#### Areas for Future Enhancement
+
+While this sprint established a strong security foundation, future sprints will focus on:
+- Enhanced monitoring and logging capabilities
+- Implementation of additional ASVS requirements
+- Expansion of API functionality while maintaining security standards
+- Performance optimization without compromising security controls
+
+#### Final Assessment
+
+Phase 2: Sprint 1 successfully demonstrates the team's ability to translate security requirements into practical implementations. The combination of secure development practices, automated security testing, and comprehensive documentation provides a solid platform for the continued development of the AMAPP system. The work completed aligns with industry best practices and academic requirements, positioning the team well for the final sprint and overall project success.
 
 ---
