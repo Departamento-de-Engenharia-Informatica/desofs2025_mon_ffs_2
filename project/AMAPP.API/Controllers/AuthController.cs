@@ -92,11 +92,11 @@ namespace AMAPP.API.Controllers
             try
             {
                 // TODO: Centralizar sanitização de email
-                var sanitizedEmail = loginRequest.Email?.Replace("\n", "").Replace("\r", "");
+                var emailHash = loginRequest.Email?.GetHashCode().ToString() ?? "null";
                 if (!ModelState.IsValid)
                 {
                     _logger.LogWarning("Tentativa de login com dados inválidos para email: {Email}",
-                            sanitizedEmail);
+                            emailHash);
                     return BadRequest("Bad credentials");
                 }
                 var user = await _userManager.FindByEmailAsync(loginRequest.Email);
@@ -127,15 +127,15 @@ namespace AMAPP.API.Controllers
                 }
 
                 _logger.LogWarning("Tentativa de login falhada para email: {Email} de IP: {IP}",
-                    sanitizedEmail,
+                    emailHash,
                     HttpContext.Connection.RemoteIpAddress);
 
                 return Unauthorized("Invalid Authentication");
             }
             catch (Exception ex)
             {
-                var sanitizedEmail = loginRequest.Email?.Replace("\n", "").Replace("\r", "");
-                _logger.LogError(ex, "Erro durante login para email: {Email}", sanitizedEmail);
+                var emailHash = loginRequest.Email?.GetHashCode().ToString() ?? "null";
+                _logger.LogError(ex, "Erro durante login para email: {Email}", emailHash);
                 return StatusCode(500, "Erro interno do servidor");
             }
             
@@ -158,8 +158,8 @@ namespace AMAPP.API.Controllers
 
                 if (user == default)
                 {
-                    var sanitizedEmail = userEmail?.Replace("\n", "").Replace("\r", "");
-                    _logger.LogWarning("Tentativa de confirmação de email para utilizador inexistente: {Email}", sanitizedEmail);
+                    var emailHash = loginRequest.Email?.GetHashCode().ToString() ?? "null";
+                    _logger.LogWarning("Tentativa de confirmação de email para utilizador inexistente: {Email}", emailHash);
                     return NotFound("Utilizador não encontrado");
                 }
 
@@ -180,7 +180,6 @@ namespace AMAPP.API.Controllers
             }
             catch (Exception ex)
             {
-                var sanitizedEmail = userEmail?.Replace("\n", "").Replace("\r", "");
                 _logger.LogError(ex, "Erro durante confirmação de email para: {Email}", userEmail);
                 return StatusCode(500, "Erro interno do servidor");
             }
