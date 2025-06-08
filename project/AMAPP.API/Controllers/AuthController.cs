@@ -158,7 +158,7 @@ namespace AMAPP.API.Controllers
 
                 if (user == default)
                 {
-                    var emailHash = loginRequest.Email?.GetHashCode().ToString() ?? "null";
+                    var emailHash = userEmail?.GetHashCode().ToString() ?? "null";
                     _logger.LogWarning("Tentativa de confirmação de email para utilizador inexistente: {Email}", emailHash);
                     return NotFound("Utilizador não encontrado");
                 }
