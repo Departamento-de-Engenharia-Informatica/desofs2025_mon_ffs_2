@@ -1,6 +1,7 @@
 ﻿using AMAPP.API.DTOs.Product;
 using FluentValidation;
 using System.Xml.Linq;
+using AMAPP.API.Utils;
 
 namespace AMAPP.API.DTOs.Product.Validators;
 
@@ -26,6 +27,11 @@ public class CreateProductDtoValidator : AbstractValidator<CreateProductDto>
 
         RuleFor(x => x.ProductTypeId)
             .GreaterThan(0).WithMessage("Invalid product type Id.");
+
+        RuleFor(x => x.Photo)
+            .Must(ImageSecurityHelper.IsValidImage)
+            .WithMessage(x => ImageSecurityHelper.GetImageValidationError(x.Photo))
+            .When(x => x.Photo != null);
 
     }
 }
