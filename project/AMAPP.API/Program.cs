@@ -284,6 +284,8 @@ namespace AMAPP.API
                     
                 });
             });
+            
+            builder.Services.AddHealthChecks();
 
 
             var app = builder.Build();
