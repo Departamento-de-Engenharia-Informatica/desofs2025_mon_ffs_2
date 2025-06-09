@@ -138,7 +138,7 @@ jobs:
 
           # health endpoint
           echo "Verificando endpoint de saúde..."
-          HEALTH_STATUS=$(curl -k -L -s -o /dev/null -w "%{http_code}" https://localhost:7237/health)
+          HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:7237/health)
           echo "Status do endpoint /health: $HEALTH_STATUS" >> ./SmokeTestResults/smoke-report.txt
           if [ "$HEALTH_STATUS" = "200" ]; then
             echo "✅ Health check passou" >> ./SmokeTestResults/smoke-report.txt
@@ -148,7 +148,7 @@ jobs:
 
           # swagger endpoint
           echo "Verificando documentação Swagger..."
-          SWAGGER_STATUS=$(curl -k -L -s -o /dev/null -w "%{http_code}" https://localhost:7237/swagger)
+          SWAGGER_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:7237/swagger/index.html)
           echo "Status do endpoint /swagger: $SWAGGER_STATUS" >> ./SmokeTestResults/smoke-report.txt
           if [ "$SWAGGER_STATUS" = "200" ]; then
             echo "✅ Swagger check passou" >> ./SmokeTestResults/smoke-report.txt
