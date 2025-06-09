@@ -70,25 +70,30 @@ namespace AMAPP.API.Controllers
             // CoProducer can only download their own report
             if (User.IsInRole("CoProducer"))
             {
-                var nameClaim = User.Identity?.Name;
+                var nameClaim = User.FindFirst(c => c.Type == "name")?.Value;
+
                 if (!string.Equals(nameClaim, username, StringComparison.OrdinalIgnoreCase))
-                    return (true, Forbid(), null);
+                {
+                    return (true,
+                        StatusCode(403, new { message = "You may only download your own report." }),
+                        null
+                    );
+                }
 
                 var caller = await _userManager.FindByNameAsync(username);
                 if (caller == null)
-                    return (true, NotFound(new { message = "User not found." }), null);
+                    return (true, NotFound(new { message = "The requested report is not available." }), null);
                 
                 _logger.LogInformation("CoProducer is authorized to download their own report");
                 return (false, null, caller.Id);
             }
-
-            // Administrator can download for any valid CoProducer
+            
             if (User.IsInRole("Administrator"))
             {
                 _logger.LogInformation("Checking selected user details for download authorization");
                 var user = await _userManager.FindByNameAsync(username);
                 if (user == null)
-                    return (true, NotFound(new { message = "User not found." }), null);
+                    return (true, NotFound(new { message = "You may only download the report from a valid CoProducer." }), null);
 
                 if (!await _userManager.IsInRoleAsync(user, "COPR"))
                     return (true, Forbid(), null);
