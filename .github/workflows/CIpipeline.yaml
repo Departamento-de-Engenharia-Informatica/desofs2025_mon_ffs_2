@@ -105,7 +105,7 @@ jobs:
 
       - name: Build
         run: dotnet build --no-restore
-
+        
       - name: Run tests with coverage
         run: |
           # Executar testes com cobertura
@@ -123,7 +123,7 @@ jobs:
             dotnet test --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
           fi
           
-# — Smoke tests
+          # — Smoke tests
           echo "Executando testes de smoke..."
           mkdir -p ./SmokeTestResults
           echo "Iniciando testes de smoke em $(date)" > ./SmokeTestResults/smoke-report.txt
