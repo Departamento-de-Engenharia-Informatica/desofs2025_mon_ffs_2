@@ -26,6 +26,9 @@ using System.Reflection;
 using System.Text;
 using AMAPP.API.Repository.ReservationRepository;
 using QuestPDF.Infrastructure;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
+using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 
 namespace AMAPP.API
@@ -182,6 +185,37 @@ namespace AMAPP.API
             {
                 options.Conventions.Add(new RouteTokenTransformerConvention(new KebabCaseParameterTransformer()));
             });
+
+
+            // Configure rate limiting
+            builder.Services.AddRateLimiter(options =>
+            {
+                options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+                options.AddFixedWindowLimiter("FixedPolicy", opt =>
+                {
+                    opt.Window = TimeSpan.FromSeconds(1);    // Time window of 1 minute
+                    opt.PermitLimit = 100;                   // Allow 100 requests per minute
+                    opt.QueueLimit = 2;                      // Queue limit of 2
+                    opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                });
+
+                // TODO: try to log the rate limit rejection
+                //options.OnRejected = async (context, cancellationToken) =>
+                //{
+                //    // Custom rejection handling logic
+                //    context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                //    context.HttpContext.Response.Headers["Retry-After"] = "60";
+
+                //    await context.HttpContext.Response.WriteAsync("Rate limit exceeded. Please try again later.", cancellationToken);
+
+                //    // Optional logging
+                //    Console.WriteLine("Rate limit exceeded for IP: {IpAddress}",
+                //        context.HttpContext.Connection.RemoteIpAddress);
+                //};
+            });
+
+
             builder.Services.AddFluentValidationAutoValidation()
                 .AddFluentValidationClientsideAdapters();
             builder.Services.AddValidatorsFromAssemblyContaining<CreateSelectedProductOfferDtoValidator>();
@@ -268,12 +302,14 @@ namespace AMAPP.API
             app.UseHttpsRedirection();
 
             app.UseCors();
+
             app.UseRouting();
+            app.UseRateLimiter();
 
             app.UseAuthentication();
             app.UseAuthorization();
 
-            app.MapControllers();
+            app.MapControllers().RequireRateLimiting("FixedPolicy");
 
 
             app.Run();
