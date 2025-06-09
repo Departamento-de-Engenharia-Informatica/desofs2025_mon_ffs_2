@@ -27,6 +27,7 @@ using System.Text;
 using AMAPP.API.Repository.ReservationRepository;
 using QuestPDF.Infrastructure;
 using System.Security.Claims;
+using AMAPP.API.Repository.CoproducerInfoRepository;
 
 namespace AMAPP.API
 {
@@ -149,7 +150,7 @@ namespace AMAPP.API
                     policy.RequireRole("Administrator", "Amap"));
 
                 options.AddPolicy("CanViewReports", policy =>
-                    policy.RequireRole("Administrator", "Amap", "Producer"));
+                    policy.RequireRole("Administrator", "Amap", "CoProducer"));
             });
 
 
@@ -170,6 +171,7 @@ namespace AMAPP.API
             builder.Services.AddScoped<IReservationService, ReservationService>();
             builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
             builder.Services.AddScoped<IReportService, ReportService>();
+            builder.Services.AddScoped<ICoproducerInfoRepository, CoproducerInfoRepository>();
 
             builder.Services.AddRouting(options =>
             {
