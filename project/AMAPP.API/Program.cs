@@ -311,7 +311,9 @@ namespace AMAPP.API
             app.UseAuthentication();
             app.UseAuthorization();
 
+            app.MapHealthChecks("/health").AllowAnonymous();
             app.MapControllers().RequireRateLimiting("FixedPolicy");
+            
 
 
             app.Run();
