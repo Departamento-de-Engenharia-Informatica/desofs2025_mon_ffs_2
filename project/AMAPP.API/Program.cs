@@ -243,6 +243,12 @@ namespace AMAPP.API
                     BearerFormat = "JWT",
                     Scheme = "Bearer"
                 });
+                
+                builder.Services.AddHttpsRedirection(options =>
+                {
+                    options.HttpsPort = 7237;   // ← your HTTPS port here
+                    options.RedirectStatusCode = StatusCodes.Status307TemporaryRedirect;
+                });
 
                 option.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {

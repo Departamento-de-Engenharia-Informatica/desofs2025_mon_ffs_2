@@ -372,13 +372,13 @@ jobs:
 
       - name: Run API in background
         run: |
-          dotnet run --no-build --urls "http://localhost:5000" &
+          dotnet run --no-build --urls "https://localhost:7237" &
           sleep 10
 
       - name: Run OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.10.0
         with:
-          target: 'http://localhost:5000'
+          target: 'https://localhost:7237'
           fail_action: false
           allow_issue_writing: true
           cmd_options: '-config api.disablekey=true'
