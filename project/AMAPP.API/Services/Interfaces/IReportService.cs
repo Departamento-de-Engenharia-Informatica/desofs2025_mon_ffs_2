@@ -1,6 +1,8 @@
-﻿namespace AMAPP.API.Services.Interfaces;
+﻿using AMAPP.API.Models;
 
 public interface IReportService
 {
-        byte[] GenerateReport();
+    //(List<Reservation> Reservations, List<Delivery> Deliveries) GetUserData(string username);
+    
+    byte[] GenerateReportByUserId(string userId);
 }
