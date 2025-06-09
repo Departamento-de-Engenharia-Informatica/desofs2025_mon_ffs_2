@@ -381,7 +381,8 @@ jobs:
           target: 'https://localhost:7237'
           fail_action: false
           allow_issue_writing: true
-          cmd_options: '-config api.disablekey=true'
+          cmd_options: '-config api.disablekey=true -config ssl.insecure=true'
+
 
       - name: Upload ZAP report
         uses: actions/upload-artifact@v4

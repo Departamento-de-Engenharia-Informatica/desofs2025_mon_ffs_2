@@ -182,13 +182,7 @@ namespace AMAPP.API
                 options.LowercaseQueryStrings = true; // Optional: lowercase query strings
                 options.ConstraintMap["kebab"] = typeof(KebabCaseParameterTransformer); // Register transformer
             });
-
-            builder.Services.AddControllers(options =>
-            {
-                options.Conventions.Add(new RouteTokenTransformerConvention(new KebabCaseParameterTransformer()));
-            });
-
-
+            
             // Configure rate limiting
             builder.Services.AddRateLimiter(options =>
             {
@@ -231,6 +225,16 @@ namespace AMAPP.API
             
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
+            
+            builder.Services.AddHealthChecks();
+
+
+            builder.Services.AddHttpsRedirection(options =>
+            {
+                options.HttpsPort             = 7237;
+                options.RedirectStatusCode    = StatusCodes.Status307TemporaryRedirect;
+            });
+            
             builder.Services.AddSwaggerGen(option =>
             {
                 option.SwaggerDoc("v1", new OpenApiInfo { Title = "AMAPP API", Version = "v1" });
@@ -244,11 +248,6 @@ namespace AMAPP.API
                     Scheme = "Bearer"
                 });
                 
-                builder.Services.AddHttpsRedirection(options =>
-                {
-                    options.HttpsPort = 7237;   // ← your HTTPS port here
-                    options.RedirectStatusCode = StatusCodes.Status307TemporaryRedirect;
-                });
 
                 option.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
@@ -264,6 +263,11 @@ namespace AMAPP.API
                         new string[]{}
                     }
                 });
+            });
+            
+            builder.Services.AddControllers(options =>
+            {
+                options.Conventions.Add(new RouteTokenTransformerConvention(new KebabCaseParameterTransformer()));
             });
 
             builder.Services.AddCors(options =>
@@ -291,9 +295,6 @@ namespace AMAPP.API
                 });
             });
             
-            builder.Services.AddHealthChecks();
-
-
             var app = builder.Build();
 
 
@@ -310,6 +311,8 @@ namespace AMAPP.API
             app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
             app.UseHttpsRedirection();
+            
+
 
             app.UseCors();
 
