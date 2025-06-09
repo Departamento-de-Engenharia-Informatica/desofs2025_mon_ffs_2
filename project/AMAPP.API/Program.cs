@@ -59,13 +59,13 @@ namespace AMAPP.API
                 options.Password.RequireLowercase = true; // Requer minúsculas
                 options.Password.RequireUppercase = true; // Requer maiúsculas
                 options.Password.RequireDigit = true; // Requer dígitos
-
+                
                 // Configurações de conta
                 options.User.RequireUniqueEmail = true;
                 options.SignIn.RequireConfirmedEmail = false; // Ajuste conforme necessário
 
                 // Configurações de lockout
-                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(30);
                 options.Lockout.MaxFailedAccessAttempts = 5;
                 options.Lockout.AllowedForNewUsers = true;
             }).AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
@@ -196,7 +196,7 @@ namespace AMAPP.API
 
                 options.AddFixedWindowLimiter("FixedPolicy", opt =>
                 {
-                    opt.Window = TimeSpan.FromSeconds(1);    // Time window of 1 minute
+                    opt.Window = TimeSpan.FromMinutes(1);    // Time window of 1 minute
                     opt.PermitLimit = 100;                   // Allow 100 requests per minute
                     opt.QueueLimit = 2;                      // Queue limit of 2
                     opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
@@ -301,6 +301,10 @@ namespace AMAPP.API
 
             app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
+            if (!app.Environment.IsDevelopment())
+            {
+                app.UseHsts();
+            }
             app.UseHttpsRedirection();
 
             app.UseCors();

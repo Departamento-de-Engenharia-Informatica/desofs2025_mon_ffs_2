@@ -20,14 +20,17 @@ namespace AMAPP.API.Services.Implementations
 
         public async Task SendEmailAsync(MessageDto message)
         {
-            MimeMessage emailMessage = CreateEmailMessage(message);
+            var emailMessage = CreateEmailMessage(message);
             await SendEmail(emailMessage);
         }
 
         private MimeMessage CreateEmailMessage(MessageDto message)
         {
             var emailMessage = new MimeMessage();
-            emailMessage.From.Add(new MailboxAddress(_emailConfig.From, Environment.GetEnvironmentVariable(_emailConfig.EmailEnvUsername, EnvironmentVariableTarget.Machine) ));
+
+            // Usar diretamente o email da configuração ou de variável de ambiente
+            var senderEmail = GetEmailCredential(_emailConfig.EmailEnvUsername);
+            emailMessage.From.Add(new MailboxAddress(_emailConfig.From, senderEmail));
             emailMessage.To.AddRange(message.To);
             emailMessage.Subject = message.Subject;
             emailMessage.Body = new TextPart(TextFormat.Html) { Text = message.Body };
@@ -37,30 +40,39 @@ namespace AMAPP.API.Services.Implementations
 
         private async Task SendEmail(MimeMessage emailMessage)
         {
-            using (var client = new SmtpClient())
+            using var client = new SmtpClient();
+            try
             {
-                try
-                {
-                    await client.ConnectAsync(_emailConfig.SmtpServer, _emailConfig.Port, SecureSocketOptions.StartTls);
-                    await client.AuthenticateAsync(Environment.GetEnvironmentVariable(_emailConfig.EmailEnvUsername, EnvironmentVariableTarget.Machine), Environment.GetEnvironmentVariable(_emailConfig.EmailEnvPassword, EnvironmentVariableTarget.Machine));
-                    await client.SendAsync(emailMessage);
-                    Console.WriteLine("Enviou email");
+                await client.ConnectAsync(_emailConfig.SmtpServer, _emailConfig.Port, SecureSocketOptions.StartTls);
 
-                }
-                catch (Exception)
-                {
-                    //log an error message or throw and exception or both
-                    throw;
-                }
-                finally
-                {
-                    client.Disconnect(true);
-                    client.Dispose();
-                }
+                var username = GetEmailCredential(_emailConfig.EmailEnvUsername);
+                var password = GetEmailCredential(_emailConfig.EmailEnvPassword);
 
+                await client.AuthenticateAsync(username, password);
+                await client.SendAsync(emailMessage);
+
+                Console.WriteLine("Email enviado com sucesso");
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao enviar email: {ex.Message}");
+                throw new InvalidOperationException("Falha ao enviar email", ex);
+            }
+            finally
+            {
+                if (client.IsConnected)
+                    await client.DisconnectAsync(true);
+                // Não precisa chamar Dispose() manualmente devido ao 'using'
+            }
+        }
 
+        private string GetEmailCredential(string configValue)
+        {
+            // Primeiro tenta buscar como variável de ambiente
+            var envValue = Environment.GetEnvironmentVariable(configValue, EnvironmentVariableTarget.Machine);
 
+            // Se não encontrar, usa o valor da configuração diretamente
+            return !string.IsNullOrEmpty(envValue) ? envValue : configValue;
         }
     }
 }
