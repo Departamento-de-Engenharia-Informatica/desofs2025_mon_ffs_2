@@ -229,12 +229,13 @@ namespace AMAPP.API
             builder.Services.AddHealthChecks();
 
 
-            /*builder.Services.AddHttpsRedirection(options =>
+            //NOTA: Com isto comentado passa o smoke test do health check, mas não redireciona para HTTPS
+             builder.Services.AddHttpsRedirection(options =>
             {
                 options.HttpsPort             = 7237;
                 options.RedirectStatusCode    = StatusCodes.Status307TemporaryRedirect;
             });
-            */
+            
             
             builder.Services.AddSwaggerGen(option =>
             {
