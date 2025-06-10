@@ -107,6 +107,9 @@ namespace AMAPP.API.Controllers
                         return Unauthorized("Conta temporariamente bloqueada devido a tentativas falhadas");
                     }
 
+                    if(await _userManager.GetTwoFactorEnabledAsync(user))
+                        return await GenerateOTPFor2FactorAuthentication(user);
+
                     var roles = await _userManager.GetRolesAsync(user);
                     var token = _tokenService.GenerateToken(user, roles.ToList());
 
@@ -136,7 +139,70 @@ namespace AMAPP.API.Controllers
             
         }
 
-        [HttpGet("confirmemail")]
+        private async Task<IActionResult> GenerateOTPFor2FactorAuthentication(User user)
+        {
+            var providers = await _userManager.GetValidTwoFactorProvidersAsync(user);
+            if (!providers.Contains("Email"))
+                return Unauthorized("Invalid 2-Factor Provider.");
+
+            var token = await _userManager.GenerateTwoFactorTokenAsync(user, "Email");
+
+            if(user.Email == null)
+            {
+                return BadRequest("Email não configurado");
+            }
+
+            var message = new MessageDto(user.Email, "Authentication token", token);
+
+            await _emailService.SendEmailAsync(message);
+
+            return Ok(new LoginResponseDto { Is2FactorRequired = true, Provider = "Email" });
+        }
+
+        [HttpPost("twofactor")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(LoginResponseDto))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> TwoFactor(TwoFactorRequestDto twoFactorRequest)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var user = await _userManager.FindByEmailAsync(twoFactorRequest.Email!);
+                if (user == null)
+                {
+                    return BadRequest("Invalid Request");
+                }
+
+                var validVerification = await _userManager.VerifyTwoFactorTokenAsync(user, twoFactorRequest.Provider!, twoFactorRequest.Token!);
+
+                var roles = await _userManager.GetRolesAsync(user);
+                var token = _tokenService.GenerateToken(user, roles.ToList());
+
+                var expirationMinutes = _configuration.GetValue<int>("JwtSettings:ExpiryMinutes", 60);
+                var loginResponse = new LoginResponseDto
+                {
+                    Token = token,
+                    Expiration = DateTime.UtcNow.AddMinutes(expirationMinutes)
+                };
+
+                _logger.LogInformation("Login bem-sucedido para utilizador: {UserId}",
+                    user.Id);
+
+                return Ok(loginResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro durante login");
+                return StatusCode(500, "Erro interno do servidor");
+            }
+        }
+
+            [HttpGet("confirmemail")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
