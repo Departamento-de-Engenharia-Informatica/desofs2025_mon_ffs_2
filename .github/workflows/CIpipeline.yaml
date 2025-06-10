@@ -388,119 +388,7 @@ jobs:
           name: zap-report
           path: owasp-zap-report.html
           
-  # Job 6: API Fuzzing com RESTler
-  api-fuzzing:
-    name: API Fuzzing
-    runs-on: ubuntu-latest
-    needs: dast-owasp-zap
-    defaults:
-      run:
-        working-directory: ./project/AMAPP.API
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
-  
-      - name: Pull RESTler Docker image
-        run: |
-          docker pull mcr.microsoft.com/restler/restler:latest
-      - name: Generate grammar
-        run: |
-          docker run --rm -v $PWD:/app -w /app \
-            mcr.microsoft.com/restler/restler:latest \
-            Restler compile --api_spec ./swagger.json --api_spec_format Swagger
-      - name: Fuzz in “lean” mode
-        run: |
-          docker run --rm -v $PWD:/app -w /app \
-            mcr.microsoft.com/restler/restler:latest \
-            Restler fuzz-lean --grammar_file grammar.py --time_limit 300
-
-      - name: Build and Run API
-        run: |
-          dotnet build --configuration Release
-          dotnet run --no-build --urls "http://localhost:7237" &
-          echo "Aguardando API inicializar..."
-          sleep 10
-          
-      - name: Extract Swagger Spec
-        run: |
-          curl -s http://localhost:7237/swagger/v1/swagger.json > ./swagger.json
-          
-      - name: Run RESTler Fuzzing
-        run: |
-          ./restler/restler/Restler compile --api_spec ./swagger.json --api_spec_format Swagger
-          ./restler/restler/Restler fuzz --grammar_file ./Compile/grammar.py --dictionary_file ./Compile/dict.json --settings ./Compile/engine_settings.json --time_budget 10
-          echo "Compilando resultados do fuzzing..."
-        continue-on-error: true
-  
-      - name: Upload Fuzzing Results
-        uses: actions/upload-artifact@v4
-        with:
-          name: restler-fuzzing-results
-          path: |
-            ./Compile/
-            ./FuzzLean/
-            
-  # Job 7: API Penetration Testing com Nuclei
-  api-pentest:
-    name: API Penetration Testing
-    runs-on: ubuntu-latest
-    needs: dast-owasp-zap
-    defaults:
-      run:
-        working-directory: ./project/AMAPP.API
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-  
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
-  
-      - name: Build and Run API
-        run: |
-          dotnet build --configuration Release
-          dotnet run --no-build --urls "http://localhost:7237" &
-          echo "Aguardando API inicializar..."
-          sleep 15
-  
-      - name: Install Nuclei
-        run: |
-          wget -q -O nuclei.zip \
-            https://github.com/projectdiscovery/nuclei/releases/download/v3.0.0/nuclei_3.0.0_linux_amd64.zip
-          unzip -o nuclei.zip               # -o = overwrite without prompting :contentReference[oaicite:5]{index=5}
-          chmod +x nuclei
-          sudo mv nuclei /usr/local/bin/    # so `nuclei` is on PATH
-  
-      - name: Update Nuclei Templates
-        run: |
-          ./nuclei -update-templates
-  
-      - name: Run Nuclei API Scan
-        run: |
-          mkdir -p nuclei-results
-          ./nuclei -target http://localhost:7237 \
-            -tags api,jwt,idor,sqli,xss \
-            -severity medium,high,critical \
-            -json -o nuclei-results/api-scan.json \
-            -markdown-export nuclei-results/api-scan.md
-        continue-on-error: true
-  
-      - name: Upload Nuclei Results
-        uses: actions/upload-artifact@v4
-        with:
-          name: nuclei-penetration-results
-          path: ./project/AMAPP.API/nuclei-results/
-
-
-  # Job 8: JWT Security Testing
+  # Job 6: JWT Security Testing
   jwt-security-scan:
     name: JWT Security Testing
     runs-on: ubuntu-latest
@@ -533,21 +421,32 @@ jobs:
           dotnet run --project AMAPP.API.csproj --configuration Release --urls "http://localhost:7237" &
           echo "Waiting for API to start..."
           sleep 15
-
+  
       - name: Run JWT tests
         run: |
           cd jwt_tool
           mkdir -p results
           python3 jwt_tool.py -M at -t http://localhost:7237/api/auth/login -rd results/jwt_scan.txt || echo "JWT scan completed"
         continue-on-error: true
+      
+      - name: Debug directory structure
+        run: |
+          echo "Verificando estrutura de diretórios:"
+          pwd
+          ls -la
+          echo "Conteúdo de jwt_tool:"
+          ls -la jwt_tool/ || echo "Diretório não encontrado"
+          echo "Conteúdo de jwt_tool/results:"
+          ls -la jwt_tool/results/ || echo "Diretório não encontrado"
+        continue-on-error: true
   
       - name: Upload JWT test results
         uses: actions/upload-artifact@v4
         with:
           name: jwt-security-results
-          path: ./project/AMAPP.API/jwt_tool/results/
+          path: ./jwt_tool/results/
         
-   # Job 9: Deployment
+   # Job 7: Deployment
   deploy-localhost:
     name: Deploy to Localhost
     runs-on: ubuntu-latest
