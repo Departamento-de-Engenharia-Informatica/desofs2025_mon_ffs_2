@@ -3,7 +3,11 @@ name: Deploy Self-Contained
 on:
   push:
     branches: [ main, develop ]
-  workflow_dispatch:
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    - cron: '0 0 * * 0'  # Executa semanalmente aos domingos
+  workflow_dispatch: # Permite execução manual do workflow
 
 jobs:
   deploy:
