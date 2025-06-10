@@ -400,25 +400,25 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-  
+        
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
   
-        - name: Pull RESTler Docker image
-          run: |
-            docker pull mcr.microsoft.com/restler/restler:latest
-        - name: Generate grammar
-          run: |
-            docker run --rm -v $PWD:/app -w /app \
-              mcr.microsoft.com/restler/restler:latest \
-              Restler compile --api_spec ./swagger.json --api_spec_format Swagger
-        - name: Fuzz in “lean” mode
-          run: |
-            docker run --rm -v $PWD:/app -w /app \
-              mcr.microsoft.com/restler/restler:latest \
-              Restler fuzz-lean --grammar_file grammar.py --time_limit 300
+      - name: Pull RESTler Docker image
+        run: |
+          docker pull mcr.microsoft.com/restler/restler:latest
+      - name: Generate grammar
+        run: |
+          docker run --rm -v $PWD:/app -w /app \
+            mcr.microsoft.com/restler/restler:latest \
+            Restler compile --api_spec ./swagger.json --api_spec_format Swagger
+      - name: Fuzz in “lean” mode
+        run: |
+          docker run --rm -v $PWD:/app -w /app \
+            mcr.microsoft.com/restler/restler:latest \
+            Restler fuzz-lean --grammar_file grammar.py --time_limit 300
 
       - name: Build and Run API
         run: |
