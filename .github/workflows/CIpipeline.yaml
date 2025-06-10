@@ -432,36 +432,7 @@ jobs:
       - name: Create Deployment Package
         run: |
           cd publish
-          
-          # Create production appsettings for vs833
-          cat > appsettings.Production.json << 'EOF'
-          {
-            "Logging": {
-              "LogLevel": {
-                "Default": "Information",
-                "Microsoft.AspNetCore": "Warning"
-              }
-            },
-            "AllowedHosts": "vs833.dei.isep.ipp.pt:2226,vs-gate.dei.isep.ipp.pt:10833,localhost",
-            "JwtSettings": {
-              "Secret": "52d4c0f3bc65ec7eeb61ad63a99d782109696442893469b8fa001028a62a054a701c6bd32ab94517693c8e2312af68f04fbc7456769b31c0e915a53c328ec750504d4e5f26f5b8036308d95a50016f181dc382566ab2e932c5943acc93e9761f556d4a90284f82aefead0d25f0eed82182f2c209b4e02b5a4767eb863b3cbf3af1bc9c59daf240fb919e14e8215d8a804bda2bdbf8865feb11da952ae0a0ba8d667df6fc3a68b0e7ec8c94c6e929b1e89879e5397b8a861ea4e23989a33954323e031ae34402bf59dc7c3442510586502b04498bb47d6c9984f1f89a56e0b158bacdc62fca2fa6801a7b692d564b81eb288d08567f1d6ebe299d4fef6d9b0d49",
-              "ExpiryMinutes": 30,
-              "Issuer": "AMAPP.API",
-              "Audience": "AMAPP.Users"
-            },
-            "EmailConfiguration": {
-              "From": "amapengreqg3@gmail.com",
-              "SmtpServer": "smtp.gmail.com",
-              "Port": "587",
-              "EmailEnvUsername": "EMAIL_USERNAME",
-              "EmailEnvPassword": "EMAIL_PASSWORD"
-            },
-            "ConnectionStrings": {
-              "PostgreSQLConnection": "Host=vsgate-s1.dei.isep.ipp.pt;Port=10279;Database=amapp;Username=postgres;Password=+nO3+HxRWRGa;"
-            }
-          }
-          EOF
-          
+          # Just create the package - use existing appsettings.json
           tar -czf ../amapp-deployment.tar.gz .
           cd ..
           echo "✅ Deployment package created for vs833"
@@ -469,7 +440,7 @@ jobs:
       - name: Setup SSH Key
         uses: webfactory/ssh-agent@v0.9.0
         with:
-          ssh-private-key: ${{ secrets.DEI_SSH_PRIVATE_KEY }}
+          ssh-private-key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
 
       - name: Deploy to vs833 Server
         env:
@@ -617,7 +588,7 @@ jobs:
             sleep 10
           done
 
-      - name: Upload Deployment Package
+      - name: Upload Deployment Artifacts
         uses: actions/upload-artifact@v4
         if: always()
         with:
