@@ -414,13 +414,26 @@ jobs:
       - name: Build and Run API
         run: |
           dotnet build AMAPP.API.csproj --configuration Release
-          dotnet run --project AMAPP.API.csproj --configuration Release --urls "http://localhost:7237" &
+          dotnet run --project AMAPP.API.csproj \
+            --configuration Release \
+            --urls "http://localhost:7237" &
           sleep 15
+
+      - name: Retrieve JWT via login
+        run: |
+          sudo apt-get update && sudo apt-get install -y jq
+          TOKEN=$(curl -s -X POST \
+            -H "Content-Type: application/json" \
+            -d '{"username":"test","password":"test"}' \
+            http://localhost:7237/api/auth/login \
+            | jq -r '.token')
+          echo "TOKEN=$TOKEN" >> $GITHUB_ENV
 
       - name: Run JWT tests
         run: |
           mkdir -p jwt_tool/results
           python3 jwt_tool/jwt_tool.py \
+            "$TOKEN" \
             -M at \
             -t http://localhost:7237/api/auth/login \
             -rd jwt_tool/results/jwt_scan.txt \
@@ -428,7 +441,7 @@ jobs:
 
       - name: Debug JWT results directory
         run: |
-          echo "PWD: $PWD"
+          echo "Listing jwt_tool folder:"
           ls -R jwt_tool
 
       - name: Upload JWT test results
