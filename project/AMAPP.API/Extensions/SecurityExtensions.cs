@@ -8,12 +8,32 @@ namespace AMAPP.API.Extensions
         // Caracteres perigosos básicos
         private static readonly Regex UnsafeChars = new Regex(@"[<>""'&]", RegexOptions.Compiled);
 
+
+        // Regex para nomes portugueses (inclui todos os acentos, ç, etc.)
+        private static readonly Regex Name = new Regex(
+            @"^[a-zA-ZàáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞŸ\s\-'\.]+$",
+            RegexOptions.Compiled);
+
         // Validação básica contra caracteres perigosos
         public static IRuleBuilderOptions<T, string> NoUnsafeChars<T>(this IRuleBuilder<T, string> ruleBuilder)
         {
             return ruleBuilder
                 .Must(value => string.IsNullOrEmpty(value) || !UnsafeChars.IsMatch(value))
                 .WithMessage("Contains invalid characters: < > \" ' &");
+        }
+
+        // Nome seguro (aceita acentos, ç, etc.)
+        public static IRuleBuilderOptions<T, string> SafeName<T>(this IRuleBuilder<T, string> ruleBuilder)
+        {
+            return ruleBuilder
+                .Must(value => string.IsNullOrEmpty(value) || Name.IsMatch(value))
+                .WithMessage("Name contains invalid characters. Only letters (including accents), spaces, hyphens, apostrophes and dots are allowed");
+        }
+
+        public static IRuleBuilderOptions<T, string> SafeText<T>(this IRuleBuilder<T, string> ruleBuilder)
+        {
+            return ruleBuilder
+                .NoUnsafeChars(); // Apenas bloqueia caracteres realmente perigosos
         }
 
         // Senha segura básica
@@ -30,11 +50,5 @@ namespace AMAPP.API.Extensions
                 .Matches(@"[\W]").WithMessage("Password must contain special character");
         }
 
-        public static IRuleBuilderOptions<T, string> SafeName<T>(this IRuleBuilder<T, string> ruleBuilder)
-        {
-            return ruleBuilder
-                .Matches(@"^[a-zA-ZÀ-ÿ\s\-']+$")
-                .WithMessage("Name contains invalid characters. Only letters, spaces, hyphens and apostrophes allowed");
-        }
     }
 }

@@ -13,7 +13,7 @@ namespace AMAPP.API.DTOs.Auth.Validators
                 .Length(1, 50)
                 .WithMessage("First name must be between 1 and 50 characters")
                 .SafeName()
-                .NoUnsafeChars();
+                .SafeText();
 
             RuleFor(x => x.LastName)
                 .NotEmpty()
@@ -21,7 +21,7 @@ namespace AMAPP.API.DTOs.Auth.Validators
                 .Length(1, 50)
                 .WithMessage("Last name must be between 1 and 50 characters")
                 .SafeName()
-                .NoUnsafeChars();
+                .SafeText();
 
             RuleFor(x => x.Email)
                 .NotEmpty()

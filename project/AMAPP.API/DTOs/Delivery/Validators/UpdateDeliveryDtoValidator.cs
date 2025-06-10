@@ -21,7 +21,7 @@ public class UpdateDeliveryDtoValidator : AbstractValidator<UpdateDeliveryDto>
             .WithMessage("Delivery location is required")
             .Length(1, 200)
             .WithMessage("Delivery location must be between 1 and 200 characters")
-            .NoUnsafeChars();
+            .SafeText();
 
         RuleFor(x => x.Status)
             .IsInEnum()

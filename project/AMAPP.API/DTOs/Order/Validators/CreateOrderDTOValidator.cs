@@ -10,7 +10,7 @@ namespace AMAPP.API.DTOs.Order.Validators
             RuleFor(x => x.DeliveryRequirements)
                 .MaximumLength(500)
                 .WithMessage("Delivery requirements cannot exceed 500 characters")
-                .NoUnsafeChars();
+                .SafeText();
 
             RuleFor(x => x.OrderItems)
                 .NotEmpty()

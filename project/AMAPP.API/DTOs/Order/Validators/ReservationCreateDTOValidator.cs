@@ -22,12 +22,12 @@ namespace AMAPP.API.DTOs.Order.Validators
                 .WithMessage("Location is required")
                 .Length(1, 200)
                 .WithMessage("Location must be between 1 and 200 characters")
-                .NoUnsafeChars();
+                .SafeText();
 
             RuleFor(x => x.Notes)
                 .MaximumLength(500)
                 .WithMessage("Notes cannot exceed 500 characters")
-                .NoUnsafeChars();
+                .SafeText();
         }
     }
 }
