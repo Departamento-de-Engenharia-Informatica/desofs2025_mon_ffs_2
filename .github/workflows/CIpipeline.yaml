@@ -386,10 +386,9 @@ jobs:
           echo "Testing connection to vs833..."
           ssh -i ~/.ssh/deploy_key vs833-deploy "echo 'Connection test successful to vs833'; mkdir -p /tmp/amapp-deploy"
           
-          echo "Copying files via rsync over SSH..."
-          rsync -avz -e "ssh -i ~/.ssh/deploy_key -o ConnectTimeout=30" \
-            ./project/AMAPP.API/publish/ \
-            vs833-deploy:/tmp/amapp-deploy/
+          echo "Copying files via tar and SSH..."
+          cd ./publish
+          tar czf - . | ssh -i ~/.ssh/deploy_key vs833-deploy "cd /tmp/amapp-deploy && tar xzf -"
           
           echo "✅ Files copied successfully to vs833"
           
