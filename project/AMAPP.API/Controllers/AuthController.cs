@@ -68,7 +68,7 @@ namespace AMAPP.API.Controllers
                 var existingUser = await _userManager.FindByEmailAsync(registerUser.Email);
                 if (existingUser != null)
                 {
-                    _logger.LogWarning("Tentativa de registro com email já existente: {Email}", registerUser.Email);
+                    _logger.LogWarning("Tentativa de registro com email já existente");
                     return BadRequest("User email is already registered.");
                 }
 
@@ -76,8 +76,7 @@ namespace AMAPP.API.Controllers
                 var allowedRoles = new[] { UserRole.Producer, UserRole.CoProducer };
                 if (!registerUser.Roles.All(role => allowedRoles.Contains(role)))
                 {
-                    _logger.LogWarning("Tentativa de registro com roles não permitidos: {Roles}",
-                        string.Join(", ", registerUser.Roles));
+                    _logger.LogWarning("Tentativa de registro com roles não permitidos");
                     return BadRequest("Only Producer and CoProducer roles are allowed for public registration.");
                 }
 
@@ -119,12 +118,11 @@ namespace AMAPP.API.Controllers
 
                         if (!addRoleResult.Succeeded)
                         {
-                            _logger.LogError("Falha ao adicionar role {Role} ao usuário {UserId}: {Errors}",
-                                roleName, newUser.Id, string.Join(", ", addRoleResult.Errors.Select(e => e.Description)));
+                            _logger.LogError("Falha ao adicionar role ao usuário {Errors}", string.Join(", ", addRoleResult.Errors.Select(e => e.Description)));
 
                             // Se falhar ao adicionar qualquer role, remover usuário criado
                             await _userManager.DeleteAsync(newUser);
-                            return BadRequest($"Failed to assign role '{roleName}'. Registration cancelled.");
+                            return BadRequest($"Failed to assign role. Registration cancelled.");
                         }
 
                         addedRoles.Add(roleName);
@@ -132,8 +130,7 @@ namespace AMAPP.API.Controllers
 
                     await _userRoleInfoService.CreateRoleInfoAsync(newUser.Id, addedRoles);
 
-                    _logger.LogInformation("Usuário registrado com sucesso: {Email} com roles {Roles}",
-                        newUser.Email, string.Join(", ", addedRoles));
+                    _logger.LogInformation("Usuário registrado com sucesso.");
 
                     return Created("", new
                     {
