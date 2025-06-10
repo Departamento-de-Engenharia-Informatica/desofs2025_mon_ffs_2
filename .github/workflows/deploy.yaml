@@ -1,12 +1,8 @@
-name: Deploy Strip Fix
+name: Deploy Self-Contained
 
 on:
   push:
     branches: [ main, develop ]
-  pull_request:
-    branches: [ main, develop ]
-  schedule:
-    - cron: '0 0 * * 0'
   workflow_dispatch:
 
 jobs:
@@ -22,13 +18,22 @@ jobs:
       with:
         dotnet-version: '8.0.x'
 
-    - name: Build e Publish
+    - name: Build Self-Contained
       run: |
         cd ./project/AMAPP.API
-        dotnet publish -c Release -o ./app
+        echo "🔨 Building self-contained deployment..."
         
-        echo "📁 Verificando estrutura do build:"
-        find ./app -type f | head -10
+        # Self-contained para Linux x64 (inclui TODAS as dependências)
+        dotnet publish -c Release \
+          --self-contained true \
+          --runtime linux-x64 \
+          -o ./app-self-contained
+        
+        echo "📦 Arquivos gerados:"
+        ls -la ./app-self-contained/ | head -10
+        
+        echo "📏 Tamanho total:"
+        du -sh ./app-self-contained/
 
     - name: Clean and prepare
       uses: appleboy/ssh-action@v1.0.3
@@ -39,23 +44,22 @@ jobs:
         port: ${{ secrets.SSH_PORT }}
         command_timeout: 10s
         script: |
-          echo "🧹 Preparing ~/amapp-api..."
-          mkdir -p ~/amapp-api
-          rm -rf ~/amapp-api/*
-          echo "✅ Directory ready"
+          echo "🧹 Preparando diretório..."
+          mkdir -p ~/amapp-self-contained
+          rm -rf ~/amapp-self-contained/*
 
-    - name: Copy files (sem strip_components)
+    - name: Copy self-contained files
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ secrets.SSH_HOST }}
         username: ${{ secrets.SSH_USERNAME }}
         password: ${{ secrets.SSH_PASSWORD }}
         port: ${{ secrets.SSH_PORT }}
-        source: "./project/AMAPP.API/app/"
-        target: "~/amapp-api/"
-        # strip_components: 0  # Remove strip_components para ver estrutura
+        source: "./project/AMAPP.API/app-self-contained/*"
+        target: "~/amapp-self-contained/"
+        strip_components: 1
 
-    - name: Check and start API
+    - name: Start self-contained API
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.SSH_HOST }}
@@ -64,43 +68,36 @@ jobs:
         port: ${{ secrets.SSH_PORT }}
         command_timeout: 20s
         script: |
-          echo "🔍 Verificando estrutura copiada..."
-          echo "📁 Conteúdo de ~/amapp-api/:"
-          ls -la ~/amapp-api/
+          cd ~/amapp-self-contained
           
-          echo ""
-          echo "🔍 Procurando AMAPP.API.dll:"
-          find ~/amapp-api -name "*.dll" | head -5
-          
-          # Encontrar diretório com AMAPP.API.dll
-          API_DIR=$(find ~/amapp-api -name "AMAPP.API.dll" -exec dirname {} \; | head -1)
-          
-          if [ -z "$API_DIR" ]; then
-            echo "❌ AMAPP.API.dll não encontrado!"
-            exit 1
-          fi
-          
-          echo "✅ API encontrada em: $API_DIR"
-          cd "$API_DIR"
-          
-          echo "📍 Executando de: $(pwd)"
-          echo "📋 Arquivos disponíveis:"
-          ls -la *.dll *.json | head -5
+          echo "📍 Local: $(pwd)"
+          echo "📋 Arquivos principais:"
+          ls -la AMAPP.API* *.dll | head -5
           
           echo "🛑 Parando processos antigos..."
-          pkill -f "AMAPP.API.dll" 2>/dev/null || echo "OK"
+          pkill -f "AMAPP.API" 2>/dev/null || echo "OK"
           
-          echo "🚀 Iniciando API..."
+          echo "🔧 Configurando permissões..."
+          chmod +x AMAPP.API
+          
+          echo "🚀 Iniciando API self-contained..."
           export ASPNETCORE_URLS="http://localhost:2226"
-          nohup dotnet AMAPP.API.dll > ~/amapp-api.log 2>&1 &
+          
+          # Executar o binário diretamente (não precisa de 'dotnet')
+          nohup ./AMAPP.API > api.log 2>&1 &
           
           echo "⏳ Aguardando inicialização..."
           sleep 5
           
           echo "🔍 Verificando se está rodando..."
-          if ps aux | grep -v grep | grep "AMAPP.API.dll"; then
-            echo "✅ API rodando!"
+          if ps aux | grep -v grep | grep "AMAPP.API"; then
+            echo "✅ API rodando com sucesso!"
+            echo "📊 Processo:"
+            ps aux | grep -v grep | grep "AMAPP.API"
           else
-            echo "❌ API não iniciou. Log dos últimos comandos:"
-            tail -10 ~/amapp-api.log
+            echo "❌ API não iniciou. Verificando log:"
+            tail -10 api.log
           fi
+          
+          echo "🩺 Testando conexão..."
+          curl -f http://localhost:2226/health || curl -f http://localhost:2226 || echo "API pode estar carregando..."
