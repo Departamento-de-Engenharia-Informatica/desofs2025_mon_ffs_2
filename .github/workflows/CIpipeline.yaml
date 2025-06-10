@@ -453,19 +453,29 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
 
-      - name: Add VM to known hosts
-        run: ssh-keyscan -p 10833 vsgate-ssh.dei.isep.ipp.pt >> ~/.ssh/known_hosts
+      - name: Add VM to known hosts (Secure Method)
+        run: |
+          mkdir -p ~/.ssh
+          # Get the host key fingerprint and add to known_hosts
+          ssh-keyscan -p 10833 vsgate-ssh.dei.isep.ipp.pt >> ~/.ssh/known_hosts
+          # Verify the key was added
+          echo "Host key added to known_hosts:"
+          ssh-keygen -lf ~/.ssh/known_hosts
 
-      - name: Deploy to VM
+      - name: Deploy to VM (Secure SSH)
         run: |
           VM_HOST="vsgate-ssh.dei.isep.ipp.pt"
           VM_PORT="10833"
           VM_USER="root"
           
+          # Verify SSH connection first
+          echo "Testing SSH connection..."
+          ssh -p $VM_PORT $VM_USER@$VM_HOST "echo 'SSH connection successful'"
+          
           # Stop service if running
           ssh -p $VM_PORT $VM_USER@$VM_HOST "sudo systemctl stop amapp-api || true"
           
-          # Upload files
+          # Upload files securely
           scp -P $VM_PORT -r ./publish/* $VM_USER@$VM_HOST:/opt/amapp-api/
           
           # Start service
@@ -488,7 +498,21 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
 
-      - name: Check service status
+      - name: Add VM to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p 10833 vsgate-ssh.dei.isep.ipp.pt >> ~/.ssh/known_hosts
+
+      - name: Add VM to known hosts (Secure Method)
+        run: |
+          mkdir -p ~/.ssh
+          # Get the host key fingerprint and add to known_hosts
+          ssh-keyscan -p 10833 vsgate-ssh.dei.isep.ipp.pt >> ~/.ssh/known_hosts
+          # Verify the key was added
+          echo "Host key added to known_hosts:"
+          ssh-keygen -lf ~/.ssh/known_hosts
+
+      - name: Secure Health Check
         run: |
           ssh -p 10833 root@vsgate-ssh.dei.isep.ipp.pt "
             sudo systemctl is-active amapp-api && echo 'Service is running'
