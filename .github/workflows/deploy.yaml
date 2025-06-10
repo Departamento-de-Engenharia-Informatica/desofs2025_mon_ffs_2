@@ -1,13 +1,8 @@
-name: Deploy Simples
+name: Deploy Sem Sudo
 
 on:
   push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main, develop ]
-  schedule:
-    - cron: '0 0 * * 0'  # Executa semanalmente aos domingos
-  workflow_dispatch: # Permite execução manual do workflow
+    branches: [ main ]
 
 jobs:
   deploy:
@@ -27,57 +22,53 @@ jobs:
         cd ./project/AMAPP.API
         dotnet publish -c Release -o ./app
 
-    - name: Test SSH
+    - name: Deploy simples
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.SSH_HOST }}
         username: ${{ secrets.SSH_USERNAME }}
         password: ${{ secrets.SSH_PASSWORD }}
         port: ${{ secrets.SSH_PORT }}
-        script: whoami
-
-    - name: Deploy via SSH
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USERNAME }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: ${{ secrets.SSH_PORT }}
+        command_timeout: 20s
         script: |
-          sudo pkill -f "dotnet.*AMAPP.API" || true
-          sudo rm -rf /var/www/api/*
-          sudo mkdir -p /var/www/api
+          echo "🛑 Stopping API..."
+          pkill -f "dotnet.*AMAPP.API" || echo "No API running"
+          
+          echo "📁 Preparing directory..."
+          rm -rf ~/amapp-api/*
+          mkdir -p ~/amapp-api
+          
+          echo "✅ Ready for file copy"
 
-    - name: Copia arquivos
+    - name: Copy files
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ secrets.SSH_HOST }}
         username: ${{ secrets.SSH_USERNAME }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        password: ${{ secrets.SSH_PASSWORD }}
         port: ${{ secrets.SSH_PORT }}
         source: "./project/AMAPP.API/app/*"
-        target: "/var/www/api/"
+        target: "~/amapp-api/"
         strip_components: 1
 
-    - name: Inicia aplicação
+    - name: Start API
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.SSH_HOST }}
         username: ${{ secrets.SSH_USERNAME }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        password: ${{ secrets.SSH_PASSWORD }}
         port: ${{ secrets.SSH_PORT }}
+        command_timeout: 30s
         script: |
-          cd /var/www/api
+          echo "🚀 Starting API..."
+          cd ~/amapp-api
           
-          # Da permissão para o executável correto
-          sudo chmod +x AMAPP.API
+          ls -la
           
-          # Define a porta 2226
+          chmod +x AMAPP.API 2>/dev/null || echo "No executable"
+          
           export ASPNETCORE_URLS="http://localhost:2226"
+          nohup dotnet AMAPP.API.dll > app.log 2>&1 &
           
-          # Inicia em background
-          nohup sudo dotnet AMAPP.API.dll > app.log 2>&1 &
-          
-          # Verifica se startou na porta 2226
-          sleep 5
-          curl -f http://localhost:2226/health || echo "App rodando na porta 2226"
+          sleep 3
+          echo "✅ API started on port 2226"
