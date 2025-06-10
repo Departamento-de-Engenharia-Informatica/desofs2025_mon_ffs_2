@@ -26,7 +26,7 @@ namespace AMAPP.API.Services.Implementations
             _userManager = userManager;
         }
 
-        public async Task<IEnumerable<OrderDTO>> GetOrdersAsync(OrderFilterDTO filter, string userId = null)
+        public async Task<IEnumerable<OrderDTO>> GetOrdersAsync(OrderFilterDTO filter, string? userId = null)
         {
             // If userId is provided, check if the user is an admin
             bool isAdmin = false;
@@ -80,7 +80,7 @@ namespace AMAPP.API.Services.Implementations
             return _mapper.Map<IEnumerable<OrderDTO>>(orders);
         }
 
-        public async Task<OrderDetailDTO> GetOrderByIdAsync(int orderId, string userId = null)
+        public async Task<OrderDetailDTO> GetOrderByIdAsync(int orderId, string? userId = null)
         {
             var order = await _context.Orders
                 .Include(o => o.OrderItems)
