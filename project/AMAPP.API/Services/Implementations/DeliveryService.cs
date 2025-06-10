@@ -34,7 +34,7 @@ namespace AMAPP.API.Services.Implementations
             return _mapper.Map<IEnumerable<DeliveryDto>>(deliveries);
         }
 
-        public async Task<DeliveryDto?> GetByIdAsync(int id, string userId = null)
+        public async Task<DeliveryDto?> GetByIdAsync(int id, string? userId = null)
         {
             var delivery = await _context.Deliveries
                 .Include(d => d.Order)

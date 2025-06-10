@@ -4,10 +4,10 @@ namespace AMAPP.API.Attributes
 {
     public class ValidImageAttribute : ValidationAttribute
     {
-        protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+        protected override ValidationResult IsValid(object? value, ValidationContext validationContext)
         {
             if (value is not IFormFile file || file.Length == 0)
-                return ValidationResult.Success; 
+                return ValidationResult.Success!; 
 
             // Size check
             if (file.Length > 5 * 1024 * 1024)
@@ -24,7 +24,7 @@ namespace AMAPP.API.Attributes
             if (!allowedMimeTypes.Contains(file.ContentType?.ToLowerInvariant()))
                 return new ValidationResult("Invalid image file type");
 
-            return ValidationResult.Success;
+            return ValidationResult.Success!;
         }
     }
 }
