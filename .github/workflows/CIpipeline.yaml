@@ -396,61 +396,46 @@ jobs:
     defaults:
       run:
         working-directory: ./project/AMAPP.API
-    
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-  
+      - uses: actions/checkout@v4
+
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-  
+
       - name: Install jwt_tool
         run: |
-          git clone https://github.com/ticarpi/jwt_tool
-          cd jwt_tool
-          pip install -r requirements.txt
-          chmod +x jwt_tool.py
-  
+          git clone https://github.com/ticarpi/jwt_tool.git jwt_tool
+          pip install -r jwt_tool/requirements.txt
+          chmod +x jwt_tool/jwt_tool.py
+
       - name: Build and Run API
         run: |
-          # Build the specific project file
           dotnet build AMAPP.API.csproj --configuration Release
-          # Run with explicit project path
           dotnet run --project AMAPP.API.csproj --configuration Release --urls "http://localhost:7237" &
-          echo "Waiting for API to start..."
           sleep 15
-  
+
       - name: Run JWT tests
         run: |
-          cd jwt_tool
-          mkdir -p results
-          python3 jwt_tool.py -M at -t http://localhost:7237/api/auth/login -rd results/jwt_scan.txt || echo "JWT scan completed"
-        continue-on-error: true
-        
-        
+          mkdir -p jwt_tool/results
+          python3 jwt_tool/jwt_tool.py \
+            -M at \
+            -t http://localhost:7237/api/auth/login \
+            -rd jwt_tool/results/jwt_scan.txt \
+            || echo "JWT scan completed"
+
       - name: Debug JWT results directory
         run: |
-          echo "Working directory: $PWD"
-          ls -R project/AMAPP.API/jwt_tool
-      
-      - name: Debug directory structure
-        run: |
-          echo "Verificando estrutura de diretórios:"
-          pwd
-          ls -la
-          echo "Conteúdo de jwt_tool:"
-          ls -la jwt_tool/ || echo "Diretório não encontrado"
-          echo "Conteúdo de jwt_tool/results:"
-          ls -la jwt_tool/results/ || echo "Diretório não encontrado"
-        continue-on-error: true
-  
+          echo "PWD: $PWD"
+          ls -R jwt_tool
+
       - name: Upload JWT test results
         uses: actions/upload-artifact@v4
         with:
           name: jwt-security-results
-          path: ./jwt_tool/results/
+          path: project/AMAPP.API/jwt_tool/results/**
         
    # Job 7: Deployment
   deploy-localhost:
