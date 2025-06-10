@@ -343,7 +343,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: zap-report
+          name: zap-scan-report
           path: report_html.html
 
   # Job 6: Deploy to ISEP VM
@@ -429,12 +429,12 @@ jobs:
           sleep 15
           
           # Test external access
-          SWAGGER_STATUS=\$(curl -s -o /dev/null -w "%{http_code}" http://vs-gate.dei.isep.ipp.pt:2226/swagger/index.html -m 30 || echo "000")
+          SWAGGER_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://vs-gate.dei.isep.ipp.pt:2226/swagger/index.html -m 30 || echo "000")
           
-          if [ "\$SWAGGER_STATUS" = "200" ]; then
+          if [ "$SWAGGER_STATUS" = "200" ]; then
             echo "✅ SUCCESS: API deployed and accessible!"
             echo "🔗 Swagger UI: http://vs-gate.dei.isep.ipp.pt:2226/swagger"
           else
-            echo "❌ Deployment may have issues (Status: \$SWAGGER_STATUS)"
+            echo "❌ Deployment may have issues (Status: $SWAGGER_STATUS)"
             echo "Check VM logs for more details"
           fi
