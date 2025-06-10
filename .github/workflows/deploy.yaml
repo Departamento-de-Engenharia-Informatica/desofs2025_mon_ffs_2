@@ -2,7 +2,12 @@ name: Deploy Sem Sudo
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    - cron: '0 0 * * 0'  # Executa semanalmente aos domingos
+  workflow_dispatch: # Permite execução manual do workflow
 
 jobs:
   deploy:
