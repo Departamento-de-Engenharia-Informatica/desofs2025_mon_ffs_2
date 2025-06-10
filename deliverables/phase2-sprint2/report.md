@@ -72,13 +72,13 @@ Pedro Oliveira - 1240482 <br>
   - [User Management](#user-management)
   - [Input Validation](#input-validation)
     - [Create Product](#create-product)
-  - [Report Orders and Deliveries](#report-orders-and-deliveries)
   - [Pipeline](#pipeline)
     - [Job 1: Code Analysis (SAST with CodeQL)](#job-1-code-analysis-sast-with-codeql)
     - [Job 2: Build and Test](#job-2-build-and-test)
     - [Job 3: Dependency Security Scan (SCA)](#job-3-dependency-security-scan-sca)
     - [Job 4: Code Quality Analysis](#job-4-code-quality-analysis)
     - [Job 5: OWASP ZAP Baseline Scan (DAST)](#job-5-owasp-zap-baseline-scan-dast)
+    - [Job 6: Deployment](#job-6-deployment)
   - [Relevant Practices Adopted](#relevant-practices-adopted)
     - [Default Branch: `develop`](#default-branch-development)
     - [Branch Protection Rules](#branch-protection-rules)
@@ -572,12 +572,6 @@ To enhance security during product creation, we implemented comprehensive image 
 **Image Processing and Sanitization**: Valid images are processed using ImageSharp to remove potentially dangerous metadata (EXIF data) and resize images that exceed 2048x2048 pixels, ensuring consistent and secure image handling.
 
 This multi-layered approach significantly reduces the attack surface for image-based vulnerabilities while maintaining a smooth user experience for legitimate file uploads.
-
----
-
-## Report Orders and Deliveries
-
-Blablabla
 
 ---
 
