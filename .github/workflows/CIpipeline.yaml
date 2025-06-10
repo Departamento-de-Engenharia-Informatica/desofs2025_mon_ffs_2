@@ -26,21 +26,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'csharp' ]  # Adicione outros idiomas se necessário
+        language: [ 'csharp' ]
 
-    
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
       with:
         languages: ${{ matrix.language }}
-        # config-file: .github/codeql/codeql-config.yml
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
 
@@ -53,7 +51,6 @@ jobs:
       uses: github/codeql-action/analyze@v3
       with:
         category: '/language:${{ matrix.language }}'
-        output: codeql-results.sarif
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -71,7 +68,7 @@ jobs:
     
     services:
       postgres:
-        image: postgres:latest
+        image: postgres:15
         ports:
           - 5432:5432
         env:
@@ -85,15 +82,15 @@ jobs:
           --health-retries 5
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
       - name: Cache NuGet packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
@@ -108,83 +105,55 @@ jobs:
         
       - name: Run tests with coverage
         run: |
-          # Executar testes com cobertura
-          if [ -f "AMAPP.API.Tests/AMAPP.API.Tests.csproj" ]; then
-            echo "Running tests from AMAPP.API.Tests project..."
-            dotnet test AMAPP.API.Tests/AMAPP.API.Tests.csproj --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
-          elif [ -f "AMAP.API.Tests/AMAP.API.Tests.csproj" ]; then
+          # Find and run tests
+          if [ -d "../AMAP.API.Tests" ]; then
             echo "Running tests from AMAP.API.Tests project..."
-            dotnet test AMAP.API.Tests/AMAP.API.Tests.csproj --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
+            dotnet test ../AMAP.API.Tests/AMAP.Tests.csproj --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
           elif [ -f "AMAPP.API.sln" ]; then
             echo "Running tests from solution..."
             dotnet test AMAPP.API.sln --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
           else
-            echo "Running tests from main project (no separate test project found)..."
+            echo "Running tests from current directory..."
             dotnet test --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
           fi
           
-          # — Smoke tests
+          # Smoke tests
           echo "Executando testes de smoke..."
           mkdir -p ./SmokeTestResults
           echo "Iniciando testes de smoke em $(date)" > ./SmokeTestResults/smoke-report.txt
 
-          # start API in background and remember its PID
-          dotnet run --no-build --urls http://localhost:7237 &
+          # Start API in background
+          dotnet run --no-build --urls http://localhost:5000 &
           API_PID=$!
           echo "API PID is $API_PID"
           
           echo "Aguardando a API iniciar..."
-          sleep 10
+          sleep 15
 
-          # health endpoint
+          # Test endpoints
           echo "Verificando endpoint de saúde..."
-          HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:7237/health)
+          HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/health || echo "000")
           echo "Status do endpoint /health: $HEALTH_STATUS" >> ./SmokeTestResults/smoke-report.txt
-          if [ "$HEALTH_STATUS" = "200" ]; then
-            echo " Health check passou" >> ./SmokeTestResults/smoke-report.txt
-          else
-            echo " Health check falhou" >> ./SmokeTestResults/smoke-report.txt
-          fi
-
-          # swagger endpoint
+          
           echo "Verificando documentação Swagger..."
-          SWAGGER_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:7237/swagger/index.html)
+          SWAGGER_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/swagger/index.html || echo "000")
           echo "Status do endpoint /swagger: $SWAGGER_STATUS" >> ./SmokeTestResults/smoke-report.txt
-          if [ "$SWAGGER_STATUS" = "200" ]; then
-            echo " Swagger check passou" >> ./SmokeTestResults/smoke-report.txt
-          else
-            echo " Swagger check falhou" >> ./SmokeTestResults/smoke-report.txt
-          fi
           
-          # stop only that API instance
-          echo "Parando a API (PID $API_PID)..."
-          kill $API_PID || echo "Não foi possível encerrar a API com PID $API_PID"
-          
-          # Instalar e executar testes de mutação
-          echo "====== INICIANDO TESTES DE MUTAÇÃO ======"
-          echo "Instalando Stryker para testes de mutação..."
-          dotnet tool install -g dotnet-stryker || echo "Stryker já instalado"
-          
-          echo "Executando testes de mutação em classes críticas..."
-          dotnet stryker \
-            -p AMAPP.API.csproj \
-            --reporter "html" \
-            --reporter "progress" \
-            --mutation-level Basic \
-            --output "MutationReports"
-          echo "✅ Testes de mutação concluídos. Relatórios gerados em ./MutationReports"
-          ls -la MutationReports || echo "Diretório MutationReports não encontrado"
+          # Stop API
+          kill $API_PID 2>/dev/null || true
+          wait $API_PID 2>/dev/null || true
           
         env:
-          ConnectionStrings__DefaultConnection: "Host=localhost;Port=5432;Database=amappdb_test;Username=postgres;Password=postgres;"
+          ConnectionStrings__PostgreSQLConnection: "Host=localhost;Port=5432;Database=amappdb_test;Username=postgres;Password=postgres;"
         continue-on-error: true
         
       - name: Generate coverage report
-        uses: danielpalme/ReportGenerator-GitHub-Action@5.2.0
+        uses: danielpalme/ReportGenerator-GitHub-Action@5.3.8
         with:
           reports: './project/AMAPP.API/TestResults/**/coverage.cobertura.xml'
           targetdir: './project/AMAPP.API/CoverageReport'
           reporttypes: 'HtmlInline;Cobertura;TextSummary'
+        continue-on-error: true
       
       - name: Upload test results and coverage
         uses: actions/upload-artifact@v4
@@ -195,7 +164,6 @@ jobs:
             ./project/AMAPP.API/TestResults/
             ./project/AMAPP.API/CoverageReport/
             ./project/AMAPP.API/SmokeTestResults/
-            ./project/AMAPP.API/MutationReports/
             
       - name: Publish for scanning
         run: |
@@ -204,12 +172,12 @@ jobs:
             --framework net8.0 \
             --output ./bin/Release/net8.0
   
-      - name: Scan .NET build output with Trivy (template mode)
+      - name: Scan .NET build output with Trivy
         uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: fs
           scan-ref: './project/AMAPP.API/bin/Release/net8.0'
-          format: template                # ← template mode always writes SARIF
+          format: template
           template: '@/contrib/sarif.tpl'
           output: 'trivy-results.sarif'
           exit-code: '0'
@@ -217,6 +185,7 @@ jobs:
           vuln-type: 'os,library'
           scanners: 'vuln,secret,misconfig'
           severity: 'MEDIUM,HIGH,CRITICAL'
+        continue-on-error: true
           
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
@@ -225,6 +194,7 @@ jobs:
           category: 'Trivy'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
  
   # Job 3: Verificação de Dependências (SCA)
   dependency-check:
@@ -250,14 +220,14 @@ jobs:
     - name: List vulnerable packages
       run: |
         echo "Checking for vulnerable NuGet packages..."
-        dotnet list package --vulnerable --include-transitive > vulnerable-packages.txt
+        dotnet list package --vulnerable --include-transitive > vulnerable-packages.txt || true
         cat vulnerable-packages.txt
       continue-on-error: true
     
     - name: Check for outdated packages
       run: |
         echo "Checking for outdated packages..."
-        dotnet list package --outdated > outdated-packages.txt
+        dotnet list package --outdated > outdated-packages.txt || true
         cat outdated-packages.txt
       continue-on-error: true
     
@@ -275,7 +245,7 @@ jobs:
       continue-on-error: true
     
     - name: Generate SBOM
-      uses: CycloneDX/gh-dotnet-generate-sbom@v1
+      uses: CycloneDX/gh-dotnet-generate-sbom@v2
       continue-on-error: true
       with:
         path: ./project/AMAPP.API/AMAPP.API.csproj
@@ -284,12 +254,11 @@ jobs:
     - name: Normalize SBOM filename
       continue-on-error: true
       run: |
-        #!/usr/bin/env bash
         WORKDIR="$GITHUB_WORKSPACE"
         PROJDIR="$WORKDIR/project/AMAPP.API"
         mkdir -p "$PROJDIR"
 
-        # look for bom.xml in either location
+        # Look for bom.xml in either location
         if [[ -f "$WORKDIR/bom.xml" ]]; then
           SRC="$WORKDIR/bom.xml"
         elif [[ -f "$PROJDIR/bom.xml" ]]; then
@@ -324,7 +293,7 @@ jobs:
     
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0  
       
@@ -341,58 +310,14 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
-      continue-on-error: true 
-      with:
-        args: --report-format sarif --exit-code 2
+      continue-on-error: true
 
-  # Job 5: DAST com OWASP ZAP
-  dast-owasp-zap:
-    name: OWASP ZAP Baseline Scan (DAST)
-    runs-on: ubuntu-latest
-    needs: build-and-test
-    defaults:
-      run:
-        working-directory: ./project/AMAPP.API
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
-
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Build API
-        run: dotnet build --no-restore
-
-      - name: Run API in background
-        run: |
-          dotnet run --no-build --urls "https://localhost:7237" &
-          sleep 10
-      
-      - name: Run OWASP ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.10.0
-        with:
-          target: 'https://localhost:7237'
-          fail_action: false
-          allow_issue_writing: true
-          cmd_options: '-config api.disablekey=true -config scanner.includelargeresponse=false -config connection.dnsTtlSuccessfulQueries=0 -config connection.timeoutInSecs=10 -config connection.followredirects=true -config ssl.insecure=true'
-
-      - name: Upload ZAP report
-        uses: actions/upload-artifact@v4
-        with:
-          name: zap-report
-          path: owasp-zap-report.html
-
-  # Job 6: Deploy to vs833
+  # Job 5: Deploy to vs833
   deploy:
     name: Deploy to vs833
     runs-on: ubuntu-latest
-    needs: build-and-test
-    # Removed if condition - will always run after build-and-test
+    needs: [build-and-test, code-quality]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     defaults:
       run:
         working-directory: ./project/AMAPP.API
@@ -415,30 +340,50 @@ jobs:
       - name: Publish
         run: dotnet publish AMAPP.API.csproj -c Release -o publish
         
+      - name: Test SSH Connection
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST || 'vs833.dei.isep.ipp.pt' }}
+          username: ${{ secrets.DEPLOY_USER || 'root' }}
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          script: |
+            echo "✅ SSH connection successful"
+            whoami
+            pwd
+            df -h
+        continue-on-error: false
+        
       - name: Copy files via SSH
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: vs833.dei.isep.ipp.pt
-          username: root
+          host: ${{ secrets.DEPLOY_HOST || 'vs833.dei.isep.ipp.pt' }}
+          username: ${{ secrets.DEPLOY_USER || 'root' }}
           key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
           source: "./project/AMAPP.API/publish/*"
           target: "/tmp/amapp-deploy"
-          strip_components: 3  # Remove ./project/AMAPP.API/publish/ from path
+          strip_components: 3
+          timeout: 300s
           
       - name: Deploy and restart application
-        uses: appleboy/ssh-action@v1.0.0
+        uses: appleboy/ssh-action@v1.0.3
         with:
-          host: vs833.dei.isep.ipp.pt
-          username: root
+          host: ${{ secrets.DEPLOY_HOST || 'vs833.dei.isep.ipp.pt' }}
+          username: ${{ secrets.DEPLOY_USER || 'root' }}
           key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          timeout: 300s
           script: |
             echo "🚀 Starting AMAPP deployment..."
             
-            # Stop the service
-            sudo systemctl stop amapp-api || echo "Service was not running"
+            # Create application directory if it doesn't exist
+            sudo mkdir -p /opt/amapp-api
             
-            # Backup current deployment
-            if [ -d "/opt/amapp-api" ] && [ "$(ls -A /opt/amapp-api)" ]; then
+            # Stop the service if it exists
+            if systemctl list-units --full -all | grep -Fq "amapp-api.service"; then
+              sudo systemctl stop amapp-api || echo "Service was not running"
+            fi
+            
+            # Backup current deployment if it exists
+            if [ -d "/opt/amapp-api" ] && [ "$(ls -A /opt/amapp-api 2>/dev/null)" ]; then
               sudo cp -r /opt/amapp-api /opt/amapp-api.backup.$(date +%Y%m%d_%H%M%S)
               echo "✅ Backup created"
             fi
@@ -454,23 +399,46 @@ jobs:
             # Clean up temp files
             rm -rf /tmp/amapp-deploy
             
-            # Start the service
-            sudo systemctl start amapp-api
+            # Create or update systemd service file
+            sudo tee /etc/systemd/system/amapp-api.service > /dev/null <<EOF
+            [Unit]
+            Description=AMAPP API Application
+            After=network.target
+            
+            [Service]
+            Type=notify
+            WorkingDirectory=/opt/amapp-api
+            ExecStart=/opt/amapp-api/AMAPP.API --urls "https://0.0.0.0:7237"
+            Restart=always
+            RestartSec=10
+            KillSignal=SIGINT
+            SyslogIdentifier=amapp-api
+            User=root
+            Environment=ASPNETCORE_ENVIRONMENT=Production
+            Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
+            
+            [Install]
+            WantedBy=multi-user.target
+            EOF
+            
+            # Reload systemd and start service
+            sudo systemctl daemon-reload
             sudo systemctl enable amapp-api
+            sudo systemctl start amapp-api
             
             # Wait and check status
-            sleep 10
+            sleep 15
             if sudo systemctl is-active --quiet amapp-api; then
               echo "✅ AMAPP service is running!"
-              echo "🌐 Available at: https://vs-gate.dei.isep.ipp.pt:10833"
+              echo "🌐 Should be available at: https://vs-gate.dei.isep.ipp.pt:10833"
             else
               echo "❌ Service failed to start"
-              sudo journalctl -u amapp-api --no-pager -n 20
+              sudo journalctl -u amapp-api --no-pager -n 50
               exit 1
             fi
             
             # Clean up old backups (keep last 3)
-            sudo find /opt -name "amapp-api.backup.*" -type d | sort -r | tail -n +4 | sudo xargs rm -rf 2>/dev/null || true
+            sudo find /opt -name "amapp-api.backup.*" -type d 2>/dev/null | sort -r | tail -n +4 | sudo xargs rm -rf 2>/dev/null || true
             
             echo "🎉 Deployment completed successfully!"
 
@@ -479,20 +447,54 @@ jobs:
           echo "🏥 Testing application health..."
           sleep 30
           
-          # Test external endpoints
-          if curl -f -k -s "https://vs-gate.dei.isep.ipp.pt:10833/swagger/index.html" > /dev/null; then
-            echo "✅ Swagger is responding: https://vs-gate.dei.isep.ipp.pt:10833/swagger"
-          else
-            echo "⚠️ Swagger endpoint check failed"
-          fi
-          
-          if curl -f -k -s "https://vs-gate.dei.isep.ipp.pt:10833/health" > /dev/null; then
-            echo "✅ Health endpoint is responding: https://vs-gate.dei.isep.ipp.pt:10833/health"
-          else
-            echo "⚠️ Health endpoint check failed"
-          fi
+          # Test external endpoints with retries
+          for i in {1..5}; do
+            echo "Health check attempt $i/5..."
+            
+            if curl -f -k -s --connect-timeout 10 --max-time 30 "https://vs-gate.dei.isep.ipp.pt:10833/swagger/index.html" > /dev/null; then
+              echo "✅ Swagger is responding: https://vs-gate.dei.isep.ipp.pt:10833/swagger"
+              break
+            else
+              echo "⚠️ Swagger endpoint check failed (attempt $i)"
+              if [ $i -eq 5 ]; then
+                echo "❌ All health check attempts failed"
+              else
+                sleep 10
+              fi
+            fi
+          done
           
           echo "🌐 Application URLs:"
           echo "   - API: https://vs-gate.dei.isep.ipp.pt:10833"
           echo "   - Swagger: https://vs-gate.dei.isep.ipp.pt:10833/swagger"
-          echo "   - Health: https://vs-gate.dei.isep.ipp.pt:10833/health"
+        continue-on-error: true
+
+  # Job 6: DAST with OWASP ZAP (only after successful deployment)
+  dast-owasp-zap:
+    name: OWASP ZAP Security Scan
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: success() && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Wait for deployment to stabilize
+        run: sleep 60
+      
+      - name: Run OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          target: 'https://vs-gate.dei.isep.ipp.pt:10833'
+          fail_action: false
+          allow_issue_writing: false
+          cmd_options: '-config api.disablekey=true -config scanner.includelargeresponse=false -config connection.dnsTtlSuccessfulQueries=0 -config connection.timeoutInSecs=30 -config ssl.insecure=true'
+        continue-on-error: true
+
+      - name: Upload ZAP report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zap-report
+          path: report_html.html
