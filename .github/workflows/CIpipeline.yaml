@@ -389,8 +389,99 @@ jobs:
         with:
           name: zap-report
           path: owasp-zap-report.html
+          
+          
+  # Job 6: Testes IAST com OWASP ZAP
+  iast-security-scan:
+    name: IAST Security Testing
+    runs-on: ubuntu-latest
+    needs: dast-owasp-zap
+    defaults:
+      run:
+        working-directory: ./project/AMAPP.API
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+          
+      - name: Restore dependencies
+        run: dotnet restore
+        
+      - name: Build API
+        run: dotnet build --no-restore
+        
+      - name: Run API com Instrumentação
+        run: |
+          # Inicia a API com variáveis para captura de dados IAST-like
+          ASPNETCORE_ENVIRONMENT=Development \
+          ASPNETCORE_URLS="http://localhost:7237" \
+          dotnet run --no-build &
+          
+          echo "Aguardando API inicializar..."
+          sleep 10
+          
+          # Guarda PID da aplicação para encerrar depois
+          API_PID=$!
+          
+      - name: Executar ZAP com Ajax Spider (simulando comportamento IAST)
+        run: |
+          # Baixar ZAP
+          mkdir -p ./zap
+          wget -q https://github.com/zaproxy/zaproxy/releases/download/v2.14.0/ZAP_2.14.0_Linux.tar.gz
+          tar -xzf ZAP_2.14.0_Linux.tar.gz -C ./zap --strip-components=1
+          
+          # Criar script de automação ZAP
+          cat > ./zap/iast-test.py << EOF
+          #!/usr/bin/env python3
+          import time
+          from zapv2 import ZAPv2
+          
+          # Inicializa ZAP API
+          zap = ZAPv2(proxies={'http': 'http://localhost:8080', 'https': 'http://localhost:8080'})
+          
+          # Configura alvo e inicia Ajax Spider
+          target = 'http://localhost:7237'
+          print('Iniciando varredura Ajax Spider em: ' + target)
+          zap.ajaxSpider.scan(target)
+          
+          # Aguarda conclusão do Ajax Spider
+          while zap.ajaxSpider.status == 'running':
+              print('Ajax Spider em execução...')
+              time.sleep(3)
+          
+          # Executa varreduras ativas nos endpoints descobertos
+          print('Iniciando varredura ativa para análise interativa...')
+          zap.ascan.scan(target)
+          
+          # Gera relatório HTML
+          print('Gerando relatório IAST...')
+          with open('iast-report.html', 'w') as f:
+              f.write(zap.core.htmlreport())
+          EOF
+          
+          # Inicia ZAP em modo daemon
+          ./zap/zap.sh -daemon -port 8080 -config api.disablekey=true &
+          sleep 10
+          
+          # Executa script de teste
+          python3 ./zap/iast-test.py
+          
+          # Encerra a aplicação
+          kill $API_PID
+        continue-on-error: true
+      
+      - name: Upload IAST report
+        uses: actions/upload-artifact@v4
+        with:
+          name: iast-report
+          path: ./project/AMAPP.API/iast-report.html
 
-   # Job 6: Deployment
+   # Job 7: Deployment
   deploy-localhost:
     name: Deploy to Localhost
     runs-on: ubuntu-latest
@@ -524,3 +615,4 @@ jobs:
           echo "   5. Test at http://localhost:5000"
           echo ""
           echo " Ready for PR review and testing!"
+          
