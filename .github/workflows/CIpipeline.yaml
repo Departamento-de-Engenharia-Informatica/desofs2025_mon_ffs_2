@@ -245,32 +245,36 @@ jobs:
       continue-on-error: true
     
     - name: Generate SBOM
-      uses: CycloneDX/gh-dotnet-generate-sbom@v2
+      run: |
+        # Install CycloneDX tool if not already installed
+        dotnet tool install --global CycloneDX.Tool || echo "CycloneDX tool already installed"
+        
+        # Generate SBOM
+        dotnet CycloneDX ./AMAPP.API.csproj -o ./sbom.xml -f xml || echo "SBOM generation failed"
+        
+        # Check if SBOM was created
+        if [ -f "./sbom.xml" ]; then
+          echo "✅ SBOM generated successfully"
+        else
+          echo "⚠️ SBOM generation failed, creating placeholder"
+          echo '<?xml version="1.0"?><bom></bom>' > ./sbom.xml
+        fi
       continue-on-error: true
-      with:
-        path: ./project/AMAPP.API/AMAPP.API.csproj
-        out: ./project/AMAPP.API
 
     - name: Normalize SBOM filename
       continue-on-error: true
       run: |
-        WORKDIR="$GITHUB_WORKSPACE"
-        PROJDIR="$WORKDIR/project/AMAPP.API"
+        PROJDIR="$GITHUB_WORKSPACE/project/AMAPP.API"
         mkdir -p "$PROJDIR"
 
-        # Look for bom.xml in either location
-        if [[ -f "$WORKDIR/bom.xml" ]]; then
-          SRC="$WORKDIR/bom.xml"
-        elif [[ -f "$PROJDIR/bom.xml" ]]; then
-          SRC="$PROJDIR/bom.xml"
+        # Check if SBOM was generated in current directory
+        if [[ -f "./sbom.xml" ]]; then
+          mv "./sbom.xml" "$PROJDIR/sbom.xml"
+          echo "✅ SBOM moved to project/AMAPP.API/sbom.xml"
         else
           echo "⚠️ SBOM not found; creating empty placeholder"
           echo '<?xml version="1.0"?><bom></bom>' > "$PROJDIR/sbom.xml"
-          exit 0
         fi
-
-        mv "$SRC" "$PROJDIR/sbom.xml"
-        echo "✅ SBOM moved to project/AMAPP.API/sbom.xml"
         
     - name: Upload dependency reports
       uses: actions/upload-artifact@v4
@@ -484,7 +488,7 @@ jobs:
         run: sleep 60
       
       - name: Run OWASP ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.12.0
+        uses: zaproxy/action-baseline@v0.10.0
         with:
           target: 'https://vs-gate.dei.isep.ipp.pt:10833'
           fail_action: false
