@@ -1,5 +1,6 @@
 using AMAPP.API.Configurations;
 using AMAPP.API.Data;
+using AMAPP.API.Extensions;
 using AMAPP.API.Middlewares;
 using AMAPP.API.Models;
 using AMAPP.API.Repository.CoproducerInfoRepository;
@@ -16,6 +17,7 @@ using FluentValidation.AspNetCore;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -211,10 +213,9 @@ namespace AMAPP.API
                 //};
             });
 
+            builder.Services.AddFluentValidationServices();
+            builder.Services.AddSecurityValidationConfig();
 
-            builder.Services.AddFluentValidationAutoValidation()
-                .AddFluentValidationClientsideAdapters();
-            
             // Add MediatR
             builder.Services.AddMediatR(cfg=>cfg.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly()));
             
