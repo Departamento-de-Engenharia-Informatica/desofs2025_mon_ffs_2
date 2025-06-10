@@ -418,8 +418,8 @@ jobs:
       - name: Copy files via SSH
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SSH_USER }}
+          host: vs833.dei.isep.ipp.pt
+          username: root
           key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
           source: "./project/AMAPP.API/publish/*"
           target: "/tmp/amapp-deploy"
@@ -428,8 +428,8 @@ jobs:
       - name: Deploy and restart application
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SSH_USER }}
+          host: vs833.dei.isep.ipp.pt
+          username: root
           key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
           script: |
             echo "🚀 Starting AMAPP deployment..."
