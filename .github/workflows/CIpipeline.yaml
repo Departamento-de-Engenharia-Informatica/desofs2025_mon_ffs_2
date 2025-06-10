@@ -389,138 +389,91 @@ jobs:
         with:
           name: zap-report
           path: owasp-zap-report.html
-
-   # Job 6: Deployment
-  deploy-localhost:
-    name: Deploy to Localhost
+   
+# Job 6: Deploy to ISEP VM
+  deploy-to-vm:
+    name: Deploy to ISEP VM
     runs-on: ubuntu-latest
-    needs: [build-and-test, code-quality, dependency-check]
-    # Deploy when creating/updating PR to develop branch
-    if: |
-      github.event_name == 'pull_request' && 
-      github.event.pull_request.base.ref == 'develop'
-    defaults:
-      run:
-        working-directory: ./project/AMAPP.API
+    needs: build-and-test
+    if: github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'develop'
     
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      - name: Download published artifacts
+        uses: actions/download-artifact@v4
         with:
-          dotnet-version: '8.0.x'
+          name: vm-deployment-package
+          path: ./publish
 
-      - name: Set deployment info
-        run: |
-          echo "DEPLOY_ENV=Development" >> $GITHUB_ENV
-          echo "BRANCH_NAME=${{ github.head_ref }}" >> $GITHUB_ENV
-          echo "TARGET_BRANCH=${{ github.base_ref }}" >> $GITHUB_ENV
-          echo "PACKAGE_NAME=amapp-pr-${{ github.event.number }}-deployment" >> $GITHUB_ENV
-          echo "RETENTION_DAYS=3" >> $GITHUB_ENV
-          echo "PR_NUMBER=${{ github.event.number }}" >> $GITHUB_ENV
-
-      - name: Create deployment package
-        run: |
-          echo " PULL REQUEST DEPLOYMENT"
-          echo " Creating deployment for PR #${{ env.PR_NUMBER }}"
-          echo " Feature branch: ${{ env.BRANCH_NAME }}"
-          echo " Target branch: ${{ env.TARGET_BRANCH }}"
-          echo ""
-          
-          dotnet restore
-          dotnet build --configuration Release
-          dotnet publish --configuration Release --output ./deploy --self-contained false
-          
-          echo " Creating startup scripts..."
-          
-          # Windows startup script
-          cat > ./deploy/start.bat << EOF
-          @echo off
-          echo  PULL REQUEST DEPLOYMENT
-          echo  Starting AMAPP API...
-          set ASPNETCORE_ENVIRONMENT=${{ env.DEPLOY_ENV }}
-          set ASPNETCORE_URLS=http://localhost:5000
-          echo.
-          echo  PR #${{ env.PR_NUMBER }}: ${{ env.BRANCH_NAME }} → ${{ env.TARGET_BRANCH }}
-          echo  FEATURE TESTING BUILD
-          echo  API: http://localhost:5000
-          echo  Swagger: http://localhost:5000/swagger
-          echo   Health: http://localhost:5000/health
-          echo.
-          echo   This is a PR build for feature testing
-          echo.
-          dotnet AMAPP.API.dll
-          pause
-          EOF
-          
-          # Linux startup script
-          cat > ./deploy/start.sh << 'EOF'
-          #!/bin/bash
-          echo " PULL REQUEST DEPLOYMENT"
-          echo " Starting AMAPP API..."
-          export ASPNETCORE_ENVIRONMENT=${{ env.DEPLOY_ENV }}
-          export ASPNETCORE_URLS="http://localhost:5000"
-          echo ""
-          echo " PR #${{ env.PR_NUMBER }}: ${{ env.BRANCH_NAME }} → ${{ env.TARGET_BRANCH }}"
-          echo " FEATURE TESTING BUILD"
-          echo " API: http://localhost:5000"
-          echo " Swagger: http://localhost:5000/swagger"
-          echo "  Health: http://localhost:5000/health"
-          echo ""
-          echo "  This is a PR build for feature testing"
-          echo ""
-          echo "Press Ctrl+C to stop"
-          dotnet AMAPP.API.dll
-          EOF
-          
-          chmod +x ./deploy/start.sh
-          
-          echo " PR deployment package created!"
-
-      - name: Test deployment package
-        run: |
-          cd ./deploy
-          echo ""
-          echo "===  PR #${{ env.PR_NUMBER }} DEPLOYMENT PACKAGE ==="
-          echo ""
-          echo " Package contents:"
-          ls -la
-          echo ""
-          echo " Verification:"
-          [ -f "AMAPP.API.dll" ] && echo "   AMAPP.API.dll found" || (echo "  ❌ AMAPP.API.dll missing" && exit 1)
-          [ -f "appsettings.json" ] && echo "   appsettings.json found" || echo "  ⚠️  appsettings.json missing"
-          [ -f "start.sh" ] && echo "   start.sh created" || echo "  ❌ start.sh missing"
-          [ -f "start.bat" ] && echo "   start.bat created" || echo "  ❌ start.bat missing"
-          echo ""
-          echo " PR deployment ready for testing!"
-
-      - name: Upload PR deployment package
-        uses: actions/upload-artifact@v4
+      - name: Setup SSH key
+        uses: webfactory/ssh-agent@v0.7.0
         with:
-          name: ${{ env.PACKAGE_NAME }}
-          path: ./project/AMAPP.API/deploy/
-          retention-days: ${{ env.RETENTION_DAYS }}
+          ssh-private-key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
 
-      - name: PR deployment summary
+      - name: Add VM to known hosts
         run: |
-          echo ""
-          echo " PR DEPLOYMENT COMPLETED! "
-          echo ""
-          echo " Package: ${{ env.PACKAGE_NAME }}"
-          echo " PR: #${{ env.PR_NUMBER }}"
-          echo " Feature: ${{ env.BRANCH_NAME }}"
-          echo " Target: ${{ env.TARGET_BRANCH }}"
-          echo " Environment: Development"
-          echo " Built: $(date)"
-          echo " Retention: ${{ env.RETENTION_DAYS }} days"
-          echo ""
-          echo " To test this PR:"
-          echo "   1. Download artifact: ${{ env.PACKAGE_NAME }}"
-          echo "   2. Extract the package"
-          echo "   3. Windows: run start.bat"
-          echo "   4. Linux/Mac: run ./start.sh"
-          echo "   5. Test at http://localhost:5000"
-          echo ""
-          echo " Ready for PR review and testing!"
+          mkdir -p ~/.ssh
+          ssh-keyscan -p 10833 vsgate-ssh.dei.isep.ipp.pt >> ~/.ssh/known_hosts
+
+      - name: Deploy and start service
+        run: |
+          VM_HOST="vsgate-ssh.dei.isep.ipp.pt"
+          VM_PORT="10833"
+          VM_USER="root"
+          
+          echo "🚀 Deploying to ISEP VM..."
+          
+          # Stop existing service
+          ssh -p $VM_PORT $VM_USER@$VM_HOST "systemctl stop amapp-api || true"
+          
+          # Upload files
+          scp -P $VM_PORT -r ./publish/* $VM_USER@$VM_HOST:/opt/amapp-api/ || echo "Creating directory and retrying..."
+          ssh -p $VM_PORT $VM_USER@$VM_HOST "mkdir -p /opt/amapp-api"
+          scp -P $VM_PORT -r ./publish/* $VM_USER@$VM_HOST:/opt/amapp-api/
+          
+          # Create simple service file and start
+          ssh -p $VM_PORT $VM_USER@$VM_HOST "
+            # Create systemd service
+            cat > /etc/systemd/system/amapp-api.service << 'EOF'
+          [Unit]
+          Description=AMAPP API Service
+          After=network.target
+
+          [Service]
+          Type=notify
+          Environment=ASPNETCORE_URLS=http://0.0.0.0:2226
+          Environment=ASPNETCORE_ENVIRONMENT=Production
+          WorkingDirectory=/opt/amapp-api
+          ExecStart=/usr/bin/dotnet /opt/amapp-api/AMAPP.API.dll
+          Restart=always
+          RestartSec=10
+          User=root
+
+          [Install]
+          WantedBy=multi-user.target
+          EOF
+            
+            # Start the service
+            systemctl daemon-reload
+            systemctl enable amapp-api
+            systemctl start amapp-api
+            sleep 5
+            
+            # Check status
+            echo '✅ Service status:'
+            systemctl status amapp-api --no-pager
+          "
+
+      - name: Quick health check
+        run: |
+          echo "🔍 Testing deployment..."
+          sleep 10
+          
+          # Test external access
+          SWAGGER_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://vs-gate.dei.isep.ipp.pt:2226/swagger -m 30 || echo "000")
+          
+          if [ "$SWAGGER_STATUS" = "200" ]; then
+            echo "✅ SUCCESS: API deployed and accessible!"
+            echo "🔗 Swagger UI: http://vs-gate.dei.isep.ipp.pt:2226/swagger"
+          else
+            echo "❌ Deployment may have issues (Status: $SWAGGER_STATUS)"
+          fi
