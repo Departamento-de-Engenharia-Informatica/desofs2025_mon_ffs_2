@@ -217,7 +217,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: jwt-security-results
-          path: project/AMAPP.API/jwt_tool/results/**
+          path: ./project/AMAPP.API/jwt_tool/results/**
           if-no-files-found: warn
 
       # ── End JWT Security Testing Steps ──
