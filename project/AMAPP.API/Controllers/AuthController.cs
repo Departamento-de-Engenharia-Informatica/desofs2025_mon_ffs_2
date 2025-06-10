@@ -5,16 +5,12 @@ using AMAPP.API.Services.Implementations;
 using AMAPP.API.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.FileProviders;
-using Microsoft.IdentityModel.Tokens;
-using MimeKit;
 using System.IdentityModel.Tokens.Jwt;
-using System.Net.Mail;
 using System.Security.Claims;
 using System.Text;
+using static AMAPP.API.Constants;
 
 namespace AMAPP.API.Controllers
 {
@@ -28,8 +24,9 @@ namespace AMAPP.API.Controllers
         private readonly IConfiguration _configuration;
         private readonly TokenService _tokenService;
         private readonly ILogger<AuthController> _logger;
+        private readonly IUserRoleInfoService _userRoleInfoService;
 
-        public AuthController(UserManager<User> userManager, RoleManager<IdentityRole> roleManager, IEmailService emailService, IConfiguration configuration, TokenService tokenService, ILogger<AuthController> logger)
+        public AuthController(UserManager<User> userManager, RoleManager<IdentityRole> roleManager, IEmailService emailService, IConfiguration configuration, TokenService tokenService, ILogger<AuthController> logger, IUserRoleInfoService userRoleInfoService)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -38,6 +35,7 @@ namespace AMAPP.API.Controllers
             _configuration = configuration;
             _tokenService = tokenService;
             _logger = logger;
+            _userRoleInfoService = userRoleInfoService;
         }
 
         [HttpPost("register")]
@@ -45,43 +43,118 @@ namespace AMAPP.API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Register(RegisterUserRequestDto registerUser)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                return BadRequest(ModelState);
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Tentativa de registro com dados inválidos");
+                    return BadRequest(ModelState);
+                }
+
+                if (registerUser.Password != registerUser.ConfirmPassword)
+                {
+                    _logger.LogWarning("Tentativa de registro com senhas não coincidentes");
+                    return BadRequest("Password and confirmation password do not match.");
+                }
+
+                // Verificar se pelo menos um role foi selecionado
+                if (registerUser.Roles == null || !registerUser.Roles.Any())
+                {
+                    _logger.LogWarning("Tentativa de registro sem roles selecionados");
+                    return BadRequest("At least one role must be selected.");
+                }
+
+                // Verificar se email já existe
+                var existingUser = await _userManager.FindByEmailAsync(registerUser.Email);
+                if (existingUser != null)
+                {
+                    _logger.LogWarning("Tentativa de registro com email já existente");
+                    return BadRequest("User email is already registered.");
+                }
+
+                // Validar roles permitidos para registro público
+                var allowedRoles = new[] { UserRole.Producer, UserRole.CoProducer };
+                if (!registerUser.Roles.All(role => allowedRoles.Contains(role)))
+                {
+                    _logger.LogWarning("Tentativa de registro com roles não permitidos");
+                    return BadRequest("Only Producer and CoProducer roles are allowed for public registration.");
+                }
+
+                // Verificar duplicatas
+                if (registerUser.Roles.Count != registerUser.Roles.Distinct().Count())
+                {
+                    _logger.LogWarning("Tentativa de registro com roles duplicados");
+                    return BadRequest("Duplicate roles are not allowed.");
+                }
+
+                // Criar novo usuário
+                var newUser = new User
+                {
+                    FirstName = registerUser.FirstName,
+                    LastName = registerUser.LastName,
+                    UserName = registerUser.Email,
+                    Email = registerUser.Email,
+                    SecurityStamp = Guid.NewGuid().ToString(),
+                };
+
+                var result = await _userManager.CreateAsync(newUser, registerUser.Password);
+
+                if (!result.Succeeded)
+                {
+                    _logger.LogWarning("Falha na criação de usuário: {Errors}",
+                        string.Join(", ", result.Errors.Select(e => e.Description)));
+                    return BadRequest(result.Errors);
+                }
+
+                try
+                {
+                    // Adicionar todos os roles selecionados
+                    var roleNames = registerUser.Roles.Select(Constants.GetRoleName).ToList();
+                    var addedRoles = new List<string>();
+
+                    foreach (var roleName in roleNames)
+                    {
+                        var addRoleResult = await _userManager.AddToRoleAsync(newUser, roleName);
+
+                        if (!addRoleResult.Succeeded)
+                        {
+                            _logger.LogError("Falha ao adicionar role ao usuário {Errors}", string.Join(", ", addRoleResult.Errors.Select(e => e.Description)));
+
+                            // Se falhar ao adicionar qualquer role, remover usuário criado
+                            await _userManager.DeleteAsync(newUser);
+                            return BadRequest($"Failed to assign role. Registration cancelled.");
+                        }
+
+                        addedRoles.Add(roleName);
+                    }
+
+                    await _userRoleInfoService.CreateRoleInfoAsync(newUser.Id, addedRoles);
+
+                    _logger.LogInformation("Usuário registrado com sucesso.");
+
+                    return Created("", new
+                    {
+                        message = "User registered successfully",
+                        email = newUser.Email,
+                        roles = addedRoles
+                    });
+                }
+                catch (Exception ex)
+                {
+                    // Se falhar em qualquer parte, remover usuário criado
+                    _logger.LogError(ex, "Erro durante criação de role info para usuário {UserId}", newUser.Id);
+                    await _userManager.DeleteAsync(newUser);
+                    return BadRequest("Failed to create user role information. Registration cancelled.");
+                }
             }
-
-            if (registerUser.Password != registerUser.ConfirmPassword)
+            catch (Exception ex)
             {
-                return BadRequest("Password not equal.");
+                _logger.LogError(ex, "Erro durante registro de usuário");
+                return StatusCode(500, "Erro interno do servidor");
             }
-
-            var verify = await _userManager.FindByEmailAsync(registerUser.Email);
-
-            if (verify != default)
-            {
-                return BadRequest("User email is already registered.");
-            }
-
-            var newUser = new User
-            {
-                FirstName = registerUser.FirstName,
-                LastName = registerUser.LastName,
-                UserName = registerUser.Email,
-                Email = registerUser.Email,
-                SecurityStamp = Guid.NewGuid().ToString(),
-            };
-
-            var result = await _userManager.CreateAsync(newUser, registerUser.Password);
-
-            if (!result.Succeeded)
-            {
-                return BadRequest(result.Errors);
-            }
-
-            await _userManager.AddToRoleAsync(newUser, "ADMIN");
-
-            return Created("", newUser.Email);
         }
+
+
 
 
         [HttpPost("login")]
