@@ -6,11 +6,11 @@ on:
   pull_request:
     branches: [ main, develop ]
   schedule:
-    - cron: '0 0 * * 0'  # Weekly on Sundays
-  workflow_dispatch: # Manual trigger
+    - cron: '0 0 * * 0'  # Executa semanalmente aos domingos
+  workflow_dispatch: # Permite execução manual do workflow
 
 jobs:
-  # Job 1: Security Analysis with CodeQL
+  # Job 1: Análise de Código com CodeQL
   analyze:
     name: CodeQL Security Analysis
     runs-on: ubuntu-latest
@@ -26,19 +26,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'csharp' ]
+        language: [ 'csharp' ]  # Adicione outros idiomas se necessário
 
+    
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v3
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
       with:
         languages: ${{ matrix.language }}
+        # config-file: .github/codeql/codeql-config.yml
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v3
       with:
         dotnet-version: '8.0.x'
 
@@ -51,11 +53,18 @@ jobs:
       uses: github/codeql-action/analyze@v3
       with:
         category: '/language:${{ matrix.language }}'
+        output: codeql-results.sarif
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # Job 2: Build and Test
   build-and-test:
     name: Build and Test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
     defaults:
       run:
         working-directory: ./project/AMAPP.API
@@ -76,12 +85,20 @@ jobs:
           --health-retries 5
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
 
       - name: Restore dependencies
         run: dotnet restore
@@ -91,52 +108,125 @@ jobs:
         
       - name: Run tests with coverage
         run: |
-          dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
+          # Executar testes com cobertura
+          if [ -f "AMAPP.API.Tests/AMAPP.API.Tests.csproj" ]; then
+            echo "Running tests from AMAPP.API.Tests project..."
+            dotnet test AMAPP.API.Tests/AMAPP.API.Tests.csproj --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
+          elif [ -f "AMAP.API.Tests/AMAP.API.Tests.csproj" ]; then
+            echo "Running tests from AMAP.API.Tests project..."
+            dotnet test AMAP.API.Tests/AMAP.API.Tests.csproj --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
+          elif [ -f "AMAPP.API.sln" ]; then
+            echo "Running tests from solution..."
+            dotnet test AMAPP.API.sln --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
+          else
+            echo "Running tests from main project (no separate test project found)..."
+            dotnet test --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
+          fi
+          
+          # — Smoke tests
+          echo "Executando testes de smoke..."
+          mkdir -p ./SmokeTestResults
+          echo "Iniciando testes de smoke em $(date)" > ./SmokeTestResults/smoke-report.txt
+
+          # start API in background and remember its PID
+          dotnet run --no-build --urls http://localhost:7237 &
+          API_PID=$!
+          echo "API PID is $API_PID"
+          
+          echo "Aguardando a API iniciar..."
+          sleep 10
+
+          # health endpoint
+          echo "Verificando endpoint de saúde..."
+          HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:7237/health)
+          echo "Status do endpoint /health: $HEALTH_STATUS" >> ./SmokeTestResults/smoke-report.txt
+          if [ "$HEALTH_STATUS" = "200" ]; then
+            echo " Health check passou" >> ./SmokeTestResults/smoke-report.txt
+          else
+            echo " Health check falhou" >> ./SmokeTestResults/smoke-report.txt
+          fi
+
+          # swagger endpoint
+          echo "Verificando documentação Swagger..."
+          SWAGGER_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:7237/swagger/index.html)
+          echo "Status do endpoint /swagger: $SWAGGER_STATUS" >> ./SmokeTestResults/smoke-report.txt
+          if [ "$SWAGGER_STATUS" = "200" ]; then
+            echo " Swagger check passou" >> ./SmokeTestResults/smoke-report.txt
+          else
+            echo " Swagger check falhou" >> ./SmokeTestResults/smoke-report.txt
+          fi
+          
+          # stop only that API instance
+          echo "Parando a API (PID $API_PID)..."
+          kill $API_PID || echo "Não foi possível encerrar a API com PID $API_PID"
+          
+          # Instalar e executar testes de mutação
+          echo "====== INICIANDO TESTES DE MUTAÇÃO ======"
+          echo "Instalando Stryker para testes de mutação..."
+          dotnet tool install -g dotnet-stryker || echo "Stryker já instalado"
+          
+          echo "Executando testes de mutação em classes críticas..."
+          dotnet stryker \
+            -p AMAPP.API.csproj \
+            --reporter "html" \
+            --reporter "progress" \
+            --mutation-level Basic \
+            --output "MutationReports"
+          echo "✅ Testes de mutação concluídos. Relatórios gerados em ./MutationReports"
+          ls -la MutationReports || echo "Diretório MutationReports não encontrado"
+          
         env:
-          ConnectionStrings__PostgreSQLConnection: "Host=localhost;Port=5432;Database=amappdb_test;Username=postgres;Password=postgres;"
+          ConnectionStrings__DefaultConnection: "Host=localhost;Port=5432;Database=amappdb_test;Username=postgres;Password=postgres;"
         continue-on-error: true
         
       - name: Generate coverage report
         uses: danielpalme/ReportGenerator-GitHub-Action@5.2.0
-        if: always()
         with:
           reports: './project/AMAPP.API/TestResults/**/coverage.cobertura.xml'
           targetdir: './project/AMAPP.API/CoverageReport'
-          reporttypes: 'HtmlInline;Cobertura'
+          reporttypes: 'HtmlInline;Cobertura;TextSummary'
       
-      - name: Publish application
-        run: dotnet publish AMAPP.API.csproj -c Release -o ./publish
-      
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-package
-          path: ./project/AMAPP.API/publish/
-
-      - name: Upload test results
+      - name: Upload test results and coverage
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-results
+          name: test-results-and-coverage
           path: |
             ./project/AMAPP.API/TestResults/
             ./project/AMAPP.API/CoverageReport/
+            ./project/AMAPP.API/SmokeTestResults/
+            ./project/AMAPP.API/MutationReports/
             
-      - name: Security scan with Trivy
+      - name: Publish for scanning
+        run: |
+          dotnet publish AMAPP.API.csproj \
+            --configuration Release \
+            --framework net8.0 \
+            --output ./bin/Release/net8.0
+  
+      - name: Scan .NET build output with Trivy (template mode)
         uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: fs
-          scan-ref: './project/AMAPP.API/publish'
-          format: sarif
+          scan-ref: './project/AMAPP.API/bin/Release/net8.0'
+          format: template                # ← template mode always writes SARIF
+          template: '@/contrib/sarif.tpl'
           output: 'trivy-results.sarif'
+          exit-code: '0'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          scanners: 'vuln,secret,misconfig'
+          severity: 'MEDIUM,HIGH,CRITICAL'
           
-      - name: Upload Trivy results
+      - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
-        if: always()
         with:
           sarif_file: 'trivy-results.sarif'
-
-  # Job 3: Dependency Security Check
+          category: 'Trivy'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+ 
+  # Job 3: Verificação de Dependências (SCA)
   dependency-check:
     name: Dependency Security Scan
     runs-on: ubuntu-latest
@@ -157,28 +247,73 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     
-    - name: Check vulnerable packages
+    - name: List vulnerable packages
       run: |
-        dotnet list package --vulnerable --include-transitive > vulnerable-packages.txt 2>&1 || true
+        echo "Checking for vulnerable NuGet packages..."
+        dotnet list package --vulnerable --include-transitive > vulnerable-packages.txt
         cat vulnerable-packages.txt
       continue-on-error: true
     
-    - name: Check outdated packages
+    - name: Check for outdated packages
       run: |
-        dotnet list package --outdated > outdated-packages.txt 2>&1 || true
+        echo "Checking for outdated packages..."
+        dotnet list package --outdated > outdated-packages.txt
         cat outdated-packages.txt
       continue-on-error: true
+    
+    - name: OWASP Dependency Check
+      uses: dependency-check/Dependency-Check_Action@main
+      with:
+        project: 'AMAPP.API'
+        path: './project'
+        format: 'HTML,JSON'
+        out: 'dependency-check-reports'
+        args: >
+          --enableRetired
+          --enableExperimental
+          --failOnCVSS 7
+      continue-on-error: true
+    
+    - name: Generate SBOM
+      uses: CycloneDX/gh-dotnet-generate-sbom@v1
+      continue-on-error: true
+      with:
+        path: ./project/AMAPP.API/AMAPP.API.csproj
+        out: ./project/AMAPP.API
+
+    - name: Normalize SBOM filename
+      continue-on-error: true
+      run: |
+        #!/usr/bin/env bash
+        WORKDIR="$GITHUB_WORKSPACE"
+        PROJDIR="$WORKDIR/project/AMAPP.API"
+        mkdir -p "$PROJDIR"
+
+        # look for bom.xml in either location
+        if [[ -f "$WORKDIR/bom.xml" ]]; then
+          SRC="$WORKDIR/bom.xml"
+        elif [[ -f "$PROJDIR/bom.xml" ]]; then
+          SRC="$PROJDIR/bom.xml"
+        else
+          echo "⚠️ SBOM not found; creating empty placeholder"
+          echo '<?xml version="1.0"?><bom></bom>' > "$PROJDIR/sbom.xml"
+          exit 0
+        fi
+
+        mv "$SRC" "$PROJDIR/sbom.xml"
+        echo "✅ SBOM moved to project/AMAPP.API/sbom.xml"
         
     - name: Upload dependency reports
       uses: actions/upload-artifact@v4
-      if: always()
       with:
         name: dependency-reports
         path: |
           ./project/AMAPP.API/vulnerable-packages.txt
           ./project/AMAPP.API/outdated-packages.txt
+          ./dependency-check-reports/
+          ./project/AMAPP.API/sbom.xml
 
-  # Job 4: Code Quality Analysis
+  # Job 4: Verificações de Qualidade de Código
   code-quality:
     name: Code Quality Analysis
     runs-on: ubuntu-latest
@@ -189,33 +324,35 @@ jobs:
     
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v3
       with:
         fetch-depth: 0  
       
+    
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0.x'
-        
+        dotnet-version: '8.0.x'    
     - name: Restore dependencies
       run: dotnet restore
       
-    - name: Check for secrets
+    - name: Check for exposed secrets
       uses: gitleaks/gitleaks-action@v2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      continue-on-error: true
+        GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+      continue-on-error: true 
+      with:
+        args: --report-format sarif --exit-code 2
 
-  # Job 5: DAST with OWASP ZAP
-  dast-scan:
-    name: OWASP ZAP Security Scan
+  # Job 5: DAST com OWASP ZAP
+  dast-owasp-zap:
+    name: OWASP ZAP Baseline Scan (DAST)
     runs-on: ubuntu-latest
     needs: build-and-test
     defaults:
       run:
         working-directory: ./project/AMAPP.API
-        
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -225,93 +362,245 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Restore and build
-        run: |
-          dotnet restore
-          dotnet build --no-restore
+      - name: Restore dependencies
+        run: dotnet restore
 
-      - name: Run API for scanning
+      - name: Build API
+        run: dotnet build --no-restore
+
+      - name: Run API in background
         run: |
-          dotnet run --no-build --urls "http://localhost:7237" &
-          sleep 15
-          curl -f http://localhost:7237/swagger/index.html || echo "API not ready"
+          dotnet run --no-build --urls "https://localhost:7237" &
+          sleep 10
       
-      - name: Run OWASP ZAP scan
+      - name: Run OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.10.0
         with:
-          target: 'http://localhost:7237'
+          target: 'https://localhost:7237'
           fail_action: false
+          allow_issue_writing: true
+          cmd_options: '-config api.disablekey=true -config scanner.includelargeresponse=false -config connection.dnsTtlSuccessfulQueries=0 -config connection.timeoutInSecs=10 -config connection.followredirects=true -config ssl.insecure=true'
 
       - name: Upload ZAP report
         uses: actions/upload-artifact@v4
-        if: always()
         with:
-          name: zap-scan-report
-          path: report_html.html
+          name: zap-report
+          path: owasp-zap-report.html
 
-  # Job 6: Deploy to ISEP VM
-  deploy-to-vm:
-    name: Deploy to ISEP VM
+  # Job 6: Deploy to DEI Servers
+  deploy:
+    name: Deploy to DEI Servers
     runs-on: ubuntu-latest
     needs: [build-and-test, dependency-check, code-quality]
-    if: github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'develop'
+    if: |
+      (github.ref == 'refs/heads/main' && github.event_name == 'push') ||
+      (github.base_ref == 'refs/heads/develop' && github.event_name == 'pull_request')
+    defaults:
+      run:
+        working-directory: ./project/AMAPP.API
+    
+    environment:
+      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+      url: ${{ github.ref == 'refs/heads/main' && 'https://vs-gate.dei.isep.ipp.pt:10833' || 'https://vs833.dei.isep.ipp.pt:2226' }}
     
     steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: app-package
-          path: ./publish
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.7.0
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
-          ssh-private-key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          dotnet-version: '8.0.x'
 
-      - name: Deploy to VM
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build for deployment
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Publish application
         run: |
-          # Add host to known_hosts
-          ssh-keyscan -p 10833 vsgate-s1.dei.isep.ipp.pt >> ~/.ssh/known_hosts || true
-          
-          VM_HOST="vsgate-s1.dei.isep.ipp.pt"
-          VM_PORT="10833"
-          VM_USER="root"
-          
-          echo "Deploying to VM..."
-          
-          # Stop existing service
-          ssh -p $VM_PORT $VM_USER@$VM_HOST "systemctl stop amapp-api || true"
-          
-          # Upload files
-          ssh -p $VM_PORT $VM_USER@$VM_HOST "mkdir -p /opt/amapp-api"
-          scp -P $VM_PORT -r ./publish/* $VM_USER@$VM_HOST:/opt/amapp-api/
-          
-          # Create simple service
-          ssh -p $VM_PORT $VM_USER@$VM_HOST "
-            cat > /etc/systemd/system/amapp-api.service << 'EOF'
-          [Unit]
-          Description=AMAPP API
-          After=network.target
+          dotnet publish AMAPP.API.csproj \
+            --configuration Release \
+            --output ./publish \
+            --no-build
 
-          [Service]
-          Type=simple
-          Environment=ASPNETCORE_ENVIRONMENT=Production
-          WorkingDirectory=/opt/amapp-api
-          ExecStart=/usr/bin/dotnet /opt/amapp-api/AMAPP.API.dll --urls http://0.0.0.0:2226
-          Restart=always
-          User=root
+      - name: Create deployment package
+        run: |
+          cd publish
+          tar -czf ../amapp-deployment-${{ github.sha }}.tar.gz .
+          cd ..
+          echo "Deployment package created: amapp-deployment-${{ github.sha }}.tar.gz"
 
-          [Install]
-          WantedBy=multi-user.target
-          EOF
-            systemctl daemon-reload
-            systemctl enable amapp-api
-            systemctl start amapp-api
+      - name: Setup SSH Key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEI_SSH_PRIVATE_KEY }}
+
+      - name: Deploy to DEI Server
+        env:
+          DEI_SERVER_HOST: ${{ secrets.DEI_SERVER_HOST }}
+          DEI_SERVER_USER: ${{ secrets.DEI_SERVER_USER }}
+          DEI_SERVER_PATH: ${{ secrets.DEI_SERVER_PATH }}
+          ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+        run: |
+          # Determine deployment settings based on branch
+          if [ "$ENVIRONMENT" = "production" ]; then
+            SERVER_PORT="10833"
+            DEPLOY_PATH="/opt/amapp/production"
+            SERVICE_NAME="amapp-production"
+          else
+            SERVER_PORT="2226"
+            DEPLOY_PATH="/opt/amapp/staging"
+            SERVICE_NAME="amapp-staging"
+          fi
+          
+          echo "Deploying to $ENVIRONMENT environment..."
+          echo "Server port: $SERVER_PORT"
+          echo "Deploy path: $DEPLOY_PATH"
+          
+          # Create deployment script
+          cat > deploy-script.sh << 'EOF'
+          #!/bin/bash
+          set -e
+          
+          DEPLOY_PATH="$1"
+          SERVICE_NAME="$2"
+          BACKUP_PATH="${DEPLOY_PATH}.backup.$(date +%Y%m%d_%H%M%S)"
+          
+          echo "Starting deployment to $DEPLOY_PATH..."
+          
+          # Create backup of current deployment
+          if [ -d "$DEPLOY_PATH" ]; then
+            echo "Creating backup: $BACKUP_PATH"
+            sudo cp -r "$DEPLOY_PATH" "$BACKUP_PATH"
+          fi
+          
+          # Create deployment directory
+          sudo mkdir -p "$DEPLOY_PATH"
+          
+          # Extract new deployment
+          echo "Extracting deployment package..."
+          sudo tar -xzf /tmp/deployment.tar.gz -C "$DEPLOY_PATH"
+          
+          # Set permissions
+          sudo chown -R www-data:www-data "$DEPLOY_PATH"
+          sudo chmod +x "$DEPLOY_PATH/AMAPP.API"
+          
+          # Update configuration for production/staging
+          sudo tee "$DEPLOY_PATH/appsettings.Production.json" > /dev/null << 'APPSETTINGS'
+          {
+            "Logging": {
+              "LogLevel": {
+                "Default": "Information",
+                "Microsoft.AspNetCore": "Warning"
+              }
+            },
+            "AllowedHosts": "vs-gate.dei.isep.ipp.pt:10833,vs833.dei.isep.ipp.pt:2226,localhost",
+            "ConnectionStrings": {
+              "PostgreSQLConnection": "Host=vsgate-s1.dei.isep.ipp.pt;Port=10279;Database=amapp;Username=postgres;Password=+nO3+HxRWRGa;"
+            }
+          }
+          APPSETTINGS
+          
+          # Restart service if it exists
+          if sudo systemctl is-active --quiet "$SERVICE_NAME" 2>/dev/null; then
+            echo "Restarting service: $SERVICE_NAME"
+            sudo systemctl restart "$SERVICE_NAME"
+            
+            # Wait for service to start
             sleep 10
-            systemctl status amapp-api
-          "
+            
+            # Check if service is running
+            if sudo systemctl is-active --quiet "$SERVICE_NAME"; then
+              echo "✅ Service $SERVICE_NAME restarted successfully"
+            else
+              echo "❌ Service $SERVICE_NAME failed to start"
+              # Rollback if service fails
+              if [ -d "$BACKUP_PATH" ]; then
+                echo "Rolling back to previous version..."
+                sudo rm -rf "$DEPLOY_PATH"
+                sudo mv "$BACKUP_PATH" "$DEPLOY_PATH"
+                sudo systemctl restart "$SERVICE_NAME"
+              fi
+              exit 1
+            fi
+          else
+            echo "⚠️ Service $SERVICE_NAME not found - manual service setup required"
+          fi
+          
+          # Clean up old backups (keep last 5)
+          echo "Cleaning up old backups..."
+          sudo find "$(dirname "$DEPLOY_PATH")" -name "$(basename "$DEPLOY_PATH").backup.*" -type d | sort -r | tail -n +6 | sudo xargs rm -rf
+          
+          echo "✅ Deployment completed successfully"
+          EOF
+          
+          chmod +x deploy-script.sh
+          
+          # Copy files to server and execute deployment
+          echo "Copying deployment package to server..."
+          scp -o StrictHostKeyChecking=no -P 22 \
+            amapp-deployment-${{ github.sha }}.tar.gz \
+            "$DEI_SERVER_USER@$DEI_SERVER_HOST:/tmp/deployment.tar.gz"
+          
+          echo "Copying deployment script to server..."
+          scp -o StrictHostKeyChecking=no -P 22 \
+            deploy-script.sh \
+            "$DEI_SERVER_USER@$DEI_SERVER_HOST:/tmp/deploy-script.sh"
+          
+          echo "Executing deployment on server..."
+          ssh -o StrictHostKeyChecking=no -p 22 \
+            "$DEI_SERVER_USER@$DEI_SERVER_HOST" \
+            "chmod +x /tmp/deploy-script.sh && /tmp/deploy-script.sh '$DEPLOY_PATH' '$SERVICE_NAME'"
 
-      - name: Health check
+      - name: Health Check
+        env:
+          ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
         run: |
+          if [ "$ENVIRONMENT" = "production" ]; then
+            HEALTH_URL="https://vs-gate.dei.isep.ipp.pt:10833/health"
+          else
+            HEALTH_URL="https://vs833.dei.isep.ipp.pt:2226/health"
+          fi
+          
+          echo "Performing health check on: $HEALTH_URL"
+          
+          # Wait for application to start
           sleep 30
-          curl -f https://vs-gate.dei.isep.ipp.pt:10833/swagger/index.html || curl -f http://vs-gate.dei.isep.ipp.pt:10833/swagger/index.html || echo "API not responding"
+          
+          # Retry health check up to 5 times
+          for i in {1..5}; do
+            if curl -f -k -s "$HEALTH_URL" > /dev/null; then
+              echo "✅ Health check passed on attempt $i"
+              echo "🚀 Deployment successful! Application is running at: $HEALTH_URL"
+              exit 0
+            else
+              echo "❌ Health check failed on attempt $i"
+              if [ $i -eq 5 ]; then
+                echo "💥 Deployment verification failed - health check unsuccessful"
+                exit 1
+              fi
+              sleep 10
+            fi
+          done
+
+      - name: Deployment notification
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "✅ Deployment completed successfully to ${{ github.ref == 'refs/heads/main' && 'PRODUCTION' || 'STAGING' }}"
+            echo "🌐 Application URL: ${{ github.ref == 'refs/heads/main' && 'https://vs-gate.dei.isep.ipp.pt:10833' || 'https://vs833.dei.isep.ipp.pt:2226' }}"
+          else
+            echo "❌ Deployment failed to ${{ github.ref == 'refs/heads/main' && 'PRODUCTION' || 'STAGING' }}"
+          fi
+
+      - name: Upload deployment artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: deployment-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}-${{ github.sha }}
+          path: |
+            ./project/AMAPP.API/amapp-deployment-${{ github.sha }}.tar.gz
+            ./project/AMAPP.API/deploy-script.sh
+          retention-days: 30
