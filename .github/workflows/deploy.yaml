@@ -1,4 +1,4 @@
-name: Deploy Ultra Simples Seguro
+name: Deploy Strip Fix
 
 on:
   push:
@@ -26,51 +26,81 @@ jobs:
       run: |
         cd ./project/AMAPP.API
         dotnet publish -c Release -o ./app
+        
+        echo "📁 Verificando estrutura do build:"
+        find ./app -type f | head -10
 
     - name: Clean and prepare
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.SSH_HOST }}
         username: ${{ secrets.SSH_USERNAME }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        password: ${{ secrets.SSH_PASSWORD }}
         port: ${{ secrets.SSH_PORT }}
         command_timeout: 10s
         script: |
-          echo "🧹 Preparing ~/amapp-deploy..."
-          mkdir -p ~/amapp-deploy
-          rm -rf ~/amapp-deploy/*
-          echo "✅ Directory ready: $(pwd)/amapp-deploy/"
+          echo "🧹 Preparing ~/amapp-api..."
+          mkdir -p ~/amapp-api
+          rm -rf ~/amapp-api/*
+          echo "✅ Directory ready"
 
-    - name: Copy files
+    - name: Copy files (sem strip_components)
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ secrets.SSH_HOST }}
         username: ${{ secrets.SSH_USERNAME }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        password: ${{ secrets.SSH_PASSWORD }}
         port: ${{ secrets.SSH_PORT }}
-        source: "./project/AMAPP.API/app/*"
-        target: "~/amapp-deploy/"           # ← Consistente com prepare
-        strip_components: 1
+        source: "./project/AMAPP.API/app/"
+        target: "~/amapp-api/"
+        # strip_components: 0  # Remove strip_components para ver estrutura
 
-    - name: Start API
+    - name: Check and start API
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.SSH_HOST }}
         username: ${{ secrets.SSH_USERNAME }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        password: ${{ secrets.SSH_PASSWORD }}
         port: ${{ secrets.SSH_PORT }}
-        command_timeout: 15s
+        command_timeout: 20s
         script: |
-          echo "🚀 Starting API..."
-          cd ~/amapp-deploy
+          echo "🔍 Verificando estrutura copiada..."
+          echo "📁 Conteúdo de ~/amapp-api/:"
+          ls -la ~/amapp-api/
           
-          echo "📋 Files deployed:"
-          ls -la | head -5
+          echo ""
+          echo "🔍 Procurando AMAPP.API.dll:"
+          find ~/amapp-api -name "*.dll" | head -5
           
-          echo "▶️ Starting on port 2226..."
+          # Encontrar diretório com AMAPP.API.dll
+          API_DIR=$(find ~/amapp-api -name "AMAPP.API.dll" -exec dirname {} \; | head -1)
+          
+          if [ -z "$API_DIR" ]; then
+            echo "❌ AMAPP.API.dll não encontrado!"
+            exit 1
+          fi
+          
+          echo "✅ API encontrada em: $API_DIR"
+          cd "$API_DIR"
+          
+          echo "📍 Executando de: $(pwd)"
+          echo "📋 Arquivos disponíveis:"
+          ls -la *.dll *.json | head -5
+          
+          echo "🛑 Parando processos antigos..."
+          pkill -f "AMAPP.API.dll" 2>/dev/null || echo "OK"
+          
+          echo "🚀 Iniciando API..."
           export ASPNETCORE_URLS="http://localhost:2226"
-          nohup dotnet AMAPP.API.dll > app.log 2>&1 &
+          nohup dotnet AMAPP.API.dll > ~/amapp-api.log 2>&1 &
           
-          sleep 3
-          echo "✅ API started on port 2226"
-          echo "📍 Location: $(pwd)"
+          echo "⏳ Aguardando inicialização..."
+          sleep 5
+          
+          echo "🔍 Verificando se está rodando..."
+          if ps aux | grep -v grep | grep "AMAPP.API.dll"; then
+            echo "✅ API rodando!"
+          else
+            echo "❌ API não iniciou. Log dos últimos comandos:"
+            tail -10 ~/amapp-api.log
+          fi
