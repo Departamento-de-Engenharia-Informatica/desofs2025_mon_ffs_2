@@ -2,6 +2,37 @@ namespace AMAPP.API
 {
     public static class Constants
     {
+        // User Roles
+        public enum UserRole
+        {
+            Producer = 1,
+            CoProducer = 2,
+            Administrator = 3,
+            Amap = 4
+        }
+
+        // Role names mapping
+        public static class RoleNames
+        {
+            public const string Producer = "PROD";
+            public const string CoProducer = "COPR";
+            public const string Administrator = "ADMIN";
+            public const string Amap = "AMAP";
+        }
+
+        // Helper method to convert enum to role name
+        public static string GetRoleName(UserRole role)
+        {
+            return role switch
+            {
+                UserRole.Producer => RoleNames.Producer,
+                UserRole.CoProducer => RoleNames.CoProducer,
+                UserRole.Administrator => RoleNames.Administrator,
+                UserRole.Amap => RoleNames.Amap,
+                _ => throw new ArgumentException("Invalid role")
+            };
+        }
+
         // Order Status
         public enum OrderStatus
         {

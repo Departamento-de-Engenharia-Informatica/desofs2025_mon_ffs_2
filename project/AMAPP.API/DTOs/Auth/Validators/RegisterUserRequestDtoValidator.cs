@@ -1,5 +1,6 @@
 ﻿using AMAPP.API.Extensions;
 using FluentValidation;
+using static AMAPP.API.Constants;
 
 namespace AMAPP.API.DTOs.Auth.Validators
 {
@@ -42,6 +43,34 @@ namespace AMAPP.API.DTOs.Auth.Validators
                 .WithMessage("Password confirmation is required")
                 .Equal(x => x.Password)
                 .WithMessage("Passwords do not match");
+
+            RuleFor(x => x.Roles)
+                .NotNull()
+                .WithMessage("Roles list cannot be null")
+                .NotEmpty()
+                .WithMessage("At least one role must be selected")
+                .Must(ContainOnlyValidRegistrationRoles)
+                .WithMessage("Only Producer and CoProducer roles are allowed for registration")
+                .Must(ContainNoDuplicates)
+                .WithMessage("Duplicate roles are not allowed");
+        }
+
+        private bool ContainOnlyValidRegistrationRoles(List<UserRole> roles)
+        {
+            if (roles == null || !roles.Any())
+                return false;
+
+            // Apenas Producer e CoProducer podem ser registrados via endpoint público
+            var allowedRoles = new[] { UserRole.Producer, UserRole.CoProducer };
+            return roles.All(role => allowedRoles.Contains(role));
+        }
+
+        private bool ContainNoDuplicates(List<UserRole> roles)
+        {
+            if (roles == null)
+                return true;
+
+            return roles.Count == roles.Distinct().Count();
         }
     }
 }
