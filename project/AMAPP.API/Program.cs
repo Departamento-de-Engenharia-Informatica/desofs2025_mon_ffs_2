@@ -182,13 +182,7 @@ namespace AMAPP.API
                 options.LowercaseQueryStrings = true; // Optional: lowercase query strings
                 options.ConstraintMap["kebab"] = typeof(KebabCaseParameterTransformer); // Register transformer
             });
-
-            builder.Services.AddControllers(options =>
-            {
-                options.Conventions.Add(new RouteTokenTransformerConvention(new KebabCaseParameterTransformer()));
-            });
-
-
+            
             // Configure rate limiting
             builder.Services.AddRateLimiter(options =>
             {
@@ -231,6 +225,18 @@ namespace AMAPP.API
             
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
+            
+            builder.Services.AddHealthChecks();
+
+
+            //NOTA: Com isto comentado passa o smoke test do health check, mas não redireciona para HTTPS
+             builder.Services.AddHttpsRedirection(options =>
+            {
+                options.HttpsPort             = 7237;
+                options.RedirectStatusCode    = StatusCodes.Status307TemporaryRedirect;
+            });
+            
+            
             builder.Services.AddSwaggerGen(option =>
             {
                 option.SwaggerDoc("v1", new OpenApiInfo { Title = "AMAPP API", Version = "v1" });
@@ -243,6 +249,7 @@ namespace AMAPP.API
                     BearerFormat = "JWT",
                     Scheme = "Bearer"
                 });
+                
 
                 option.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
@@ -258,6 +265,11 @@ namespace AMAPP.API
                         new string[]{}
                     }
                 });
+            });
+            
+            builder.Services.AddControllers(options =>
+            {
+                options.Conventions.Add(new RouteTokenTransformerConvention(new KebabCaseParameterTransformer()));
             });
 
             builder.Services.AddCors(options =>
@@ -284,8 +296,7 @@ namespace AMAPP.API
                     
                 });
             });
-
-
+            
             var app = builder.Build();
 
 
@@ -306,6 +317,8 @@ namespace AMAPP.API
                 app.UseHsts();
             }
             app.UseHttpsRedirection();
+            
+
 
             app.UseCors();
 
@@ -315,7 +328,9 @@ namespace AMAPP.API
             app.UseAuthentication();
             app.UseAuthorization();
 
+            app.MapHealthChecks("/health").AllowAnonymous();
             app.MapControllers().RequireRateLimiting("FixedPolicy");
+            
 
 
             app.Run();

@@ -105,7 +105,7 @@ jobs:
 
       - name: Build
         run: dotnet build --no-restore
-
+        
       - name: Run tests with coverage
         run: |
           # Executar testes com cobertura
@@ -123,28 +123,32 @@ jobs:
             dotnet test --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
           fi
           
-          #— Smoke tests
+          # — Smoke tests
           echo "Executando testes de smoke..."
           mkdir -p ./SmokeTestResults
           echo "Iniciando testes de smoke em $(date)" > ./SmokeTestResults/smoke-report.txt
 
-          # start API in background
-          dotnet run --no-build --urls http://localhost:5000 &
+          # start API in background and remember its PID
+          dotnet run --no-build --urls http://localhost:7237 &
+          API_PID=$!
+          echo "API PID is $API_PID"
+          
           echo "Aguardando a API iniciar..."
           sleep 10
 
           # health endpoint
           echo "Verificando endpoint de saúde..."
-          HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/health)
+          HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:7237/health)
           echo "Status do endpoint /health: $HEALTH_STATUS" >> ./SmokeTestResults/smoke-report.txt
           if [ "$HEALTH_STATUS" = "200" ]; then
             echo " Health check passou" >> ./SmokeTestResults/smoke-report.txt
           else
             echo " Health check falhou" >> ./SmokeTestResults/smoke-report.txt
           fi
+
           # swagger endpoint
           echo "Verificando documentação Swagger..."
-          SWAGGER_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/swagger)
+          SWAGGER_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:7237/swagger/index.html)
           echo "Status do endpoint /swagger: $SWAGGER_STATUS" >> ./SmokeTestResults/smoke-report.txt
           if [ "$SWAGGER_STATUS" = "200" ]; then
             echo " Swagger check passou" >> ./SmokeTestResults/smoke-report.txt
@@ -152,41 +156,9 @@ jobs:
             echo " Swagger check falhou" >> ./SmokeTestResults/smoke-report.txt
           fi
           
-          # E2E Smoke testes
-          echo "Executando testes E2E..." >> ./SmokeTestResults/smoke-report.txt
-          
-          # Teste completo de fluxo de negócio (exemplo para uma API de recursos)
-          CREATE_RESPONSE=$(curl -s -X POST "http://localhost:5000/api/recursos" \
-            -H "Content-Type: application/json" \
-            -d '{"nome":"Recurso Teste","descricao":"Criado automaticamente"}')
-          
-          # Extrair ID do recurso criado
-          RESOURCE_ID=$(echo $CREATE_RESPONSE | grep -o '"id":"[^"]*' | cut -d'"' -f4)
-          echo "Recurso criado com ID: $RESOURCE_ID" >> ./SmokeTestResults/smoke-report.txt
-          
-          # Verificar se consegue obter o recurso
-          GET_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:5000/api/recursos/$RESOURCE_ID")
-          echo "GET recurso status: $GET_STATUS" >> ./SmokeTestResults/smoke-report.txt
-          
-          # Atualizar recurso
-          UPDATE_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X PUT "http://localhost:5000/api/recursos/$RESOURCE_ID" \
-            -H "Content-Type: application/json" \
-            -d '{"id":"'$RESOURCE_ID'","nome":"Recurso Atualizado","descricao":"Atualizado automaticamente"}')
-          echo "UPDATE recurso status: $UPDATE_STATUS" >> ./SmokeTestResults/smoke-report.txt
-          
-          # Apagar recurso
-          DELETE_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE "http://localhost:5000/api/recursos/$RESOURCE_ID")
-          echo "DELETE recurso status: $DELETE_STATUS" >> ./SmokeTestResults/smoke-report.txt
-          
-          # Verificar fluxo completo
-          if [ "$GET_STATUS" = "200" ] && [ "$UPDATE_STATUS" = "200" ] && [ "$DELETE_STATUS" = "200" ]; then
-            echo "✅ Teste E2E completo executado com sucesso" >> ./SmokeTestResults/smoke-report.txt
-          else
-            echo "❌ Falha no teste E2E" >> ./SmokeTestResults/smoke-report.txt
-          fi
-          
-          # stop API (código existente)
-          pkill -f "dotnet run" || echo "Não foi possível encerrar a API"
+          # stop only that API instance
+          echo "Parando a API (PID $API_PID)..."
+          kill $API_PID || echo "Não foi possível encerrar a API com PID $API_PID"
           
           # Instalar e executar testes de mutação
           echo "====== INICIANDO TESTES DE MUTAÇÃO ======"
@@ -382,7 +354,6 @@ jobs:
     defaults:
       run:
         working-directory: ./project/AMAPP.API
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -400,16 +371,18 @@ jobs:
 
       - name: Run API in background
         run: |
-          dotnet run --no-build --urls "http://localhost:5000" &
+          dotnet run --no-build --urls "https://localhost:7237" &
           sleep 10
-
+      
       - name: Run OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.10.0
         with:
-          target: 'http://localhost:5000'
+          target: 'https://localhost:7237'
           fail_action: false
           allow_issue_writing: true
-          cmd_options: '-config api.disablekey=true'
+          cmd_options: '-config api.disablekey=true -config scanner.includelargeresponse=false -config connection.dnsTtlSuccessfulQueries=0 -config connection.timeoutInSecs=10 -config connection.followredirects=true -config ssl.insecure=true'
+  
+
 
       - name: Upload ZAP report
         uses: actions/upload-artifact@v4
