@@ -328,11 +328,11 @@ jobs:
       with:
         fetch-depth: 0  
       
-    
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'    
+        
     - name: Restore dependencies
       run: dotnet restore
       
@@ -354,16 +354,6 @@ jobs:
       run:
         working-directory: ./project/AMAPP.API
     steps:
-      - name: Debug GitHub Context
-        run: |
-          echo "🔍 Debug Information:"
-          echo "Event name: ${{ github.event_name }}"
-          echo "Ref: ${{ github.ref }}"
-          echo "Head ref: ${{ github.head_ref }}"
-          echo "Base ref: ${{ github.base_ref }}"
-          echo "SHA: ${{ github.sha }}"
-          echo "Actor: ${{ github.actor }}"
-          
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -397,223 +387,115 @@ jobs:
           name: zap-report
           path: owasp-zap-report.html
 
-  # Job 6: Deploy to vs833 DEI Server
+  # Job 6: Deploy to vs833
   deploy:
-    name: Deploy to DEI Servers
+    name: Deploy to vs833
     runs-on: ubuntu-latest
-    needs: [build-and-test]
-    # Temporarily removed condition for testing
-    # if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    needs: build-and-test
+    # Only deploy on main branch pushes or manual trigger
+    if: |
+      (github.ref == 'refs/heads/main' && github.event_name == 'push') ||
+      github.event_name == 'workflow_dispatch'
     defaults:
       run:
         working-directory: ./project/AMAPP.API
     
     steps:
-      - name: Checkout repository
+      - name: Checkout Code
         uses: actions/checkout@v4
-
-      - name: Setup .NET
+        
+      - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
-
-      - name: Restore and Build
-        run: |
-          dotnet restore
-          dotnet build --configuration Release --no-restore
-
-      - name: Publish Application
-        run: |
-          dotnet publish AMAPP.API.csproj \
-            --configuration Release \
-            --output ./publish \
-            --no-build
-
-      - name: Create Deployment Package
-        run: |
-          cd publish
-          # Just create the package - use existing appsettings.json
-          tar -czf ../amapp-deployment.tar.gz .
-          cd ..
-          echo "✅ Deployment package created for vs833"
-
-      - name: Setup SSH Key
-        uses: webfactory/ssh-agent@v0.9.0
+          
+      - name: Restore dependencies
+        run: dotnet restore
+        
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+        
+      - name: Publish
+        run: dotnet publish AMAPP.API.csproj -c Release -o publish
+        
+      - name: Copy files via SSH
+        uses: appleboy/scp-action@v0.1.7
         with:
-          ssh-private-key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
-
-      - name: Deploy to vs833 Server
-        env:
-          DEI_SERVER_HOST: vs833.dei.isep.ipp.pt
-          DEI_SERVER_USER: root
-        run: |
-          echo "🚀 Deploying to vs833.dei.isep.ipp.pt:2226..."
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          source: "./project/AMAPP.API/publish/*"
+          target: "/tmp/amapp-deploy"
+          strip_components: 3  # Remove ./project/AMAPP.API/publish/ from path
           
-          # Create deployment script
-          cat > deploy-script.sh << 'EOF'
-          #!/bin/bash
-          set -e
-          
-          echo "Starting AMAPP deployment to /opt/amapp-api..."
-          
-          # Stop the service
-          echo "Stopping amapp-api service..."
-          sudo systemctl stop amapp-api || echo "Service was not running"
-          
-          # Backup current deployment
-          if [ -d "/opt/amapp-api" ] && [ "$(ls -A /opt/amapp-api)" ]; then
-            echo "Creating backup..."
-            sudo cp -r /opt/amapp-api /opt/amapp-api.backup.$(date +%Y%m%d_%H%M%S)
-          fi
-          
-          # Clear deployment directory
-          sudo rm -rf /opt/amapp-api/*
-          
-          # Extract new deployment
-          echo "Extracting new deployment..."
-          sudo tar -xzf /tmp/amapp-deployment.tar.gz -C /opt/amapp-api/
-          
-          # Set permissions
-          sudo chown -R root:root /opt/amapp-api/
-          sudo chmod +x /opt/amapp-api/AMAPP.API
-          
-          # Start the service
-          echo "Starting amapp-api service..."
-          sudo systemctl start amapp-api
-          
-          # Enable service if not already enabled
-          sudo systemctl enable amapp-api
-          
-          # Wait for service to start
-          sleep 10
-          
-          # Check service status
-          if sudo systemctl is-active --quiet amapp-api; then
-            echo "✅ AMAPP service is running successfully!"
-            echo "🌐 Service accessible at: http://vs833.dei.isep.ipp.pt:2226"
-            echo "🌐 External access via: https://vs-gate.dei.isep.ipp.pt:10833"
-          else
-            echo "❌ Service failed to start. Checking logs..."
-            sudo journalctl -u amapp-api --no-pager -n 20
-            exit 1
-          fi
-          
-          # Clean up old backups (keep last 3)
-          echo "Cleaning up old backups..."
-          sudo find /opt -name "amapp-api.backup.*" -type d | sort -r | tail -n +4 | sudo xargs rm -rf 2>/dev/null || true
-          
-          echo "✅ Deployment completed successfully!"
-          EOF
-          
-          chmod +x deploy-script.sh
-          
-          # Copy deployment package to server
-          echo "📦 Copying deployment package to vs833..."
-          scp -o StrictHostKeyChecking=no -P 22 \
-            amapp-deployment.tar.gz \
-            "$DEI_SERVER_USER@$DEI_SERVER_HOST:/tmp/amapp-deployment.tar.gz"
-          
-          # Copy and execute deployment script
-          echo "📋 Executing deployment script..."
-          scp -o StrictHostKeyChecking=no -P 22 \
-            deploy-script.sh \
-            "$DEI_SERVER_USER@$DEI_SERVER_HOST:/tmp/deploy-script.sh"
-          
-          ssh -o StrictHostKeyChecking=no -p 22 \
-            "$DEI_SERVER_USER@$DEI_SERVER_HOST" \
-            "chmod +x /tmp/deploy-script.sh && /tmp/deploy-script.sh"
+      - name: Deploy and restart application
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          script: |
+            echo "🚀 Starting AMAPP deployment..."
+            
+            # Stop the service
+            sudo systemctl stop amapp-api || echo "Service was not running"
+            
+            # Backup current deployment
+            if [ -d "/opt/amapp-api" ] && [ "$(ls -A /opt/amapp-api)" ]; then
+              sudo cp -r /opt/amapp-api /opt/amapp-api.backup.$(date +%Y%m%d_%H%M%S)
+              echo "✅ Backup created"
+            fi
+            
+            # Clear and copy new files
+            sudo rm -rf /opt/amapp-api/*
+            sudo cp -r /tmp/amapp-deploy/* /opt/amapp-api/
+            
+            # Set permissions
+            sudo chown -R root:root /opt/amapp-api/
+            sudo chmod +x /opt/amapp-api/AMAPP.API
+            
+            # Clean up temp files
+            rm -rf /tmp/amapp-deploy
+            
+            # Start the service
+            sudo systemctl start amapp-api
+            sudo systemctl enable amapp-api
+            
+            # Wait and check status
+            sleep 10
+            if sudo systemctl is-active --quiet amapp-api; then
+              echo "✅ AMAPP service is running!"
+              echo "🌐 Available at: https://vs-gate.dei.isep.ipp.pt:10833"
+            else
+              echo "❌ Service failed to start"
+              sudo journalctl -u amapp-api --no-pager -n 20
+              exit 1
+            fi
+            
+            # Clean up old backups (keep last 3)
+            sudo find /opt -name "amapp-api.backup.*" -type d | sort -r | tail -n +4 | sudo xargs rm -rf 2>/dev/null || true
+            
+            echo "🎉 Deployment completed successfully!"
 
       - name: Health Check
         run: |
-          echo "🏥 Performing health checks..."
-          
-          # Wait for application to fully start
+          echo "🏥 Testing application health..."
           sleep 30
           
-          # Test internal endpoint (vs833:2226)
-          echo "Testing internal endpoint..."
-          if ssh -o StrictHostKeyChecking=no -p 22 root@vs833.dei.isep.ipp.pt \
-             "curl -f -s http://localhost:2226/swagger/index.html > /dev/null"; then
-            echo "✅ Internal Swagger (vs833:2226/swagger) is responding"
+          # Test external endpoints
+          if curl -f -k -s "https://vs-gate.dei.isep.ipp.pt:10833/swagger/index.html" > /dev/null; then
+            echo "✅ Swagger is responding: https://vs-gate.dei.isep.ipp.pt:10833/swagger"
           else
-            echo "⚠️ Internal Swagger endpoint check failed"
+            echo "⚠️ Swagger endpoint check failed"
           fi
           
-          # Test internal API health endpoint
-          if ssh -o StrictHostKeyChecking=no -p 22 root@vs833.dei.isep.ipp.pt \
-             "curl -f -s http://localhost:2226/health > /dev/null"; then
-            echo "✅ Internal Health endpoint (vs833:2226/health) is responding"
+          if curl -f -k -s "https://vs-gate.dei.isep.ipp.pt:10833/health" > /dev/null; then
+            echo "✅ Health endpoint is responding: https://vs-gate.dei.isep.ipp.pt:10833/health"
           else
-            echo "⚠️ Internal Health endpoint check failed"
+            echo "⚠️ Health endpoint check failed"
           fi
           
-          # Test external endpoints (vs-gate:10833)
-          echo "Testing external endpoints..."
-          for i in {1..5}; do
-            # Test Swagger
-            if curl -f -k -s "https://vs-gate.dei.isep.ipp.pt:10833/swagger/index.html" > /dev/null; then
-              echo "✅ External Swagger (vs-gate:10833/swagger) is responding on attempt $i"
-              SWAGGER_OK=true
-            else
-              echo "⚠️ External Swagger check failed on attempt $i"
-              SWAGGER_OK=false
-            fi
-            
-            # Test Health endpoint
-            if curl -f -k -s "https://vs-gate.dei.isep.ipp.pt:10833/health" > /dev/null; then
-              echo "✅ External Health (vs-gate:10833/health) is responding on attempt $i"
-              HEALTH_OK=true
-            else
-              echo "⚠️ External Health check failed on attempt $i"
-              HEALTH_OK=false
-            fi
-            
-            # If both endpoints are working, exit success
-            if [ "$SWAGGER_OK" = true ] && [ "$HEALTH_OK" = true ]; then
-              echo "🎉 All endpoints are responding!"
-              echo "🌐 Application URLs:"
-              echo "   - Swagger: https://vs-gate.dei.isep.ipp.pt:10833/swagger"
-              echo "   - Health: https://vs-gate.dei.isep.ipp.pt:10833/health"
-              echo "   - API: https://vs-gate.dei.isep.ipp.pt:10833"
-              exit 0
-            fi
-            
-            if [ $i -eq 5 ]; then
-              echo "🔍 Some external endpoints not responding, but deployment may still be successful"
-              echo "🌐 Try accessing:"
-              echo "   - Swagger: https://vs-gate.dei.isep.ipp.pt:10833/swagger"
-              echo "   - Health: https://vs-gate.dei.isep.ipp.pt:10833/health"
-              exit 0
-            fi
-            sleep 10
-          done
-
-      - name: Upload Deployment Artifacts
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: amapp-deployment-vs833-${{ github.sha }}
-          path: |
-            ./project/AMAPP.API/amapp-deployment.tar.gz
-            ./project/AMAPP.API/deploy-script.sh
-
-      - name: Deployment Summary
-        if: always()
-        run: |
-          if [ "${{ job.status }}" = "success" ]; then
-            echo "✅ AMAPP successfully deployed to vs833!"
-            echo ""
-            echo "🌐 Application URLs:"
-            echo "   - API: https://vs-gate.dei.isep.ipp.pt:10833"
-            echo "   - Swagger: https://vs-gate.dei.isep.ipp.pt:10833/swagger"
-            echo "   - Health: https://vs-gate.dei.isep.ipp.pt:10833/health"
-            echo "   - Internal: http://vs833.dei.isep.ipp.pt:2226"
-            echo ""
-            echo "🔧 Service Management:"
-            echo "   - Status: sudo systemctl status amapp-api"
-            echo "   - Logs: sudo journalctl -u amapp-api -f"
-            echo "   - Restart: sudo systemctl restart amapp-api"
-          else
-            echo "❌ Deployment to vs833 failed"
-            echo "🔍 Check the logs above for details"
-          fi
+          echo "🌐 Application URLs:"
+          echo "   - API: https://vs-gate.dei.isep.ipp.pt:10833"
+          echo "   - Swagger: https://vs-gate.dei.isep.ipp.pt:10833/swagger"
+          echo "   - Health: https://vs-gate.dei.isep.ipp.pt:10833/health"
