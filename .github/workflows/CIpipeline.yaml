@@ -354,7 +354,6 @@ jobs:
     defaults:
       run:
         working-directory: ./project/AMAPP.API
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -370,19 +369,19 @@ jobs:
       - name: Build API
         run: dotnet build --no-restore
 
-    - name: Run API in background
-      run: |
-        dotnet run --no-build --urls "https://localhost:7237" &
-        sleep 10
-    
-    - name: Run OWASP ZAP Baseline Scan
-      uses: zaproxy/action-baseline@v0.10.0
-      with:
-        target: 'https://localhost:7237'
-        fail_action: false
-        allow_issue_writing: true
-        cmd_options: '-config api.disablekey=true -config scanner.includelargeresponse=false -config connection.dnsTtlSuccessfulQueries=0 -config connection.timeoutInSecs=10 -config connection.followredirects=true -config ssl.insecure=true'
-
+      - name: Run API in background
+        run: |
+          dotnet run --no-build --urls "https://localhost:7237" &
+          sleep 10
+      
+      - name: Run OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.10.0
+        with:
+          target: 'https://localhost:7237'
+          fail_action: false
+          allow_issue_writing: true
+          cmd_options: '-config api.disablekey=true -config scanner.includelargeresponse=false -config connection.dnsTtlSuccessfulQueries=0 -config connection.timeoutInSecs=10 -config connection.followredirects=true -config ssl.insecure=true'
+  
 
 
       - name: Upload ZAP report
