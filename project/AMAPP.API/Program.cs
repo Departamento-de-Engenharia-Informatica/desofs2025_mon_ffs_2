@@ -1,15 +1,14 @@
 using AMAPP.API.Configurations;
 using AMAPP.API.Data;
-using AMAPP.API.DTOs.CompoundProductProduct.Validators;
-using AMAPP.API.DTOs.SelectedProductOffer.Validators;
-using AMAPP.API.DTOs.SubscriptionPayment.Validators;
-using AMAPP.API.DTOs.SubscriptionPeriod.Validators;
+using AMAPP.API.Extensions;
 using AMAPP.API.Middlewares;
 using AMAPP.API.Models;
+using AMAPP.API.Repository.CoproducerInfoRepository;
 using AMAPP.API.Repository.DeliveryRepository;
 using AMAPP.API.Repository.OrderRepository;
 using AMAPP.API.Repository.ProducerInfoRepository;
 using AMAPP.API.Repository.ProdutoRepository;
+using AMAPP.API.Repository.ReservationRepository;
 using AMAPP.API.Services.Implementations;
 using AMAPP.API.Services.Interfaces;
 using AMAPP.API.Utils;
@@ -18,19 +17,16 @@ using FluentValidation.AspNetCore;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using QuestPDF.Infrastructure;
 using System.Reflection;
 using System.Text;
-using AMAPP.API.Repository.ReservationRepository;
-using QuestPDF.Infrastructure;
-using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
-using Microsoft.Extensions.Logging;
-using System.Security.Claims;
-using AMAPP.API.Repository.CoproducerInfoRepository;
 
 namespace AMAPP.API
 {
@@ -215,15 +211,9 @@ namespace AMAPP.API
                 //};
             });
 
+            builder.Services.AddFluentValidationServices();
+            builder.Services.AddSecurityValidationConfig();
 
-            builder.Services.AddFluentValidationAutoValidation()
-                .AddFluentValidationClientsideAdapters();
-            builder.Services.AddValidatorsFromAssemblyContaining<CreateSelectedProductOfferDtoValidator>();
-            builder.Services.AddValidatorsFromAssemblyContaining<CreateSubscriptionPeriodDtoValidator>();
-            builder.Services.AddValidatorsFromAssemblyContaining<CreateSubscriptionPaymentDtoValidator>();
-            builder.Services.AddValidatorsFromAssemblyContaining<CreateCompoundProductProductDtoValidator>();
-            builder.Services.AddValidatorsFromAssemblyContaining<UpdateCompoundProductProductDtoValidator>();
-            
             // Add MediatR
             builder.Services.AddMediatR(cfg=>cfg.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly()));
             

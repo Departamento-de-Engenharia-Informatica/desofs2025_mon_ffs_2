@@ -20,14 +20,6 @@ namespace AMAPP.API.Utils
                 throw new ArgumentException("File is not a valid image or has been tampered with");
             }
 
-            var content = System.Text.Encoding.UTF8.GetString(fileContent).ToLowerInvariant();
-            var suspiciousPatterns = new[] { "<script", "javascript:", "<?php", "<%", "eval(" };
-
-            if (suspiciousPatterns.Any(pattern => content.Contains(pattern)))
-            {
-                throw new ArgumentException("Image contains suspicious content");
-            }
-
             try
             {
                 using var image = Image.Load(fileContent);
