@@ -1,4 +1,4 @@
-﻿namespace AMAPP.API.Services.Implementations
+﻿namespace AMAPP.API.Services.Interfaces
 {
     public interface IUserRoleInfoService
     {

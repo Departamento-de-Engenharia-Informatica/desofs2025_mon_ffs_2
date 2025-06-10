@@ -176,6 +176,7 @@ namespace AMAPP.API
             builder.Services.AddScoped<ICoproducerInfoRepository, CoproducerInfoRepository>();
             builder.Services.AddScoped<ITokenBlacklistService, MemoryCacheTokenBlacklistService>();
             builder.Services.AddScoped<IUserRoleInfoService, UserRoleInfoService>();
+            builder.Services.AddScoped<IRoleManagementService, RoleManagementService>();
 
             builder.Services.AddRouting(options =>
             {
