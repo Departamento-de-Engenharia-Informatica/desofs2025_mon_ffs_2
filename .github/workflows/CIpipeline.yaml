@@ -462,11 +462,20 @@ jobs:
                 systemctl daemon-reload
                 systemctl enable amapp-api
                 systemctl start amapp-api
-                sleep 5
+                sleep 10
                 
-                # Check status
+                # Check status and logs
                 echo '✅ Service status:'
                 systemctl status amapp-api --no-pager || true
+                
+                echo '📋 Recent logs:'
+                journalctl -u amapp-api --no-pager -n 20 || true
+                
+                echo '🔍 Process check:'
+                ps aux | grep dotnet || echo 'No dotnet processes found'
+                
+                echo '🌐 Network check:'
+                netstat -tlnp | grep 2226 || echo 'Port 2226 not listening'
               "
               
               DEPLOYED=true
@@ -487,13 +496,50 @@ jobs:
           echo "🔍 Testing deployment..."
           sleep 15
           
-          # Test external access
-          SWAGGER_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://vs-gate.dei.isep.ipp.pt:2226/swagger/index.html -m 30 || echo "000")
+          # Based on ISEP port mappings: port 2226 maps to vs-gate.dei.isep.ipp.pt:10833 (HTTPS)
+          POSSIBLE_URLS=(
+            "https://vs-gate.dei.isep.ipp.pt:10833/swagger/index.html"
+            "https://vs-gate.dei.isep.ipp.pt:10833/swagger"
+            "https://vs-gate.dei.isep.ipp.pt:10833/"
+            "http://vs-gate.dei.isep.ipp.pt:10833/swagger/index.html"
+            "http://vs-gate.dei.isep.ipp.pt:10833/swagger"
+            "http://vs-gate.dei.isep.ipp.pt:10833/"
+          )
           
-          if [ "$SWAGGER_STATUS" = "200" ]; then
-            echo "✅ SUCCESS: API deployed and accessible!"
-            echo "🔗 Swagger UI: http://vs-gate.dei.isep.ipp.pt:2226/swagger"
+          SUCCESS=false
+          
+          for url in "${POSSIBLE_URLS[@]}"; do
+            echo "Testing URL: $url"
+            
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$url" -m 30 --connect-timeout 10 -k || echo "000")
+            
+            echo "Status for $url: $HTTP_STATUS"
+            
+            if [ "$HTTP_STATUS" = "200" ]; then
+              echo "✅ SUCCESS: API deployed and accessible at $url"
+              SUCCESS=true
+              WORKING_URL="$url"
+              break
+            elif [ "$HTTP_STATUS" = "302" ] || [ "$HTTP_STATUS" = "301" ]; then
+              echo "🔄 Redirect detected at $url (Status: $HTTP_STATUS)"
+            else
+              echo "❌ Failed: $url (Status: $HTTP_STATUS)"
+            fi
+          done
+          
+          if [ "$SUCCESS" = false ]; then
+            echo "❌ All health check attempts failed"
+            echo "💡 Troubleshooting info:"
+            echo "   - Internal service should be running on port 2226"
+            echo "   - External access should be via vs-gate.dei.isep.ipp.pt:10833"
+            echo "   - Check if HTTPS/HTTP protocol mismatch"
           else
-            echo "❌ Deployment may have issues (Status: $SWAGGER_STATUS)"
-            echo "Check VM logs for more details"
+            echo "🎉 SUCCESS: API is accessible!"
+            echo "🔗 Working URL: $WORKING_URL"
+            echo ""
+            echo "📍 API Endpoints:"
+            echo "   - Swagger UI: ${WORKING_URL%/*}/swagger"
+            echo "   - API Base: ${WORKING_URL%/*}/api/"
+            echo "   - Products: ${WORKING_URL%/*}/api/product"
+            echo "   - Auth: ${WORKING_URL%/*}/api/auth"
           fi
