@@ -1,6 +1,7 @@
 ﻿using AMAPP.API.Configurations;
 using AMAPP.API.DTOs.Auth;
 using AMAPP.API.Models;
+using AMAPP.API.Services.Interfaces;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.Data;
@@ -15,11 +16,13 @@ public class TokenService
 
     private readonly JwtSettings _jwtSettings;
     private readonly ILogger<TokenService> _logger;
+    private readonly ITokenBlacklistService _blacklistService;
 
-    public TokenService(IOptions<JwtSettings> jwtSettings, ILogger<TokenService> logger)
+    public TokenService(IOptions<JwtSettings> jwtSettings, ILogger<TokenService> logger, ITokenBlacklistService blacklistService)
     {
         _jwtSettings = jwtSettings.Value;
         _logger = logger;
+        _blacklistService = blacklistService;
     }
 
     public string GenerateToken(User user, List<string>? roles = null)
@@ -45,8 +48,12 @@ public class TokenService
                 throw new ArgumentException("User.Email não pode estar vazio", nameof(user));
             }
 
+            // Gerar JTI único para este token
+            var jti = Guid.NewGuid().ToString();
+            var expiration = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiryMinutes);
+
             // Criar claims com validação
-            var claims = CreateClaims(user, roles);
+            var claims = CreateClaims(user, roles, jti);
 
             // Get secret key from configuration
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Secret));
@@ -76,15 +83,14 @@ public class TokenService
 
             return tokenString;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-
+            _logger.LogError(ex, "Erro ao gerar token para UserId: {UserId}", user?.Id);
             throw;
         }
-
     }
 
-    public bool ValidateToken(string token)
+    public async Task<bool> ValidateToken(string token)
     {
         try
         {
@@ -111,6 +117,23 @@ public class TokenService
 
             var principal = tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
 
+            // Extrair JTI do token
+            var jti = principal.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
+
+            if (string.IsNullOrEmpty(jti))
+            {
+                _logger.LogWarning("Token sem JTI recebido");
+                return false;
+            }
+
+            // Verificar se o token está na blacklist
+            var isRevoked = await _blacklistService.IsTokenRevokedAsync(jti);
+            if (isRevoked)
+            {
+                _logger.LogWarning("Token revogado tentou ser usado: {JTI}", jti);
+                return false;
+            }
+
             // Verificar se é um JWT válido
             if (validatedToken is not JwtSecurityToken jwtToken ||
                 !jwtToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
@@ -134,11 +157,26 @@ public class TokenService
         }
     }
 
-    public ClaimsPrincipal? GetPrincipalFromToken(string token)
+    public string? ExtractJtiFromTokenAsync(string token)
     {
         try
         {
-            if (!ValidateToken(token))
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var jsonToken = tokenHandler.ReadJwtToken(token);
+            return jsonToken.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Jti)?.Value;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao extrair JTI do token");
+            return null;
+        }
+    }
+
+    public async Task<ClaimsPrincipal?> GetPrincipalFromToken(string token)
+    {
+        try
+        {
+            if (!await ValidateToken(token))
                 return null;
 
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -166,11 +204,11 @@ public class TokenService
         }
     }
 
-    private List<Claim> CreateClaims(User user, List<string>? roles)
+    private List<Claim> CreateClaims(User user, List<string>? roles, string jti)
     {
         var claims = new List<Claim>
         {
-            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new(JwtRegisteredClaimNames.Jti, jti), // ID único do token
             new(JwtRegisteredClaimNames.Sub, user.Id),
             new(JwtRegisteredClaimNames.Email, user.Email!),
             new(JwtRegisteredClaimNames.Name, user.UserName ?? user.Email!),

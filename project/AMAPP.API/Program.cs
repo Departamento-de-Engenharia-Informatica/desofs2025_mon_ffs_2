@@ -162,6 +162,9 @@ namespace AMAPP.API
             builder.Services.Configure<JwtSettings>(configuration.GetSection(key: nameof(JwtSettings)));
             builder.Services.Configure<EmailConfiguration>(configuration.GetSection(key: nameof(EmailConfiguration)));
 
+            // Adicionar MemoryCache para blacklist
+            builder.Services.AddMemoryCache();
+
             builder.Services.AddScoped<TokenService>();
             builder.Services.AddScoped<IEmailService, EmailService>();
             builder.Services.AddScoped<IProductService, ProductService>();
@@ -175,6 +178,7 @@ namespace AMAPP.API
             builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
             builder.Services.AddScoped<IReportService, ReportService>();
             builder.Services.AddScoped<ICoproducerInfoRepository, CoproducerInfoRepository>();
+            builder.Services.AddScoped<ITokenBlacklistService, MemoryCacheTokenBlacklistService>();
 
             builder.Services.AddRouting(options =>
             {
@@ -324,6 +328,8 @@ namespace AMAPP.API
 
             app.UseRouting();
             app.UseRateLimiter();
+
+            app.UseMiddleware<TokenRevocationMiddleware>();
 
             app.UseAuthentication();
             app.UseAuthorization();

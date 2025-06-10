@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using MimeKit;
+using System.IdentityModel.Tokens.Jwt;
 using System.Net.Mail;
 using System.Security.Claims;
 using System.Text;
@@ -202,7 +203,53 @@ namespace AMAPP.API.Controllers
             }
         }
 
-            [HttpGet("confirmemail")]
+        [HttpPost("logout")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> Logout()
+        {
+            try
+            {
+                var authHeader = Request.Headers["Authorization"].FirstOrDefault();
+
+                if (authHeader == null || !authHeader.StartsWith("Bearer "))
+                {
+                    return BadRequest("Invalid authorization header");
+                }
+
+                var token = authHeader.Substring("Bearer ".Length).Trim();
+                var jti = _tokenService.ExtractJtiFromTokenAsync(token);
+
+                if (string.IsNullOrEmpty(jti))
+                {
+                    return BadRequest("Invalid token");
+                }
+
+                // Extrair expiração do token para definir quando remover da blacklist
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var jsonToken = tokenHandler.ReadJwtToken(token);
+                var expiration = jsonToken.ValidTo;
+
+                // Adicionar token à blacklist
+                var blacklistService = HttpContext.RequestServices.GetRequiredService<ITokenBlacklistService>();
+                await blacklistService.RevokeTokenAsync(jti, expiration);
+
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                _logger.LogInformation("Logout realizado com sucesso para UserId: {UserId}, Token JTI: {JTI}",
+                    userId, jti);
+
+                return Ok(new { message = "Logout realizado com sucesso" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro durante logout");
+                return StatusCode(500, "Erro interno do servidor");
+            }
+        }
+
+        [HttpGet("confirmemail")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
