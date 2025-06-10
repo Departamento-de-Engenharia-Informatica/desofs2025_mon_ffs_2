@@ -6,7 +6,7 @@ namespace AMAPP.API.Services.Interfaces
     {
         // Métodos existentes
         Task<IEnumerable<DeliveryDto>> GetAllAsync();
-        Task<DeliveryDto?> GetByIdAsync(int id, string userId = null);
+        Task<DeliveryDto?> GetByIdAsync(int id, string? userId = null);
         Task<DeliveryDto> CreateAsync(CreateDeliveryDto dto);
         Task<DeliveryDto?> UpdateAsync(int id, UpdateDeliveryDto dto);
         Task<bool> DeleteAsync(int id);
