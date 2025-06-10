@@ -274,34 +274,29 @@ jobs:
           --failOnCVSS 7
       continue-on-error: true
     
-    - name: Generate SBOM
-      uses: CycloneDX/gh-dotnet-generate-sbom@v1
-      continue-on-error: true
-      with:
-        path: ./project/AMAPP.API/AMAPP.API.csproj
-        out: ./project/AMAPP.API
-
-    - name: Normalize SBOM filename
+    - name: Generate SBOM manually
       continue-on-error: true
       run: |
-        #!/usr/bin/env bash
-        WORKDIR="$GITHUB_WORKSPACE"
-        PROJDIR="$WORKDIR/project/AMAPP.API"
-        mkdir -p "$PROJDIR"
-
-        # look for bom.xml in either location
-        if [[ -f "$WORKDIR/bom.xml" ]]; then
-          SRC="$WORKDIR/bom.xml"
-        elif [[ -f "$PROJDIR/bom.xml" ]]; then
-          SRC="$PROJDIR/bom.xml"
-        else
-          echo "⚠️ SBOM not found; creating empty placeholder"
-          echo '<?xml version="1.0"?><bom></bom>' > "$PROJDIR/sbom.xml"
-          exit 0
+        cd ./project/AMAPP.API
+        
+        # Verificar se CycloneDX está disponível
+        if ! command -v dotnet-cyclonedx &> /dev/null; then
+          dotnet tool install --global cyclonedx || echo "CycloneDX already installed"
         fi
-
-        mv "$SRC" "$PROJDIR/sbom.xml"
-        echo "✅ SBOM moved to project/AMAPP.API/sbom.xml"
+        
+        # Gerar SBOM no diretório correto
+        dotnet cyclonedx AMAPP.API.csproj --out . --filename bom.xml
+        
+        # Verificar e mover
+        if [[ -f "bom.xml" ]]; then
+          echo "✅ SBOM generated successfully"
+          mv bom.xml sbom.xml
+          echo "📄 SBOM preview:"
+          head -n 10 sbom.xml
+        else
+          echo "❌ SBOM generation failed - creating placeholder"
+          echo '<?xml version="1.0"?><bom></bom>' > sbom.xml
+        fi
         
     - name: Upload dependency reports
       uses: actions/upload-artifact@v4
