@@ -9,10 +9,11 @@
 **Master in Informatics Engineering - 2024/2025**
 
 **Students:**
+
 Ilídio Magalhães - 1191577 <br>
 Hugo Coelho - 1162086 <br>
-Pedro Oliveira - 1240482 <br>
 Paulo Abreu - 1240481 <br>
+Pedro Oliveira - 1240482 <br>
 
 **Location:** Porto, May 26, 2025
 
@@ -20,7 +21,7 @@ Paulo Abreu - 1240481 <br>
 
 ## Table of Contents
 
-- [Phase 2: Sprint 1](#phase-2-sprint-1)
+- [Phase 2: Sprint 2](#phase-2-sprint-1)
   - [Table of Contents](#table-of-contents)
   - [Introduction](#introduction)
     - [Objectives](#objectives)
@@ -67,27 +68,21 @@ Paulo Abreu - 1240481 <br>
   - [Development](#development)
     - [Technology Used](#technology-used)
     - [Structure](#structure)
+  - [Authentication](#authentication)
+  - [User Management](#user-management)
+  - [Input Validation](#input-validation)
+    - [Create Product](#create-product)
   - [Pipeline](#pipeline)
     - [Job 1: Code Analysis (SAST with CodeQL)](#job-1-code-analysis-sast-with-codeql)
-      - [Job Setup and Configuration](#job-setup-and-configuration)
-      - [Job Execution Steps](#job-execution-steps)
     - [Job 2: Build and Test](#job-2-build-and-test)
-      - [Job Setup and Configuration](#job-setup-and-configuration-1)
-      - [Job Execution Steps](#job-execution-steps-1)
-      - [Test and Verification Stage](#test-and-verification-stage)
-      - [Coverage Report Generation](#coverage-report-generation)
     - [Job 3: Dependency Security Scan (SCA)](#job-3-dependency-security-scan-sca)
     - [Job 4: Code Quality Analysis](#job-4-code-quality-analysis)
-      - [Job Setup and Configuration](#job-setup-and-configuration-2)
-      - [Job Execution Steps](#job-execution-steps-2)
     - [Job 5: OWASP ZAP Baseline Scan (DAST)](#job-5-owasp-zap-baseline-scan-dast)
-      - [Job Setup and Configuration](#job-setup-and-configuration-3)
-      - [Job Execution Steps](#job-execution-steps-3)
+    - [Job 6: Deployment](#job-6-deployment)
   - [Relevant Practices Adopted](#relevant-practices-adopted)
     - [Default Branch: `develop`](#default-branch-development)
     - [Branch Protection Rules](#branch-protection-rules)
   - [ASVS](#asvs)
-    - [Subdividir pelos pontos a baixo: ](#subdividir-pelos-pontos-a-baixo-)
   - [Conclusion](#conclusion)
       - [Sprint Achievements](#sprint-achievements)
       - [Key Accomplishments](#key-accomplishments)
@@ -473,61 +468,140 @@ This architecture allows for scalability, testability, and easier maintenance, m
 
 ## Authentication
 
-Blablabla
+The authentication system implements comprehensive security measures aligned with modern security standards and best practices.
+
+**Strong Password Requirements**: The system enforces robust password policies requiring a minimum of 12 characters with mandatory inclusion of uppercase letters, lowercase letters, numbers, and special characters. Additionally, passwords must contain at least 3 unique characters and include non-alphanumeric characters, following current security guidelines that prioritize password strength through length and complexity.
+
+**Account Lockout Protection**: The system implements automatic account lockout after exactly 5 failed authentication attempts. When an account is locked, it remains inaccessible for 30 minutes before automatically unlocking. This mechanism applies to all users, including newly created accounts, providing robust protection against brute force attacks while balancing security with user accessibility.
+
+**Two-Factor Authentication (2FA)**: Multi-factor authentication is implemented using email-based token verification. When 2FA is enabled for a user account, the system generates a time-limited authentication token that is sent via email. Users must provide both their password and the received token to complete the authentication process, significantly enhancing account security beyond traditional password-only authentication.
+
+**Secure JWT Token Management**: The authentication system uses JWT tokens with comprehensive validation including issuer verification, audience validation, and signature verification. Tokens have configurable expiration times and implement proper blacklist management through a dedicated TokenBlacklistService. The logout functionality ensures complete token revocation by adding JWT IDs to a blacklist, preventing token reuse even if intercepted.
+
+**Rate Limiting Protection**: The system implements rate limiting with a fixed window policy allowing 100 requests per minute per client, with a queue limit of 2 additional requests. This protects against automated attacks and ensures fair resource usage across all users.
+
+**Role-Based Authorization**: Comprehensive role-based access control is implemented with specific policies for different user types (Administrator, Producer, CoProducer, Amap) and business-specific permissions for managing products, subscriptions, payments, and reports.
+
+**HTTPS and Security Headers**: The system enforces HTTPS in production environments with proper security configurations including HSTS (HTTP Strict Transport Security) for enhanced connection security.
 
 ---
 
-## User Management
-  
-Blablabla
+## Role Policies
+
+The system implements a comprehensive role-based access control (RBAC) model that governs user access across all application functionality. Access control is enforced through role-based permissions combined with ownership verification and business logic constraints.
+
+### User Roles and Capabilities
+
+**Administrator**
+- Complete system oversight with full access to all resources
+- Can manage all products, orders, and deliveries regardless of ownership
+- Access to comprehensive reporting across all users
+- Exclusive control over delivery creation, updates, and deletion
+
+**Producer**
+- Product lifecycle management for their own products only
+- View orders and deliveries related to their products
+- Update order items when contextually appropriate
+- Cannot create orders or manage deliveries
+
+**CoProducer**
+- Order management including creation, updates, and item modifications
+- Access to their own orders and related deliveries
+- Generate and download personal reports
+- Cannot manage products or system-wide deliveries
+
+### Access Control Matrix
+
+**Product Management**
+All product operations (create, update, delete) require the "CanManageProducts" policy, which grants access to Producer and Administrator roles. Product viewing is publicly available, with detailed product information accessible to anonymous users for transparency.
+
+**Order Operations**
+Order creation and management is primarily restricted to CoProducers, who can create orders and manage order items with strict ownership verification. Administrators have read-only access to all orders for oversight purposes. Producers can view orders related to their products and update order items within their product context.
+
+**Delivery Management**
+Delivery operations are heavily restricted, with only Administrators having full control over delivery creation, updates, and deletion. CoProducers and Producers can view deliveries related to their respective areas of responsibility, but with ownership verification to ensure users only access relevant delivery information.
+
+**Reporting and Analytics**
+Report access follows the "CanViewReports" policy, allowing CoProducers to download their own reports while Administrators can access reports for any valid CoProducer. This enables both self-service reporting and administrative oversight.
 
 ---
 
 ## Input Validation
 
-Blablabla
+The system implements comprehensive input validation across all user-facing functionality using FluentValidation framework with custom security extensions to prevent injection attacks and ensure data integrity.
+
+**FluentValidation Framework Implementation**
+The application uses FluentValidation as the primary validation mechanism, with dedicated validator classes for each DTO category. Every major functional area has its own validation folder structure (Auth/Validators, Order/Validators, Product/Validators, Delivery/Validators) ensuring organized and maintainable validation rules.
+
+**Custom Security Extensions**
+A centralized SecurityExtensions class provides reusable validation methods that are consistently applied across all DTOs:
+- **NoUnsafeChars()**: Blocks dangerous characters (`< > " ' &`) that could enable XSS attacks
+- **SafeName()**: Validates names with Portuguese character support including accents and special characters while preventing malicious input
+- **SafeText()**: Provides general text validation that maintains security without breaking legitimate use cases
+- **StrongPassword()**: Enforces robust password policies with 12-character minimum, requiring uppercase, lowercase, numbers, and special characters
+
+**Comprehensive Validation Coverage**
+Every DTO in the system has corresponding validators that implement multiple validation layers:
+- **Data Type Validation**: Ensures correct data types and formats for all fields
+- **Length Restrictions**: Prevents buffer overflow attacks through appropriate field length limits
+- **Business Logic Validation**: Enforces domain-specific rules and constraints
+- **Security Validation**: Blocks potential injection attempts and malicious input patterns
+- **Format Validation**: Ensures proper email formats, numeric ranges, and acceptable character sets
+
+**Localization and User Experience**
+The validation system supports Portuguese language requirements while maintaining security standards. Name validation accommodates Portuguese characters, accents, and cultural naming conventions without compromising security integrity. Error messages are clear and helpful without exposing internal system details.
+
+**Validation Pipeline Integration**
+FluentValidation is integrated into the ASP.NET Core request pipeline, ensuring all incoming data is validated before reaching business logic. Invalid requests are immediately rejected with detailed error responses, preventing malformed or malicious data from entering the system. The validation occurs at the controller level through ModelState validation, providing early detection of security threats and data integrity issues.
+
+**Consistent Security Standards**
+All validators follow consistent security patterns including email format validation (max 254 characters), password strength requirements, proper handling of optional fields, and prevention of common attack vectors such as SQL injection and cross-site scripting through input sanitization.
 
 ### Create Product
 
-Blablabla
+To enhance security during product creation, we implemented comprehensive image validation using the ImageSharp library. This validation process includes multiple layers of security checks:
 
----
+**File Format Validation**: The system validates image files by checking both file extensions (.jpg, .jpeg, .png, .webp) and MIME types (image/jpeg, image/png, image/webp) to ensure only legitimate image formats are accepted.
 
-## Report Orders and Deliveries
+**Binary Signature Verification**: Each uploaded image undergoes binary signature validation to verify the file's actual format matches its extension, preventing file type spoofing attacks where malicious files are disguised with image extensions.
+
+**Content Security Scanning**: The system scans image content for suspicious patterns such as embedded scripts (`<script`, `javascript:`, `<?php`, `<%`, `eval(`), preventing potential code injection attacks through image uploads.
+
+**File Size Restrictions**: Images are limited to a maximum size of 5MB to prevent denial-of-service attacks and ensure reasonable storage usage.
+
+**Image Processing and Sanitization**: Valid images are processed using ImageSharp to remove potentially dangerous metadata (EXIF data) and resize images that exceed 2048x2048 pixels, ensuring consistent and secure image handling.
+
+This multi-layered approach significantly reduces the attack surface for image-based vulnerabilities while maintaining a smooth user experience for legitimate file uploads.
 
 ---
 
 ## Pipeline
 
-The pipeline consists of five main steps, each designed to ensure the quality and reliability of the software throughout the development process.
+The CI/CD pipeline consists of six main jobs that execute automated security testing, quality assurance, and deployment processes. The pipeline runs on pushes to main/develop branches, pull requests, weekly schedules, and manual triggers.
 
-### Job 1: Code Analysis (SAST with CodeQL)
+### Job 1: CodeQL Security Analysis
 
-Blablabla
-
----
+Performs static application security testing (SAST) using GitHub's CodeQL engine to identify potential security vulnerabilities in the C# codebase. The analysis runs on every code change and generates SARIF reports that integrate with GitHub's Security tab for vulnerability tracking and remediation.
 
 ### Job 2: Build and Test
 
-Blablabla
-
----
+Executes comprehensive testing including unit tests with code coverage analysis, smoke tests to verify API health and Swagger endpoints, and mutation testing using Stryker to assess test quality. The job runs against a PostgreSQL test database and generates detailed coverage reports. Additionally, performs filesystem scanning with Trivy to detect vulnerabilities in dependencies and build artifacts.
 
 ### Job 3: Dependency Security Scan (SCA)
 
-Blablabla
-
----
+Conducts software composition analysis by checking for vulnerable and outdated NuGet packages, running OWASP Dependency Check to identify known vulnerabilities in dependencies, and generating a Software Bill of Materials (SBOM) using CycloneDX for supply chain transparency. Results include vulnerability reports and recommendations for package updates.
 
 ### Job 4: Code Quality Analysis
 
-Blablabla
-
----
+Performs code quality assessment by scanning for exposed secrets and credentials using Gitleaks, ensuring no sensitive information is accidentally committed to the repository. The analysis helps maintain security best practices and prevents credential leaks in the codebase.
 
 ### Job 5: OWASP ZAP Baseline Scan (DAST)
 
-Blablabla
+Executes dynamic application security testing by running the API in a test environment and performing automated security scans using OWASP ZAP. The scan identifies runtime vulnerabilities such as injection flaws, authentication issues, and configuration problems that may not be detectable through static analysis.
+
+### Job 6: Deployment
+
+Creates automated deployment packages for pull requests targeting the develop branch. Generates ready-to-run deployment artifacts with startup scripts for both Windows and Linux environments, enabling easy testing of feature branches. The deployment package includes the compiled application, configuration files, and helper scripts for local testing with a 3-day retention period.
 
 ---
 
@@ -543,8 +617,6 @@ The `develop` branch is set as the default branch of the repository. This ensure
 This practice follows common Git workflows such as Git Flow, providing a clear separation between development and production environments.
 
 ![Default branch](./figs/branch-develop.PNG)
-
----
 
 ### Branch Protection Rules
 
@@ -572,6 +644,26 @@ Blablabla
 ---
 
 ## Conclusion
+
+Blablabla
+
+### Sprint Achievements
+
+Blablabla
+
+### Key Accomplishments
+
+Blablabla
+
+### Risk Mitigation Progress
+
+Blablabla
+
+### Areas for Future Enhancement
+
+Blablabla
+
+### Final Assessment
 
 Blablabla
 
