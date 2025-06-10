@@ -406,13 +406,20 @@ jobs:
         with:
           dotnet-version: '8.0.x'
   
-      - name: Install RESTler
-        run: |
-          mkdir -p ./restler
-          wget -q https://github.com/microsoft/restler-fuzzer/releases/download/v8.3.0/restler-fuzzer-v8.3-ubuntu20.04.1-x64.zip
-          unzip restler-fuzzer-v8.3-ubuntu20.04.1-x64.zip -d ./restler
-          chmod +x ./restler/restler/Restler
-  
+        - name: Pull RESTler Docker image
+          run: |
+            docker pull mcr.microsoft.com/restler/restler:latest
+        - name: Generate grammar
+          run: |
+            docker run --rm -v $PWD:/app -w /app \
+              mcr.microsoft.com/restler/restler:latest \
+              Restler compile --api_spec ./swagger.json --api_spec_format Swagger
+        - name: Fuzz in “lean” mode
+          run: |
+            docker run --rm -v $PWD:/app -w /app \
+              mcr.microsoft.com/restler/restler:latest \
+              Restler fuzz-lean --grammar_file grammar.py --time_limit 300
+
       - name: Build and Run API
         run: |
           dotnet build --configuration Release
@@ -466,10 +473,11 @@ jobs:
   
       - name: Install Nuclei
         run: |
-          echo "Instalando Nuclei..."
-          wget -q https://github.com/projectdiscovery/nuclei/releases/download/v3.0.0/nuclei_3.0.0_linux_amd64.zip
-          unzip nuclei_3.0.0_linux_amd64.zip
+          wget -q -O nuclei.zip \
+            https://github.com/projectdiscovery/nuclei/releases/download/v3.0.0/nuclei_3.0.0_linux_amd64.zip
+          unzip -o nuclei.zip               # -o = overwrite without prompting :contentReference[oaicite:5]{index=5}
           chmod +x nuclei
+          sudo mv nuclei /usr/local/bin/    # so `nuclei` is on PATH
   
       - name: Update Nuclei Templates
         run: |
@@ -519,12 +527,13 @@ jobs:
   
       - name: Build and Run API
         run: |
-          cd ..
-          dotnet build --configuration Release
-          dotnet run --no-build --urls "http://localhost:7237" &
-          echo "Aguardando API inicializar..."
+          # Build the specific project file
+          dotnet build AMAPP.API.csproj --configuration Release
+          # Run with explicit project path
+          dotnet run --project AMAPP.API.csproj --configuration Release --urls "http://localhost:7237" &
+          echo "Waiting for API to start..."
           sleep 15
-  
+
       - name: Run JWT tests
         run: |
           cd jwt_tool
