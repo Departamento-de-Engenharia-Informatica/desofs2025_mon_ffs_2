@@ -1,4 +1,4 @@
-name: Deploy Ultra Simples
+name: Deploy Ultra Simples Seguro
 
 on:
   push:
@@ -6,8 +6,8 @@ on:
   pull_request:
     branches: [ main, develop ]
   schedule:
-    - cron: '0 0 * * 0'  # Executa semanalmente aos domingos
-  workflow_dispatch: # Permite execução manual do workflow
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -32,24 +32,24 @@ jobs:
       with:
         host: ${{ secrets.SSH_HOST }}
         username: ${{ secrets.SSH_USERNAME }}
-        password: ${{ secrets.SSH_PASSWORD }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: ${{ secrets.SSH_PORT }}
         command_timeout: 10s
         script: |
-          echo "Preparing..."
+          echo "🧹 Preparing ~/amapp-deploy..."
           mkdir -p ~/amapp-deploy
-          rm -f /var/www/amapp/* 2>/dev/null || true
-          echo "Ready"
+          rm -rf ~/amapp-deploy/*
+          echo "✅ Directory ready: $(pwd)/amapp-deploy/"
 
     - name: Copy files
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ secrets.SSH_HOST }}
         username: ${{ secrets.SSH_USERNAME }}
-        password: ${{ secrets.SSH_PASSWORD }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: ${{ secrets.SSH_PORT }}
         source: "./project/AMAPP.API/app/*"
-        target: "/var/www/amapp/"
+        target: "~/amapp-deploy/"           # ← Consistente com prepare
         strip_components: 1
 
     - name: Start API
@@ -57,12 +57,20 @@ jobs:
       with:
         host: ${{ secrets.SSH_HOST }}
         username: ${{ secrets.SSH_USERNAME }}
-        password: ${{ secrets.SSH_PASSWORD }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: ${{ secrets.SSH_PORT }}
         command_timeout: 15s
         script: |
+          echo "🚀 Starting API..."
           cd ~/amapp-deploy
-          ls -la
+          
+          echo "📋 Files deployed:"
+          ls -la | head -5
+          
+          echo "▶️ Starting on port 2226..."
           export ASPNETCORE_URLS="http://localhost:2226"
-          nohup dotnet AMAPP.API.dll &
-          echo "API started on port 2226"
+          nohup dotnet AMAPP.API.dll > app.log 2>&1 &
+          
+          sleep 3
+          echo "✅ API started on port 2226"
+          echo "📍 Location: $(pwd)"
