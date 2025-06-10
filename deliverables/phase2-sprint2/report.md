@@ -528,7 +528,34 @@ Report access follows the "CanViewReports" policy, allowing CoProducers to downl
 
 ## Input Validation
 
-Blablabla
+The system implements comprehensive input validation across all user-facing functionality using FluentValidation framework with custom security extensions to prevent injection attacks and ensure data integrity.
+
+**FluentValidation Framework Implementation**
+The application uses FluentValidation as the primary validation mechanism, with dedicated validator classes for each DTO category. Every major functional area has its own validation folder structure (Auth/Validators, Order/Validators, Product/Validators, Delivery/Validators) ensuring organized and maintainable validation rules.
+
+**Custom Security Extensions**
+A centralized SecurityExtensions class provides reusable validation methods that are consistently applied across all DTOs:
+- **NoUnsafeChars()**: Blocks dangerous characters (`< > " ' &`) that could enable XSS attacks
+- **SafeName()**: Validates names with Portuguese character support including accents and special characters while preventing malicious input
+- **SafeText()**: Provides general text validation that maintains security without breaking legitimate use cases
+- **StrongPassword()**: Enforces robust password policies with 12-character minimum, requiring uppercase, lowercase, numbers, and special characters
+
+**Comprehensive Validation Coverage**
+Every DTO in the system has corresponding validators that implement multiple validation layers:
+- **Data Type Validation**: Ensures correct data types and formats for all fields
+- **Length Restrictions**: Prevents buffer overflow attacks through appropriate field length limits
+- **Business Logic Validation**: Enforces domain-specific rules and constraints
+- **Security Validation**: Blocks potential injection attempts and malicious input patterns
+- **Format Validation**: Ensures proper email formats, numeric ranges, and acceptable character sets
+
+**Localization and User Experience**
+The validation system supports Portuguese language requirements while maintaining security standards. Name validation accommodates Portuguese characters, accents, and cultural naming conventions without compromising security integrity. Error messages are clear and helpful without exposing internal system details.
+
+**Validation Pipeline Integration**
+FluentValidation is integrated into the ASP.NET Core request pipeline, ensuring all incoming data is validated before reaching business logic. Invalid requests are immediately rejected with detailed error responses, preventing malformed or malicious data from entering the system. The validation occurs at the controller level through ModelState validation, providing early detection of security threats and data integrity issues.
+
+**Consistent Security Standards**
+All validators follow consistent security patterns including email format validation (max 254 characters), password strength requirements, proper handling of optional fields, and prevention of common attack vectors such as SQL injection and cross-site scripting through input sanitization.
 
 ### Create Product
 
@@ -556,35 +583,31 @@ Blablabla
 
 ## Pipeline
 
-The pipeline consists of five main steps, each designed to ensure the quality and reliability of the software throughout the development process.
+The CI/CD pipeline consists of six main jobs that execute automated security testing, quality assurance, and deployment processes. The pipeline runs on pushes to main/develop branches, pull requests, weekly schedules, and manual triggers.
 
-### Job 1: Code Analysis (SAST with CodeQL)
+### Job 1: CodeQL Security Analysis
 
-Blablabla
-
----
+Performs static application security testing (SAST) using GitHub's CodeQL engine to identify potential security vulnerabilities in the C# codebase. The analysis runs on every code change and generates SARIF reports that integrate with GitHub's Security tab for vulnerability tracking and remediation.
 
 ### Job 2: Build and Test
 
-Blablabla
-
----
+Executes comprehensive testing including unit tests with code coverage analysis, smoke tests to verify API health and Swagger endpoints, and mutation testing using Stryker to assess test quality. The job runs against a PostgreSQL test database and generates detailed coverage reports. Additionally, performs filesystem scanning with Trivy to detect vulnerabilities in dependencies and build artifacts.
 
 ### Job 3: Dependency Security Scan (SCA)
 
-Blablabla
-
----
+Conducts software composition analysis by checking for vulnerable and outdated NuGet packages, running OWASP Dependency Check to identify known vulnerabilities in dependencies, and generating a Software Bill of Materials (SBOM) using CycloneDX for supply chain transparency. Results include vulnerability reports and recommendations for package updates.
 
 ### Job 4: Code Quality Analysis
 
-Blablabla
-
----
+Performs code quality assessment by scanning for exposed secrets and credentials using Gitleaks, ensuring no sensitive information is accidentally committed to the repository. The analysis helps maintain security best practices and prevents credential leaks in the codebase.
 
 ### Job 5: OWASP ZAP Baseline Scan (DAST)
 
-Blablabla
+Executes dynamic application security testing by running the API in a test environment and performing automated security scans using OWASP ZAP. The scan identifies runtime vulnerabilities such as injection flaws, authentication issues, and configuration problems that may not be detectable through static analysis.
+
+### Job 6: Deployment
+
+Creates automated deployment packages for pull requests targeting the develop branch. Generates ready-to-run deployment artifacts with startup scripts for both Windows and Linux environments, enabling easy testing of feature branches. The deployment package includes the compiled application, configuration files, and helper scripts for local testing with a 3-day retention period.
 
 ---
 
