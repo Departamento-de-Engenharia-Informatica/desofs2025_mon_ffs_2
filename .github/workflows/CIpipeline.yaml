@@ -347,39 +347,58 @@ jobs:
       - name: Publish
         run: dotnet publish AMAPP.API.csproj -c Release -o publish
         
-      - name: Test SSH Connection
+      - name: Test SSH Connection and Resolve Host
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.DEPLOY_HOST || 'vs833.dei.isep.ipp.pt' }}
+          host: vsgate-ssh.dei.isep.ipp.pt
+          port: 10833
           username: ${{ secrets.DEPLOY_USER || 'root' }}
           key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
           script: |
-            echo "✅ SSH connection successful"
-            whoami
-            pwd
+            echo "✅ SSH connection successful to vs833 via gateway"
+            echo "Current user: $(whoami)"
+            echo "Current directory: $(pwd)"
+            echo "Hostname: $(hostname)"
+            echo "Disk usage:"
             df -h
         continue-on-error: false
         
       - name: Copy files via SSH
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.DEPLOY_HOST || 'vs833.dei.isep.ipp.pt' }}
-          username: ${{ secrets.DEPLOY_USER || 'root' }}
-          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
-          source: "./project/AMAPP.API/publish/*"
-          target: "/tmp/amapp-deploy"
-          strip_components: 3
-          timeout: 300s
+        run: |
+          echo "Creating SSH config for vs833 via gateway..."
+          mkdir -p ~/.ssh
+          cat > ~/.ssh/config << EOF
+          Host vs833-deploy
+            HostName vsgate-ssh.dei.isep.ipp.pt
+            Port 10833
+            User ${{ secrets.DEPLOY_USER || 'root' }}
+            ServerAliveInterval 60
+            ServerAliveCountMax 3
+            ConnectTimeout 30
+            TCPKeepAlive yes
+            StrictHostKeyChecking no
+          EOF
+          
+          echo "Setting up SSH key..."
+          echo "${{ secrets.VM_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          
+          echo "Testing connection to vs833..."
+          ssh -i ~/.ssh/deploy_key vs833-deploy "echo 'Connection test successful to vs833'; mkdir -p /tmp/amapp-deploy"
+          
+          echo "Copying files via rsync over SSH..."
+          rsync -avz -e "ssh -i ~/.ssh/deploy_key -o ConnectTimeout=30" \
+            ./project/AMAPP.API/publish/ \
+            vs833-deploy:/tmp/amapp-deploy/
+          
+          echo "✅ Files copied successfully to vs833"
           
       - name: Deploy and restart application
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.DEPLOY_HOST || 'vs833.dei.isep.ipp.pt' }}
-          username: ${{ secrets.DEPLOY_USER || 'root' }}
-          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
-          timeout: 300s
-          script: |
-            echo "🚀 Starting AMAPP deployment..."
+        run: |
+          echo "🚀 Starting AMAPP deployment via SSH gateway to vs833..."
+          
+          ssh -i ~/.ssh/deploy_key vs833-deploy << 'DEPLOY_SCRIPT'
+            echo "🚀 Starting AMAPP deployment on vs833..."
             
             # Create application directory if it doesn't exist
             sudo mkdir -p /opt/amapp-api
@@ -407,26 +426,26 @@ jobs:
             rm -rf /tmp/amapp-deploy
             
             # Create or update systemd service file
-            sudo tee /etc/systemd/system/amapp-api.service > /dev/null <<EOF
-            [Unit]
-            Description=AMAPP API Application
-            After=network.target
-            
-            [Service]
-            Type=notify
-            WorkingDirectory=/opt/amapp-api
-            ExecStart=/opt/amapp-api/AMAPP.API --urls "https://0.0.0.0:7237"
-            Restart=always
-            RestartSec=10
-            KillSignal=SIGINT
-            SyslogIdentifier=amapp-api
-            User=root
-            Environment=ASPNETCORE_ENVIRONMENT=Production
-            Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
-            
-            [Install]
-            WantedBy=multi-user.target
-            EOF
+            sudo tee /etc/systemd/system/amapp-api.service > /dev/null << 'SERVICE_EOF'
+          [Unit]
+          Description=AMAPP API Application
+          After=network.target
+          
+          [Service]
+          Type=notify
+          WorkingDirectory=/opt/amapp-api
+          ExecStart=/opt/amapp-api/AMAPP.API --urls "https://0.0.0.0:7237"
+          Restart=always
+          RestartSec=10
+          KillSignal=SIGINT
+          SyslogIdentifier=amapp-api
+          User=root
+          Environment=ASPNETCORE_ENVIRONMENT=Production
+          Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
+          
+          [Install]
+          WantedBy=multi-user.target
+          SERVICE_EOF
             
             # Reload systemd and start service
             sudo systemctl daemon-reload
@@ -436,7 +455,7 @@ jobs:
             # Wait and check status
             sleep 15
             if sudo systemctl is-active --quiet amapp-api; then
-              echo "✅ AMAPP service is running!"
+              echo "✅ AMAPP service is running on vs833!"
               echo "🌐 Should be available at: https://vs-gate.dei.isep.ipp.pt:10833"
             else
               echo "❌ Service failed to start"
@@ -447,7 +466,8 @@ jobs:
             # Clean up old backups (keep last 3)
             sudo find /opt -name "amapp-api.backup.*" -type d 2>/dev/null | sort -r | tail -n +4 | sudo xargs rm -rf 2>/dev/null || true
             
-            echo "🎉 Deployment completed successfully!"
+            echo "🎉 Deployment completed successfully on vs833!"
+          DEPLOY_SCRIPT
 
       - name: Health Check
         run: |
