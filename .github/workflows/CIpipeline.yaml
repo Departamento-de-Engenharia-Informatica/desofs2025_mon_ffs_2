@@ -428,6 +428,12 @@ jobs:
           mkdir -p results
           python3 jwt_tool.py -M at -t http://localhost:7237/api/auth/login -rd results/jwt_scan.txt || echo "JWT scan completed"
         continue-on-error: true
+        
+        
+      - name: Debug JWT results directory
+        run: |
+          echo "Working directory: $PWD"
+          ls -R project/AMAPP.API/jwt_tool
       
       - name: Debug directory structure
         run: |
