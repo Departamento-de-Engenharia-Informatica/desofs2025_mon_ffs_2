@@ -9,10 +9,11 @@
 **Master in Informatics Engineering - 2024/2025**
 
 **Students:**
+
 Ilídio Magalhães - 1191577 <br>
 Hugo Coelho - 1162086 <br>
-Pedro Oliveira - 1240482 <br>
 Paulo Abreu - 1240481 <br>
+Pedro Oliveira - 1240482 <br>
 
 **Location:** Porto, May 26, 2025
 
@@ -20,7 +21,7 @@ Paulo Abreu - 1240481 <br>
 
 ## Table of Contents
 
-- [Phase 2: Sprint 1](#phase-2-sprint-1)
+- [Phase 2: Sprint 2](#phase-2-sprint-1)
   - [Table of Contents](#table-of-contents)
   - [Introduction](#introduction)
     - [Objectives](#objectives)
@@ -67,27 +68,21 @@ Paulo Abreu - 1240481 <br>
   - [Development](#development)
     - [Technology Used](#technology-used)
     - [Structure](#structure)
+  - [Authentication](#authentication)
+  - [User Management](#user-management)
+  - [Input Validation](#input-validation)
+    - [Create Product](#create-product)
+  - [Report Orders and Deliveries](#report-orders-and-deliveries)
   - [Pipeline](#pipeline)
     - [Job 1: Code Analysis (SAST with CodeQL)](#job-1-code-analysis-sast-with-codeql)
-      - [Job Setup and Configuration](#job-setup-and-configuration)
-      - [Job Execution Steps](#job-execution-steps)
     - [Job 2: Build and Test](#job-2-build-and-test)
-      - [Job Setup and Configuration](#job-setup-and-configuration-1)
-      - [Job Execution Steps](#job-execution-steps-1)
-      - [Test and Verification Stage](#test-and-verification-stage)
-      - [Coverage Report Generation](#coverage-report-generation)
     - [Job 3: Dependency Security Scan (SCA)](#job-3-dependency-security-scan-sca)
     - [Job 4: Code Quality Analysis](#job-4-code-quality-analysis)
-      - [Job Setup and Configuration](#job-setup-and-configuration-2)
-      - [Job Execution Steps](#job-execution-steps-2)
     - [Job 5: OWASP ZAP Baseline Scan (DAST)](#job-5-owasp-zap-baseline-scan-dast)
-      - [Job Setup and Configuration](#job-setup-and-configuration-3)
-      - [Job Execution Steps](#job-execution-steps-3)
   - [Relevant Practices Adopted](#relevant-practices-adopted)
     - [Default Branch: `develop`](#default-branch-development)
     - [Branch Protection Rules](#branch-protection-rules)
   - [ASVS](#asvs)
-    - [Subdividir pelos pontos a baixo: ](#subdividir-pelos-pontos-a-baixo-)
   - [Conclusion](#conclusion)
       - [Sprint Achievements](#sprint-achievements)
       - [Key Accomplishments](#key-accomplishments)
@@ -473,13 +468,61 @@ This architecture allows for scalability, testability, and easier maintenance, m
 
 ## Authentication
 
-Blablabla
+The authentication system implements comprehensive security measures aligned with modern security standards and best practices.
+
+**Strong Password Requirements**: The system enforces robust password policies requiring a minimum of 12 characters with mandatory inclusion of uppercase letters, lowercase letters, numbers, and special characters. Additionally, passwords must contain at least 3 unique characters and include non-alphanumeric characters, following current security guidelines that prioritize password strength through length and complexity.
+
+**Account Lockout Protection**: The system implements automatic account lockout after exactly 5 failed authentication attempts. When an account is locked, it remains inaccessible for 30 minutes before automatically unlocking. This mechanism applies to all users, including newly created accounts, providing robust protection against brute force attacks while balancing security with user accessibility.
+
+**Two-Factor Authentication (2FA)**: Multi-factor authentication is implemented using email-based token verification. When 2FA is enabled for a user account, the system generates a time-limited authentication token that is sent via email. Users must provide both their password and the received token to complete the authentication process, significantly enhancing account security beyond traditional password-only authentication.
+
+**Secure JWT Token Management**: The authentication system uses JWT tokens with comprehensive validation including issuer verification, audience validation, and signature verification. Tokens have configurable expiration times and implement proper blacklist management through a dedicated TokenBlacklistService. The logout functionality ensures complete token revocation by adding JWT IDs to a blacklist, preventing token reuse even if intercepted.
+
+**Rate Limiting Protection**: The system implements rate limiting with a fixed window policy allowing 100 requests per minute per client, with a queue limit of 2 additional requests. This protects against automated attacks and ensures fair resource usage across all users.
+
+**Role-Based Authorization**: Comprehensive role-based access control is implemented with specific policies for different user types (Administrator, Producer, CoProducer, Amap) and business-specific permissions for managing products, subscriptions, payments, and reports.
+
+**HTTPS and Security Headers**: The system enforces HTTPS in production environments with proper security configurations including HSTS (HTTP Strict Transport Security) for enhanced connection security.
 
 ---
 
-## User Management
-  
-Blablabla
+## Role Policies
+
+The system implements a comprehensive role-based access control (RBAC) model that governs user access across all application functionality. Access control is enforced through role-based permissions combined with ownership verification and business logic constraints.
+
+### User Roles and Capabilities
+
+**Administrator**
+- Complete system oversight with full access to all resources
+- Can manage all products, orders, and deliveries regardless of ownership
+- Access to comprehensive reporting across all users
+- Exclusive control over delivery creation, updates, and deletion
+
+**Producer**
+- Product lifecycle management for their own products only
+- View orders and deliveries related to their products
+- Update order items when contextually appropriate
+- Cannot create orders or manage deliveries
+
+**CoProducer**
+- Order management including creation, updates, and item modifications
+- Access to their own orders and related deliveries
+- Generate and download personal reports
+- Cannot manage products or system-wide deliveries
+
+### Access Control Matrix
+
+**Product Management**
+All product operations (create, update, delete) require the "CanManageProducts" policy, which grants access to Producer and Administrator roles. Product viewing is publicly available, with detailed product information accessible to anonymous users for transparency.
+
+**Order Operations**
+Order creation and management is primarily restricted to CoProducers, who can create orders and manage order items with strict ownership verification. Administrators have read-only access to all orders for oversight purposes. Producers can view orders related to their products and update order items within their product context.
+
+**Delivery Management**
+Delivery operations are heavily restricted, with only Administrators having full control over delivery creation, updates, and deletion. CoProducers and Producers can view deliveries related to their respective areas of responsibility, but with ownership verification to ensure users only access relevant delivery information.
+
+**Reporting and Analytics**
+Report access follows the "CanViewReports" policy, allowing CoProducers to download their own reports while Administrators can access reports for any valid CoProducer. This enables both self-service reporting and administrative oversight.
 
 ---
 
@@ -489,11 +532,25 @@ Blablabla
 
 ### Create Product
 
-Blablabla
+To enhance security during product creation, we implemented comprehensive image validation using the ImageSharp library. This validation process includes multiple layers of security checks:
+
+**File Format Validation**: The system validates image files by checking both file extensions (.jpg, .jpeg, .png, .webp) and MIME types (image/jpeg, image/png, image/webp) to ensure only legitimate image formats are accepted.
+
+**Binary Signature Verification**: Each uploaded image undergoes binary signature validation to verify the file's actual format matches its extension, preventing file type spoofing attacks where malicious files are disguised with image extensions.
+
+**Content Security Scanning**: The system scans image content for suspicious patterns such as embedded scripts (`<script`, `javascript:`, `<?php`, `<%`, `eval(`), preventing potential code injection attacks through image uploads.
+
+**File Size Restrictions**: Images are limited to a maximum size of 5MB to prevent denial-of-service attacks and ensure reasonable storage usage.
+
+**Image Processing and Sanitization**: Valid images are processed using ImageSharp to remove potentially dangerous metadata (EXIF data) and resize images that exceed 2048x2048 pixels, ensuring consistent and secure image handling.
+
+This multi-layered approach significantly reduces the attack surface for image-based vulnerabilities while maintaining a smooth user experience for legitimate file uploads.
 
 ---
 
 ## Report Orders and Deliveries
+
+Blablabla
 
 ---
 
@@ -544,8 +601,6 @@ This practice follows common Git workflows such as Git Flow, providing a clear s
 
 ![Default branch](./figs/branch-develop.PNG)
 
----
-
 ### Branch Protection Rules
 
 To ensure the stability and security of the codebase, several protection rules have been applied to the main branches:
@@ -572,6 +627,26 @@ Blablabla
 ---
 
 ## Conclusion
+
+Blablabla
+
+### Sprint Achievements
+
+Blablabla
+
+### Key Accomplishments
+
+Blablabla
+
+### Risk Mitigation Progress
+
+Blablabla
+
+### Areas for Future Enhancement
+
+Blablabla
+
+### Final Assessment
 
 Blablabla
 
