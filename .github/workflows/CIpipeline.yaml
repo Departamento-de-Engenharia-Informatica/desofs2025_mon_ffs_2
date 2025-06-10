@@ -194,11 +194,18 @@ jobs:
           chmod +x jwt_tool/jwt_tool.py
 
       - name: Obtain JWT via API Login
+        env:
+          API_USERNAME: ${{ secrets.API_USERNAME }}
+          API_PASSWORD: ${{ secrets.API_PASSWORD }}
         run: |
           sudo apt-get update && sudo apt-get install -y jq
+          # Criar payload JSON com as credenciais de secrets
+          JSON_PAYLOAD="{\"username\":\"$API_USERNAME\",\"password\":\"$API_PASSWORD\"}"
+          
+          # Executar requisição usando as credenciais seguras
           TOKEN=$(curl -s -X POST \
             -H "Content-Type: application/json" \
-            -d '{"username":"test","password":"test"}' \
+            -d "$JSON_PAYLOAD" \
             http://localhost:7237/api/auth/login \
             | jq -r '.token')
           echo "TOKEN=$TOKEN" >> $GITHUB_ENV
@@ -215,6 +222,7 @@ jobs:
 
       - name: Upload JWT Test Results
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: jwt-security-results
           path: ./project/AMAPP.API/jwt_tool/results/**
