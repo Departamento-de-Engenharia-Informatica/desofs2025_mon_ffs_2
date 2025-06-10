@@ -179,6 +179,49 @@ jobs:
           ConnectionStrings__DefaultConnection: "Host=localhost;Port=5432;Database=amappdb_test;Username=postgres;Password=postgres;"
         continue-on-error: true
         
+        
+      # ── Begin JWT Security Testing Steps ──
+
+      - name: Setup Python for JWT Tool
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install jwt_tool
+        run: |
+          git clone https://github.com/ticarpi/jwt_tool.git jwt_tool
+          pip install -r jwt_tool/requirements.txt
+          chmod +x jwt_tool/jwt_tool.py
+
+      - name: Obtain JWT via API Login
+        run: |
+          sudo apt-get update && sudo apt-get install -y jq
+          TOKEN=$(curl -s -X POST \
+            -H "Content-Type: application/json" \
+            -d '{"username":"test","password":"test"}' \
+            http://localhost:7237/api/auth/login \
+            | jq -r '.token')
+          echo "TOKEN=$TOKEN" >> $GITHUB_ENV
+
+      - name: Run JWT Tool
+        run: |
+          mkdir -p jwt_tool/results
+          python3 jwt_tool/jwt_tool.py \
+            "$TOKEN" \
+            -M at \
+            -t http://localhost:7237/api/auth/login \
+            -rd jwt_tool/results/jwt_scan.txt \
+            || echo "JWT scan completed"
+
+      - name: Upload JWT Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: jwt-security-results
+          path: project/AMAPP.API/jwt_tool/results/**
+          if-no-files-found: warn
+
+      # ── End JWT Security Testing Steps ──
+        
       - name: Generate coverage report
         uses: danielpalme/ReportGenerator-GitHub-Action@5.2.0
         with:
@@ -388,69 +431,7 @@ jobs:
           name: zap-report
           path: owasp-zap-report.html
           
-  # Job 6: JWT Security Testing
-  jwt-security-scan:
-    name: JWT Security Testing
-    runs-on: ubuntu-latest
-    needs: dast-owasp-zap
-    defaults:
-      run:
-        working-directory: ./project/AMAPP.API
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-
-      - name: Install jwt_tool
-        run: |
-          git clone https://github.com/ticarpi/jwt_tool.git jwt_tool
-          pip install -r jwt_tool/requirements.txt
-          chmod +x jwt_tool/jwt_tool.py
-
-      - name: Build and Run API
-        run: |
-          dotnet build AMAPP.API.csproj --configuration Release
-          dotnet run --project AMAPP.API.csproj \
-            --configuration Release \
-            --urls "http://localhost:7237" &
-          sleep 15
-
-      - name: Retrieve JWT via login
-        run: |
-          sudo apt-get update && sudo apt-get install -y jq
-          TOKEN=$(curl -s -X POST \
-            -H "Content-Type: application/json" \
-            -d '{"username":"test","password":"test"}' \
-            http://localhost:7237/api/auth/login \
-            | jq -r '.token')
-          echo "TOKEN=$TOKEN" >> $GITHUB_ENV
-
-      - name: Run JWT tests
-        run: |
-          mkdir -p jwt_tool/results
-          python3 jwt_tool/jwt_tool.py \
-            "$TOKEN" \
-            -M at \
-            -t http://localhost:7237/api/auth/login \
-            -rd jwt_tool/results/jwt_scan.txt \
-            || echo "JWT scan completed"
-
-      - name: Debug JWT results directory
-        run: |
-          echo "Listing jwt_tool folder:"
-          ls -R jwt_tool
-
-      - name: Upload JWT test results
-        uses: actions/upload-artifact@v4
-        with:
-          name: jwt-security-results
-          path: project/AMAPP.API/jwt_tool/results/**
-        
-   # Job 7: Deployment
+   # Job 6: Deployment
   deploy-localhost:
     name: Deploy to Localhost
     runs-on: ubuntu-latest
