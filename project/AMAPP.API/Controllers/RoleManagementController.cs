@@ -37,14 +37,14 @@ namespace AMAPP.API.Controllers
                 // FluentValidation executa automaticamente aqui
                 if (!ModelState.IsValid)
                 {
-                    _logger.LogWarning("Invalid model state for assign roles request to user {UserName}", dto.UserName);
+                    _logger.LogWarning("Invalid model state for assign roles request to user");
                     return BadRequest(ModelState);
                 }
 
                 // Verificar se o usuário existe pelo username (email)
                 if (!await _roleManagementService.UserExistsByNameAsync(dto.UserName))
                 {
-                    _logger.LogWarning("User with username {UserName} not found", dto.UserName);
+                    _logger.LogWarning("User with username not found");
                     return NotFound(new
                     {
                         message = $"User with username '{dto.UserName}' not found",
@@ -56,8 +56,7 @@ namespace AMAPP.API.Controllers
                 var success = await _roleManagementService.AssignRolesToUserAsync(dto.UserName, dto.RoleNames);
                 if (!success)
                 {
-                    _logger.LogWarning("Failed to assign roles {Roles} to user {UserName}",
-                        string.Join(", ", dto.RoleNames), dto.UserName);
+                    _logger.LogWarning("Failed to assign roles to user");
                     return BadRequest(new
                     {
                         message = "Failed to assign roles to user",
@@ -67,8 +66,7 @@ namespace AMAPP.API.Controllers
                 }
 
                 // Log de sucesso para auditoria
-                _logger.LogInformation("Admin successfully assigned roles {Roles} to user {UserName}",
-                    string.Join(", ", dto.RoleNames), dto.UserName);
+                _logger.LogInformation("Admin successfully assigned roles to user");
 
                 // Resposta de sucesso com detalhes
                 return Ok(new
@@ -81,8 +79,7 @@ namespace AMAPP.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error assigning roles {Roles} to user {UserName}",
-                    string.Join(", ", dto.RoleNames ?? new List<string>()), dto.UserName);
+                _logger.LogError(ex, "Error assigning roles to user");
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new
                     {
@@ -107,14 +104,14 @@ namespace AMAPP.API.Controllers
                 // FluentValidation executa automaticamente aqui
                 if (!ModelState.IsValid)
                 {
-                    _logger.LogWarning("Invalid model state for remove roles request from user {UserName}", dto.UserName);
+                    _logger.LogWarning("Invalid model state for remove roles request from user");
                     return BadRequest(ModelState);
                 }
 
                 // Verificar se o usuário existe pelo username (email)
                 if (!await _roleManagementService.UserExistsByNameAsync(dto.UserName))
                 {
-                    _logger.LogWarning("User with username {UserName} not found", dto.UserName);
+                    _logger.LogWarning("User with username not found");
                     return NotFound(new
                     {
                         message = $"User with username '{dto.UserName}' not found",
@@ -126,8 +123,7 @@ namespace AMAPP.API.Controllers
                 var success = await _roleManagementService.RemoveRolesFromUserAsync(dto.UserName, dto.RoleNames);
                 if (!success)
                 {
-                    _logger.LogWarning("Failed to remove roles {Roles} from user {UserName}",
-                        string.Join(", ", dto.RoleNames), dto.UserName);
+                    _logger.LogWarning("Failed to remove roles from user");
                     return BadRequest(new
                     {
                         message = "Failed to remove roles from user",
@@ -137,8 +133,7 @@ namespace AMAPP.API.Controllers
                 }
 
                 // Log de sucesso para auditoria
-                _logger.LogInformation("Admin successfully removed roles {Roles} from user {UserName}",
-                    string.Join(", ", dto.RoleNames), dto.UserName);
+                _logger.LogInformation("Admin successfully removed roles from user");
 
                 // Resposta de sucesso com detalhes
                 return Ok(new
@@ -151,8 +146,7 @@ namespace AMAPP.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error removing roles {Roles} from user {UserName}",
-                    string.Join(", ", dto.RoleNames ?? new List<string>()), dto.UserName);
+                _logger.LogError(ex, "Error removing roles from user");
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new
                     {
