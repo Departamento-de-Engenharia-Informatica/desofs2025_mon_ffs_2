@@ -575,17 +575,29 @@ This multi-layered approach significantly reduces the attack surface for image-b
 
 To ensure a secure and robust development lifecycle, the team adopted a structured workflow with multiple security layers and quality controls.
 
-### Rate limiting - DDOS
+### Rate Limiting - DDoS Mitigation
 
-### CSRG
+Rate limiting middleware is implemented to throttle incoming requests and prevent abuse. The API startup configuration includes policies that limit the number of requests a client can make within specific time windows (per IP or user). This application-level protection helps mitigate Denial of Service attacks by slowing down or blocking excessive requests, making it harder for attackers to flood the system. While not a complete defense against large-scale DDoS attacks, it provides an important security layer to absorb basic flooding and brute-force attempts.
+
+### CSRF Protection
+
+Cross-Site Request Forgery protection is addressed through the API's token-based authentication design. Since the system uses JWT tokens in Authorization headers rather than cookies, it's inherently less vulnerable to CSRF attacks - browsers don't automatically attach JWTs to cross-site requests. Combined with strict CORS configuration, this prevents unauthorized cross-site calls. The stateless token approach and origin restrictions effectively mitigate CSRF risks without requiring additional anti-forgery services.
 
 ### TLS/SSL Encryption
 
-### CORS
+All client-server communications are secured via TLS/SSL encryption. The API is accessible only over HTTPS, ensuring data in transit is encrypted and protected from eavesdropping or man-in-the-middle attacks. The server is configured to redirect or refuse HTTP requests and only serve content over TLS, complying with industry best practices for transport-level encryption of sensitive information including credentials and personal data.
 
-### Dto's
+### CORS (Cross-Origin Resource Sharing)
 
-### Logout com revoke do token
+CORS is deliberately restricted to allow only known, trusted origins to consume the API. The configuration uses allow-list rules specifying trusted domains while restricting methods and headers to only those required. This maintains browser same-origin protections while permitting legitimate cross-origin access for the intended frontend. The configuration avoids overly-broad settings that could introduce security risks.
+
+### DTOs (Data Transfer Objects)
+
+The application employs DTOs for input and output models rather than binding client requests directly to database entities. This prevents mass assignment and over-posting vulnerabilities by defining only the fields that clients are allowed to provide or receive. DTOs include data annotations and validation logic, acting as a security layer that whitelists acceptable data before mapping to domain models.
+
+### Logout with Token Revocation
+
+The system implements JWT token revocation on logout to enhance security. When users log out, the API adds the token identifier to a server-side blocklist, preventing further use even before natural expiration. Custom validation logic checks this blocklist on each request, rejecting revoked tokens. This approach ensures immediate session termination and protects against abuse of leaked or persisted tokens.
 
 ### Branch Management
 
