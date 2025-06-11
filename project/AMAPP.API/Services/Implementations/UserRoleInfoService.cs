@@ -1,10 +1,10 @@
 ﻿using AMAPP.API.Data;
 using AMAPP.API.Models;
-using AMAPP.API.Services.Implementations;
+using AMAPP.API.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using static AMAPP.API.Constants;
 
-namespace AMAPP.API.Services.Interfaces
+namespace AMAPP.API.Services.Implementations
 {
     public class UserRoleInfoService : IUserRoleInfoService
     {
