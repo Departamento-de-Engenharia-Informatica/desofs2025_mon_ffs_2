@@ -1,4 +1,6 @@
-﻿using FluentValidation;
+﻿using AMAPP.API.Extensions;
+using AMAPP.API.Utils;
+using FluentValidation;
 
 namespace AMAPP.API.DTOs.Product.Validators;
 
@@ -7,23 +9,38 @@ public class UpdateProductDtoValidator : AbstractValidator<UpdateProductDto>
     public UpdateProductDtoValidator()
     {
         RuleFor(x => x.Name)
-            .NotEmpty().WithMessage("Name is required.") // Ensure it's not null or empty
-            .Length(3, 100).WithMessage("Name must be between 3 and 100 characters.") // Minimum and maximum length
-            .Matches(@"^[a-zA-Z0-9\s]+$").WithMessage("Name can only contain alphanumeric characters and spaces."); // Optional: restrict to alphanumeric + spaces
+                .NotEmpty()
+                .WithMessage("Name is required")
+                .Length(2, 100)
+                .WithMessage("Name must be between 2 and 100 characters")
+                .SafeName()
+                .NoUnsafeChars();
 
         RuleFor(x => x.Description)
-            .NotEmpty().WithMessage("Description is required.")
-            .MaximumLength(255).WithMessage("Description must not exceed 255 characters."); // Limit the description length
+            .NotEmpty()
+            .WithMessage("Description is required")
+            .MaximumLength(500)
+            .WithMessage("Description must not exceed 500 characters")
+            .NoUnsafeChars();
 
         RuleFor(x => x.DeliveryUnit)
-            .NotEmpty().WithMessage("Delivery unit is required.")
-            .IsInEnum().WithMessage("Invalid delivery unit.");
+            .IsInEnum()
+            .WithMessage("Invalid delivery unit");
 
         RuleFor(x => x.ReferencePrice)
-           .GreaterThan(0).WithMessage("Reference price must be greater than 0.");
+            .GreaterThan(0)
+            .WithMessage("Reference price must be greater than 0")
+            .LessThan(100000)
+            .WithMessage("Reference price too high");
 
         RuleFor(x => x.ProductTypeId)
-            .GreaterThan(0).WithMessage("Invalid product type Id.");
+            .GreaterThan(0)
+            .WithMessage("Invalid product type ID");
+
+        RuleFor(x => x.Photo)
+               .Must(ImageSecurityHelper.IsValidImage)
+               .WithMessage(x => ImageSecurityHelper.GetImageValidationError(x.Photo))
+               .When(x => x.Photo != null);
 
     }
 }

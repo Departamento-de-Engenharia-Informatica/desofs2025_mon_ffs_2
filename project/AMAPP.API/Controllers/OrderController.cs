@@ -9,7 +9,7 @@ namespace AMAPP.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] 
+    [Authorize]
     public class OrdersController : ControllerBase
     {
         private readonly IOrderService _orderService;
@@ -21,8 +21,6 @@ namespace AMAPP.API.Controllers
             _logger = logger;
         }
 
-
-
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<OrderDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -31,7 +29,6 @@ namespace AMAPP.API.Controllers
         {
             try
             {
-                // Get the current user ID from claims
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
                 if (string.IsNullOrEmpty(userId))
@@ -52,10 +49,7 @@ namespace AMAPP.API.Controllers
             }
         }
 
-
-
         [HttpGet("{id:int}")]
-        [Authorize(Roles = "Administrator")]
         [ProducesResponseType(typeof(OrderDetailDTO), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -65,7 +59,6 @@ namespace AMAPP.API.Controllers
         {
             try
             {
-                // Get the current user ID from claims
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
                 if (string.IsNullOrEmpty(userId))
@@ -98,8 +91,6 @@ namespace AMAPP.API.Controllers
             }
         }
 
-
-
         [HttpGet("Coproducer/{coproducerId:int}")]
         [Authorize(Roles = "CoProducer,Administrator")]
         [ProducesResponseType(typeof(IEnumerable<OrderDTO>), StatusCodes.Status200OK)]
@@ -110,8 +101,10 @@ namespace AMAPP.API.Controllers
         {
             try
             {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
                 // Verify if the current user is authorized for this coproducer
-                if (!await IsCurrentUserAuthorizedForCoproducer(coproducerId))
+                if (!await IsCurrentUserAuthorizedForCoproducer(coproducerId, userId))
                 {
                     _logger.LogWarning("User not authorized for coproducer ID: {CoproducerId}", coproducerId);
                     return Forbid();
@@ -128,7 +121,6 @@ namespace AMAPP.API.Controllers
                     new { message = "An error occurred while retrieving the orders" });
             }
         }
-
 
         [HttpPost]
         [Authorize(Roles = "CoProducer")]
@@ -152,7 +144,6 @@ namespace AMAPP.API.Controllers
 
             try
             {
-                // Get the current user ID from claims
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
                 if (string.IsNullOrEmpty(userId))
@@ -182,9 +173,8 @@ namespace AMAPP.API.Controllers
             }
         }
 
-
         [HttpPut("{id:int}")]
-        [Authorize(Roles = "CoProducer")]
+        [Authorize(Roles = "CoProducer,Producer")]
         [ProducesResponseType(typeof(OrderDTO), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -207,28 +197,12 @@ namespace AMAPP.API.Controllers
 
             try
             {
-                // Get the current user ID from claims
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
                 if (string.IsNullOrEmpty(userId))
                 {
                     _logger.LogWarning("User ID not found in claims");
                     return Unauthorized(new { message = "User not authenticated properly" });
-                }
-
-                // First check if the order exists
-                var order = await _orderService.GetOrderByIdAsync(id, userId);
-                if (order == null)
-                {
-                    _logger.LogWarning("Order with ID: {OrderId} not found", id);
-                    return NotFound(new { message = $"Order with ID {id} not found" });
-                }
-
-                // Verify if the current user is authorized for this coproducer
-                if (!await IsCurrentUserAuthorizedForCoproducer(order.CoproducerInfoId))
-                {
-                    _logger.LogWarning("User not authorized to update order: {OrderId}", id);
-                    return Forbid();
                 }
 
                 _logger.LogInformation("Updating order with ID: {OrderId} by user: {UserId}", id, userId);
@@ -258,6 +232,103 @@ namespace AMAPP.API.Controllers
             }
         }
 
+        [HttpPatch("{id:int}/cancel")]
+        [Authorize(Roles = "CoProducer,Producer")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult> CancelOrder(int id)
+        {
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("User ID not found in claims");
+                    return Unauthorized(new { message = "User not authenticated properly" });
+                }
+
+                _logger.LogInformation("Cancelling order with ID: {OrderId} by user: {UserId}", id, userId);
+                var result = await _orderService.CancelOrderAsync(id, userId);
+
+                if (!result)
+                {
+                    _logger.LogWarning("Order with ID: {OrderId} not found", id);
+                    return NotFound(new { message = $"Order with ID {id} not found" });
+                }
+
+                return Ok(new { message = "Order cancelled successfully" });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogWarning(ex, "Unauthorized access while cancelling order {OrderId}", id);
+                return Forbid();
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Invalid operation while cancelling order {OrderId}", id);
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error while cancelling order {OrderId}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = "An unexpected error occurred while cancelling the order" });
+            }
+        }
+
+        [HttpDelete("{id:int}")]
+        [Authorize(Roles = "CoProducer")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult> DeleteOrder(int id)
+        {
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("User ID not found in claims");
+                    return Unauthorized(new { message = "User not authenticated properly" });
+                }
+
+                _logger.LogInformation("Cancelling order with ID: {OrderId} by coproducer: {UserId}", id, userId);
+                var result = await _orderService.CancelOrderAsync(id, userId);
+
+                if (!result)
+                {
+                    _logger.LogWarning("Order with ID: {OrderId} not found", id);
+                    return NotFound(new { message = $"Order with ID {id} not found" });
+                }
+
+                return Ok(new { message = "Order cancelled successfully" });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogWarning(ex, "Unauthorized access while cancelling order {OrderId}", id);
+                return Forbid();
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Invalid operation while cancelling order {OrderId}", id);
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error while cancelling order {OrderId}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = "An unexpected error occurred while cancelling the order" });
+            }
+        }
 
         [HttpPost("{id:int}/Items")]
         [Authorize(Roles = "CoProducer")]
@@ -283,7 +354,6 @@ namespace AMAPP.API.Controllers
 
             try
             {
-                // Get the current user ID from claims
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
                 if (string.IsNullOrEmpty(userId))
@@ -292,27 +362,12 @@ namespace AMAPP.API.Controllers
                     return Unauthorized(new { message = "User not authenticated properly" });
                 }
 
-                // Check if the order exists
-                var order = await _orderService.GetOrderByIdAsync(id, userId);
-                if (order == null)
-                {
-                    _logger.LogWarning("Order with ID: {OrderId} not found", id);
-                    return NotFound(new { message = $"Order with ID {id} not found" });
-                }
-
-                // Verify if the current user is authorized for this coproducer
-                if (!await IsCurrentUserAuthorizedForCoproducer(order.CoproducerInfoId))
-                {
-                    _logger.LogWarning("User not authorized to add items to order: {OrderId}", id);
-                    return Forbid();
-                }
-
                 _logger.LogInformation("Adding item to order with ID: {OrderId} by user: {UserId}", id, userId);
                 var orderItem = await _orderService.AddOrderItemAsync(id, createOrderItemDTO, userId);
 
                 return CreatedAtAction(
                     nameof(GetOrder),
-                    new { id = order.Id },
+                    new { id = id },
                     orderItem);
             }
             catch (KeyNotFoundException ex)
@@ -325,6 +380,11 @@ namespace AMAPP.API.Controllers
                 _logger.LogWarning(ex, "Invalid input while adding order item");
                 return BadRequest(new { message = ex.Message });
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogWarning(ex, "Unauthorized access while adding order item");
+                return Forbid();
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unexpected error while adding order item to order {OrderId}", id);
@@ -333,9 +393,8 @@ namespace AMAPP.API.Controllers
             }
         }
 
-
         [HttpDelete("Items/{id:int}")]
-        [Authorize(Roles = "CoProducer")]
+        [Authorize(Roles = "CoProducer,Producer")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -345,7 +404,6 @@ namespace AMAPP.API.Controllers
         {
             try
             {
-                // Get the current user ID from claims
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
                 if (string.IsNullOrEmpty(userId))
@@ -354,21 +412,44 @@ namespace AMAPP.API.Controllers
                     return Unauthorized(new { message = "User not authenticated properly" });
                 }
 
-                _logger.LogInformation("Removing order item with ID: {OrderItemId} by user: {UserId}", id, userId);
-                var result = await _orderService.RemoveOrderItemAsync(id, userId);
-
-                if (!result)
+                // Check if user is a producer - if so, use the new cancel item method
+                if (User.IsInRole("Producer"))
                 {
-                    _logger.LogWarning("Order item with ID: {OrderItemId} not found", id);
-                    return NotFound(new { message = $"Order item with ID {id} not found" });
-                }
+                    _logger.LogInformation("Producer cancelling order item with ID: {OrderItemId} by user: {UserId}", id, userId);
+                    var result = await _orderService.CancelOrderItemAsync(id, userId);
 
-                return NoContent();
+                    if (!result)
+                    {
+                        _logger.LogWarning("Order item with ID: {OrderItemId} not found", id);
+                        return NotFound(new { message = $"Order item with ID {id} not found" });
+                    }
+
+                    return Ok(new { message = "Order item cancelled successfully" });
+                }
+                else
+                {
+                    // Coproducer removing items from their own order
+                    _logger.LogInformation("Coproducer removing order item with ID: {OrderItemId} by user: {UserId}", id, userId);
+                    var result = await _orderService.RemoveOrderItemAsync(id, userId);
+
+                    if (!result)
+                    {
+                        _logger.LogWarning("Order item with ID: {OrderItemId} not found", id);
+                        return NotFound(new { message = $"Order item with ID {id} not found" });
+                    }
+
+                    return NoContent();
+                }
             }
             catch (UnauthorizedAccessException ex)
             {
                 _logger.LogWarning(ex, "Unauthorized access while removing order item {OrderItemId}", id);
                 return Forbid();
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Invalid operation while removing order item {OrderItemId}", id);
+                return BadRequest(new { message = ex.Message });
             }
             catch (Exception ex)
             {
@@ -377,7 +458,6 @@ namespace AMAPP.API.Controllers
                     new { message = "An unexpected error occurred while removing the order item" });
             }
         }
-
 
         [HttpGet("Producer/{producerId:int}")]
         [Authorize(Roles = "Producer,Administrator")]
@@ -389,8 +469,10 @@ namespace AMAPP.API.Controllers
         {
             try
             {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
                 // Verify if the current user is authorized for this producer
-                if (!await IsCurrentUserAuthorizedForProducer(producerId))
+                if (!await IsCurrentUserAuthorizedForProducer(producerId, userId))
                 {
                     _logger.LogWarning("User not authorized for producer ID: {ProducerId}", producerId);
                     return Forbid();
@@ -413,6 +495,7 @@ namespace AMAPP.API.Controllers
         [ProducesResponseType(typeof(OrderItemDTO), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<OrderItemDTO>> UpdateOrderItem(int id, [FromBody] UpdateOrderItemDTO updateOrderItemDTO)
@@ -431,7 +514,6 @@ namespace AMAPP.API.Controllers
 
             try
             {
-                // Get the current user ID from claims
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
                 if (string.IsNullOrEmpty(userId))
@@ -471,18 +553,26 @@ namespace AMAPP.API.Controllers
         // HELPER METHODS
         // --------------------------
 
-        private async Task<bool> IsCurrentUserAuthorizedForCoproducer(int coproducerId)
+        private async Task<bool> IsCurrentUserAuthorizedForCoproducer(int coproducerId, string userId)
         {
-            // TODO: actual verification logic
-            // For now this is a placeholder implementing the same behavior as the original code
-            return true;
+            // Check if user is admin
+            if (User.IsInRole("Administrator"))
+                return true;
+
+            // Check if the current user's coproducer ID matches
+            var userCoproducerId = await _orderService.GetCoproducerIdForUserAsync(userId);
+            return userCoproducerId == coproducerId;
         }
 
-        private async Task<bool> IsCurrentUserAuthorizedForProducer(int producerId)
+        private async Task<bool> IsCurrentUserAuthorizedForProducer(int producerId, string userId)
         {
-            // TODO: actual verification logic
-            // For now this is a placeholder implementing the same behavior as the original code
-            return true;
+            // Check if user is admin
+            if (User.IsInRole("Administrator"))
+                return true;
+
+            // Check if the current user's producer ID matches
+            var userProducerId = await _orderService.GetProducerIdForUserAsync(userId);
+            return userProducerId == producerId;
         }
     }
 }

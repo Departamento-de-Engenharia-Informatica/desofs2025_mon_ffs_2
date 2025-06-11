@@ -5,6 +5,8 @@ using AMAPP.API.Repository.ProdutoRepository;
 using AMAPP.API.Services.Interfaces;
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
+using AMAPP.API.Utils;
+
 
 namespace AMAPP.API.Services.Implementations
 {
@@ -14,13 +16,16 @@ namespace AMAPP.API.Services.Implementations
         private readonly IMapper _mapper;
         private readonly IProducerInfoRepository _producerInfoRepository;
         private readonly UserManager<User> _userManager;
+        private readonly ILogger<ProductService> _logger;
 
-        public ProductService(IProductRepository productRepository, IMapper mapper, IProducerInfoRepository producerInfoRepository, UserManager<User> userManager)
+
+        public ProductService(IProductRepository productRepository, IMapper mapper, IProducerInfoRepository producerInfoRepository, UserManager<User> userManager, ILogger<ProductService> logger)
         {
             _productRepository = productRepository;
             _mapper = mapper;
             _producerInfoRepository = producerInfoRepository;
             _userManager = userManager;
+            _logger = logger;
         }
 
         public async Task<List<ProductDto>> GetAllProductsAsync()
@@ -48,21 +53,19 @@ namespace AMAPP.API.Services.Implementations
             if (producer == null)
                 throw new KeyNotFoundException("Producer not found.");
 
+            byte[]? photoBytes = null;
             if (productDto.Photo != null)
             {
-                if (productDto.Photo.Length > 5 * 1024 * 1024) // 5 MB limit
+                try
                 {
-                    throw new ArgumentException("Photo size exceeds the 5MB limit.");
+                    // This method does all the security validation and processing
+                    photoBytes = await ImageSecurityHelper.ValidateAndProcessImageAsync(productDto.Photo);
                 }
-
-                var validFormats = new[] { ".jpg", ".jpeg", ".png" };
-                var fileExtension = Path.GetExtension(productDto.Photo.FileName).ToLower();
-                if (!validFormats.Contains(fileExtension))
+                catch (ArgumentException ex)
                 {
-                    throw new ArgumentException("Invalid photo format. Only JPG and PNG are allowed.");
+                    throw new ArgumentException($"Image validation failed: {ex.Message}");
                 }
             }
-
 
             // TODO: Remover
             var producerInfo = await _producerInfoRepository.GetProducerInfoByUserIdAsync(producer.Id);
@@ -76,16 +79,6 @@ namespace AMAPP.API.Services.Implementations
                 await _producerInfoRepository.AddAsync(producerInfo);
             }
 
-            // Convert the uploaded image to a byte array
-            byte[]? photoBytes = null;
-            if (productDto.Photo != null)
-            {
-                using (var memoryStream = new MemoryStream())
-                {
-                    await productDto.Photo.CopyToAsync(memoryStream);
-                    photoBytes = memoryStream.ToArray();
-                }
-            }
 
             var product = _mapper.Map<Product>(productDto);
 
@@ -103,104 +96,106 @@ namespace AMAPP.API.Services.Implementations
             if (existingProduct == null)
                 throw new KeyNotFoundException("Product not found.");
 
-            // Verificar se o usuário é administrador
+            // Get user and check if admin
             var user = await _userManager.FindByIdAsync(userId);
-            var isAdmin = user != null && await _userManager.IsInRoleAsync(user, "Administrator");
+            if (user == null)
+                throw new KeyNotFoundException("User not found.");
 
-            // Se não for administrador, verificar se é o proprietário
+            var isAdmin = await _userManager.IsInRoleAsync(user, "Administrator");
+
+            // If not admin, MUST be the owner
             if (!isAdmin)
             {
                 bool isOwner = await IsProductOwnerAsync(id, userId);
                 if (!isOwner)
                 {
-                    throw new UnauthorizedAccessException("You don't have permission to update this product.");
+                    throw new UnauthorizedAccessException("You don't have permission to update this product. You can only update products you created.");
                 }
             }
 
-            // Resto do código de validação e atualização
+            // Image validation and processing
+            byte[]? photoBytes = existingProduct.Photo;
             if (productDto.Photo != null)
             {
-                if (productDto.Photo.Length > 5 * 1024 * 1024) // 5 MB limit
+                try
                 {
-                    throw new ArgumentException("Photo size exceeds the 5MB limit.");
+                    photoBytes = await ImageSecurityHelper.ValidateAndProcessImageAsync(productDto.Photo);
                 }
-
-                var validFormats = new[] { ".jpg", ".jpeg", ".png" };
-                var fileExtension = Path.GetExtension(productDto.Photo.FileName).ToLower();
-                if (!validFormats.Contains(fileExtension))
+                catch (ArgumentException ex)
                 {
-                    throw new ArgumentException("Invalid photo format. Only JPG and PNG are allowed.");
-                }
-            }
-
-            // Convert the uploaded image to a byte array
-            byte[]? photoBytes = null;
-            if (productDto.Photo != null)
-            {
-                using (var memoryStream = new MemoryStream())
-                {
-                    await productDto.Photo.CopyToAsync(memoryStream);
-                    photoBytes = memoryStream.ToArray();
+                    throw new ArgumentException($"Image validation failed: {ex.Message}");
                 }
             }
 
             _mapper.Map(productDto, existingProduct);
-
             existingProduct.Photo = photoBytes;
 
             await _productRepository.UpdateAsync(existingProduct);
-
             return _mapper.Map<ProductDto>(existingProduct);
         }
 
+
         private async Task<bool> IsProductOwnerAsync(int productId, string userId)
         {
-            var product = await _productRepository.GetByIdAsync(productId);
-            if (product == null)
-                return false;
+            try
+            {
+                // Get the product with ProducerInfo included
+                var product = await _productRepository.GetByIdAsync(productId);
+                if (product == null)
+                {
+                    _logger?.LogWarning("Product {ProductId} not found when checking ownership", productId);
+                    return false;
+                }
 
-            var producerInfo = await _producerInfoRepository.GetProducerInfoByUserIdAsync(userId);
-            if (producerInfo == null)
-                return false;
+                // Get the producer info for this user
+                var producerInfo = await _producerInfoRepository.GetProducerInfoByUserIdAsync(userId);
+                if (producerInfo == null)
+                {
+                    _logger?.LogWarning("ProducerInfo not found for user {UserId}", userId);
+                    return false;
+                }
 
-            return product.ProducerInfoId == producerInfo.Id;
+                // Check if the product belongs to this producer
+                bool isOwner = product.ProducerInfoId == producerInfo.Id;
+
+                _logger?.LogInformation("Ownership check for Product {ProductId} by User {UserId}: {IsOwner}",
+                    productId, userId, isOwner);
+
+                return isOwner;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error checking product ownership for Product {ProductId} and User {UserId}",
+                    productId, userId);
+                return false; // Fail securely
+            }
         }
 
         public async Task<bool> DeleteProductAsync(int id, string userId)
         {
             var product = await _productRepository.GetByIdAsync(id);
-
             if (product == null)
                 return false;
 
-            // Verificar se o usuário é administrador
+            // Get user and check if admin
             var user = await _userManager.FindByIdAsync(userId);
-            var isAdmin = user != null && await _userManager.IsInRoleAsync(user, "Administrator");
+            if (user == null)
+                throw new KeyNotFoundException("User not found.");
 
-            // Se não for administrador, verificar se é o proprietário
+            var isAdmin = await _userManager.IsInRoleAsync(user, "Administrator");
+
+            // If not admin, MUST be the owner
             if (!isAdmin)
             {
                 bool isOwner = await IsProductOwnerAsync(id, userId);
                 if (!isOwner)
                 {
-                    throw new UnauthorizedAccessException("You don't have permission to delete this product.");
+                    throw new UnauthorizedAccessException("You don't have permission to delete this product. You can only delete products you created.");
                 }
             }
 
             await _productRepository.RemoveAsync(product);
-
             return true;
-        }
-
-        //to validate if the product exists
-        public async Task<ProductDto> GetProductDetailsByIdAsync(int id)
-        {
-            var product = await _productRepository.GetByIdAsync(id);
-
-            if (product == null)
-                return null;
-
-            return _mapper.Map<ProductDto>(product);
         }
     }
 }

@@ -23,6 +23,8 @@ namespace AMAPP.API.Services.Interfaces
         // Order operations
         Task<OrderDTO> CreateOrderAsync(CreateOrderDTO createOrderDTO, string userId);
         Task<OrderDTO> UpdateOrderAsync(int orderId, UpdateOrderDTO updateOrderDTO, string userId);
+        Task<bool> CancelOrderAsync(int orderId, string userId); 
+        Task<bool> CancelOrderItemAsync(int orderItemId, string userId); 
 
         // Order item operations
         Task<OrderItemDTO> UpdateOrderItemAsync(int orderItemId, UpdateOrderItemDTO updateOrderItemDTO, string userId);
@@ -32,5 +34,8 @@ namespace AMAPP.API.Services.Interfaces
         // Authorization checks
         Task<bool> CanCoproducerModifyOrderAsync(int orderId, string userId);
         Task<bool> CanProducerModifyOrderItemAsync(int orderItemId, string userId);
+        Task<bool> CanUserUpdateOrderAsync(int orderId, string userId); 
+        Task<bool> CanUserUpdateOrderItemAsync(int orderItemId, string userId); 
+        Task<bool> CanUserAccessOrderAsync(int orderId, string userId);
     }
 }

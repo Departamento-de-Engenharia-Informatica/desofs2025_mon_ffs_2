@@ -1,15 +1,14 @@
 using AMAPP.API.Configurations;
 using AMAPP.API.Data;
-using AMAPP.API.DTOs.CompoundProductProduct.Validators;
-using AMAPP.API.DTOs.SelectedProductOffer.Validators;
-using AMAPP.API.DTOs.SubscriptionPayment.Validators;
-using AMAPP.API.DTOs.SubscriptionPeriod.Validators;
+using AMAPP.API.Extensions;
 using AMAPP.API.Middlewares;
 using AMAPP.API.Models;
+using AMAPP.API.Repository.CoproducerInfoRepository;
 using AMAPP.API.Repository.DeliveryRepository;
 using AMAPP.API.Repository.OrderRepository;
 using AMAPP.API.Repository.ProducerInfoRepository;
 using AMAPP.API.Repository.ProdutoRepository;
+using AMAPP.API.Repository.ReservationRepository;
 using AMAPP.API.Services.Implementations;
 using AMAPP.API.Services.Interfaces;
 using AMAPP.API.Utils;
@@ -18,14 +17,16 @@ using FluentValidation.AspNetCore;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using QuestPDF.Infrastructure;
 using System.Reflection;
 using System.Text;
-using AMAPP.API.Repository.ReservationRepository;
-using QuestPDF.Infrastructure;
+using System.Threading.RateLimiting;
 
 namespace AMAPP.API
 {
@@ -54,32 +55,41 @@ namespace AMAPP.API
                 options.Password.RequireLowercase = true; // Requer minúsculas
                 options.Password.RequireUppercase = true; // Requer maiúsculas
                 options.Password.RequireDigit = true; // Requer dígitos
-
+                
                 // Configurações de conta
                 options.User.RequireUniqueEmail = true;
                 options.SignIn.RequireConfirmedEmail = false; // Ajuste conforme necessário
 
                 // Configurações de lockout
-                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(30);
                 options.Lockout.MaxFailedAccessAttempts = 5;
                 options.Lockout.AllowedForNewUsers = true;
             }).AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
 
+
+            // ========== CONFIGURAÇÃO JWT SEGURA ==========
             builder.Services.AddAuthentication(auth =>
             {
                 auth.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 auth.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             }).AddJwtBearer(options =>
             {
-                options.RequireHttpsMetadata = false;
+                // Exige HTTPS em produção
+                options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
+                //options.RequireHttpsMetadata = false;
                 options.SaveToken = true; // Stores the token in the HttpContext.User
+
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JwtSettings:Secret"])),
                     ValidateIssuerSigningKey = true,
                     ValidateLifetime = true,
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
+
+                    ValidateIssuer = true, 
+                    ValidateAudience = true,
+                    ValidIssuer = configuration["JwtSettings:Issuer"],
+                    ValidAudience = configuration["JwtSettings:Audience"],
+
                     ClockSkew = TimeSpan.Zero
                 };
 
@@ -88,17 +98,59 @@ namespace AMAPP.API
                 {
                     OnAuthenticationFailed = context =>
                     {
-                        Console.WriteLine($"Authentication failed: {context.Exception.Message}");
+                        var logger = context.HttpContext.RequestServices
+                            .GetRequiredService<ILogger<Program>>();
+                        logger.LogWarning("JWT Authentication failed: {Error} for IP: {IP}",
+                            context.Exception.Message,
+                            context.HttpContext.Connection.RemoteIpAddress);
                         return Task.CompletedTask;
                     },
                     OnTokenValidated = context =>
                     {
-                        Console.WriteLine($"Token validated successfully for user: {context.Principal.Identity?.Name}");
+                        var logger = context.HttpContext.RequestServices
+                           .GetRequiredService<ILogger<Program>>();
+
+                        var userName = context.Principal.FindFirst("name")?.Value ??
+                                           context.Principal.Identity?.Name ??
+                                           "Unknown";
+
+                        logger.LogInformation("Token validated for user: {User}",
+                            userName);
                         return Task.CompletedTask;
                     }
                 };
             });
 
+
+            // ========== CONFIGURAÇÃO DE AUTORIZAÇÃO COM POLÍTICAS ==========
+            builder.Services.AddAuthorization(options =>
+            {
+                // Políticas específicas do AMAPP
+                options.AddPolicy("AdminOnly", policy =>
+                    policy.RequireRole("Administrator"));
+
+                options.AddPolicy("ProducerOnly", policy =>
+                    policy.RequireRole("Producer"));
+
+                options.AddPolicy("CoproducerOnly", policy =>
+                    policy.RequireRole("CoProducer"));
+
+                options.AddPolicy("AmapOnly", policy =>
+                    policy.RequireRole("Amap"));
+
+                // Políticas de negócio
+                options.AddPolicy("CanManageProducts", policy =>
+                    policy.RequireRole("Producer", "Administrator"));
+
+                options.AddPolicy("CanManageSubscriptions", policy =>
+                    policy.RequireRole("CoProducer", "Administrator", "Amap"));
+
+                options.AddPolicy("CanManagePayments", policy =>
+                    policy.RequireRole("Administrator", "Amap"));
+
+                options.AddPolicy("CanViewReports", policy =>
+                    policy.RequireRole("Administrator", "Amap", "CoProducer"));
+            });
 
 
             builder.Services.AddAutoMapper(typeof(Program));
@@ -106,7 +158,9 @@ namespace AMAPP.API
             builder.Services.Configure<JwtSettings>(configuration.GetSection(key: nameof(JwtSettings)));
             builder.Services.Configure<EmailConfiguration>(configuration.GetSection(key: nameof(EmailConfiguration)));
 
-            builder.Services.AddScoped<IJwtService, JwtService>();
+            // Adicionar MemoryCache para blacklist
+            builder.Services.AddMemoryCache();
+
             builder.Services.AddScoped<TokenService>();
             builder.Services.AddScoped<IEmailService, EmailService>();
             builder.Services.AddScoped<IProductService, ProductService>();
@@ -119,6 +173,10 @@ namespace AMAPP.API
             builder.Services.AddScoped<IReservationService, ReservationService>();
             builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
             builder.Services.AddScoped<IReportService, ReportService>();
+            builder.Services.AddScoped<ICoproducerInfoRepository, CoproducerInfoRepository>();
+            builder.Services.AddScoped<ITokenBlacklistService, MemoryCacheTokenBlacklistService>();
+            builder.Services.AddScoped<IUserRoleInfoService, UserRoleInfoService>();
+            builder.Services.AddScoped<IRoleManagementService, RoleManagementService>();
 
             builder.Services.AddRouting(options =>
             {
@@ -126,24 +184,55 @@ namespace AMAPP.API
                 options.LowercaseQueryStrings = true; // Optional: lowercase query strings
                 options.ConstraintMap["kebab"] = typeof(KebabCaseParameterTransformer); // Register transformer
             });
-
-            builder.Services.AddControllers(options =>
-            {
-                options.Conventions.Add(new RouteTokenTransformerConvention(new KebabCaseParameterTransformer()));
-            });
-            builder.Services.AddFluentValidationAutoValidation()
-                .AddFluentValidationClientsideAdapters();
-            builder.Services.AddValidatorsFromAssemblyContaining<CreateSelectedProductOfferDtoValidator>();
-            builder.Services.AddValidatorsFromAssemblyContaining<CreateSubscriptionPeriodDtoValidator>();
-            builder.Services.AddValidatorsFromAssemblyContaining<CreateSubscriptionPaymentDtoValidator>();
-            builder.Services.AddValidatorsFromAssemblyContaining<CreateCompoundProductProductDtoValidator>();
-            builder.Services.AddValidatorsFromAssemblyContaining<UpdateCompoundProductProductDtoValidator>();
             
+            // Configure rate limiting
+            builder.Services.AddRateLimiter(options =>
+            {
+                options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+                options.AddFixedWindowLimiter("FixedPolicy", opt =>
+                {
+                    opt.Window = TimeSpan.FromMinutes(1);    // Time window of 1 minute
+                    opt.PermitLimit = 100;                   // Allow 100 requests per minute
+                    opt.QueueLimit = 2;                      // Queue limit of 2
+                    opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                });
+
+                // TODO: try to log the rate limit rejection
+                //options.OnRejected = async (context, cancellationToken) =>
+                //{
+                //    // Custom rejection handling logic
+                //    context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                //    context.HttpContext.Response.Headers["Retry-After"] = "60";
+
+                //    await context.HttpContext.Response.WriteAsync("Rate limit exceeded. Please try again later.", cancellationToken);
+
+                //    // Optional logging
+                //    Console.WriteLine("Rate limit exceeded for IP: {IpAddress}",
+                //        context.HttpContext.Connection.RemoteIpAddress);
+                //};
+            });
+
+            builder.Services.AddFluentValidationServices();
+            builder.Services.AddSecurityValidationConfig();
+
             // Add MediatR
             builder.Services.AddMediatR(cfg=>cfg.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly()));
             
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
+            
+            builder.Services.AddHealthChecks();
+
+
+            //NOTA: Com isto comentado passa o smoke test do health check, mas não redireciona para HTTPS
+             builder.Services.AddHttpsRedirection(options =>
+            {
+                options.HttpsPort             = 7237;
+                options.RedirectStatusCode    = StatusCodes.Status307TemporaryRedirect;
+            });
+            
+            
             builder.Services.AddSwaggerGen(option =>
             {
                 option.SwaggerDoc("v1", new OpenApiInfo { Title = "AMAPP API", Version = "v1" });
@@ -156,6 +245,7 @@ namespace AMAPP.API
                     BearerFormat = "JWT",
                     Scheme = "Bearer"
                 });
+                
 
                 option.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
@@ -172,16 +262,37 @@ namespace AMAPP.API
                     }
                 });
             });
+            
+            builder.Services.AddControllers(options =>
+            {
+                options.Conventions.Add(new RouteTokenTransformerConvention(new KebabCaseParameterTransformer()));
+            });
 
             builder.Services.AddCors(options =>
             {
+
                 options.AddDefaultPolicy(policy =>
                 {
-                    policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+                    if (builder.Environment.IsDevelopment())
+                    {
+                        // In development, allow all origins
+                        policy
+                        .AllowAnyOrigin()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                    }
+                    else
+                    {
+                        // Muito restritivo
+                        policy.WithOrigins("https://amapp.com", "https://www.amapp.com")
+                              .WithHeaders("Content-Type", "Authorization")
+                              .WithMethods("GET", "POST", "PUT", "DELETE")
+                              .AllowCredentials();
+                    }
+                    
                 });
             });
-
-
+            
             var app = builder.Build();
 
 
@@ -197,15 +308,27 @@ namespace AMAPP.API
 
             app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
+            if (!app.Environment.IsDevelopment())
+            {
+                app.UseHsts();
+            }
             app.UseHttpsRedirection();
+            
+
 
             app.UseCors();
+
             app.UseRouting();
+            app.UseRateLimiter();
+
+            app.UseMiddleware<TokenRevocationMiddleware>();
 
             app.UseAuthentication();
             app.UseAuthorization();
 
-            app.MapControllers();
+            app.MapHealthChecks("/health").AllowAnonymous();
+            app.MapControllers().RequireRateLimiting("FixedPolicy");
+            
 
 
             app.Run();

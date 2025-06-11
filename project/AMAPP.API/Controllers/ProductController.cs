@@ -1,4 +1,5 @@
 ﻿using AMAPP.API.DTOs.Product;
+using AMAPP.API.Extensions;
 using AMAPP.API.Models;
 using AMAPP.API.Repository.ProducerInfoRepository;
 using AMAPP.API.Services.Interfaces;
@@ -28,7 +29,7 @@ namespace AMAPP.API.Controllers
         }
 
         /// <summary>
-        /// Retrieves all products
+        /// Retrieves all products - Qualquer utilizador autenticado
         /// </summary>
         /// <returns>List of products</returns>
         [HttpGet]
@@ -51,7 +52,7 @@ namespace AMAPP.API.Controllers
         }
 
         /// <summary>
-        /// Gets a product by its ID
+        /// Gets a product by its ID - Público (mas com logging de segurança)
         /// </summary>
         /// <param name="id">Product ID</param>
         /// <returns>Product details</returns>
@@ -59,9 +60,11 @@ namespace AMAPP.API.Controllers
         [AllowAnonymous] // Allow public access to product details
         [ProducesResponseType(typeof(ProductDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<ProductDto>> GetProductById(int id)
         {
+
             try
             {
                 _logger.LogInformation("Retrieving product with ID: {ProductId}", id);
@@ -85,27 +88,30 @@ namespace AMAPP.API.Controllers
 
 
         [HttpPost]
-        [Authorize(Roles = "Producer,Administrator")]
+        [Authorize(Policy = "CanManageProducts")]
         [ProducesResponseType(typeof(ProductDto), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<ProductDto>> AddProduct([FromForm] CreateProductDto productDto)
         {
-            if (!ModelState.IsValid)
-            {
-                _logger.LogWarning("Invalid model state for product creation");
-                return BadRequest(new
-                {
-                    message = "Invalid product data",
-                    errors = ModelState.Values
-                        .SelectMany(v => v.Errors)
-                        .Select(e => e.ErrorMessage)
-                });
-            }
+
+
 
             try
             {
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state for product creation");
+                    return BadRequest(new
+                    {
+                        message = "Invalid product data",
+                        errors = ModelState.Values
+                            .SelectMany(v => v.Errors)
+                            .Select(e => e.ErrorMessage)
+                    });
+                }
+
                 // Obter o ID do usuário atual
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -154,7 +160,7 @@ namespace AMAPP.API.Controllers
         }
 
         [HttpPut("{id:int}")]
-        [Authorize(Roles = "Producer,Administrator")]
+        [Authorize(Policy = "CanManageProducts")]
         [ProducesResponseType(typeof(ProductDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -162,20 +168,20 @@ namespace AMAPP.API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<ProductDto>> UpdateProduct(int id, [FromForm] UpdateProductDto productDto)
         {
-            if (!ModelState.IsValid)
-            {
-                _logger.LogWarning("Invalid model state for product update");
-                return BadRequest(new
-                {
-                    message = "Invalid product data",
-                    errors = ModelState.Values
-                        .SelectMany(v => v.Errors)
-                        .Select(e => e.ErrorMessage)
-                });
-            }
-
             try
             {
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state for product update");
+                    return BadRequest(new
+                    {
+                        message = "Invalid product data",
+                        errors = ModelState.Values
+                            .SelectMany(v => v.Errors)
+                            .Select(e => e.ErrorMessage)
+                    });
+                }
+
                 // Obter o ID do usuário atual
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -218,7 +224,7 @@ namespace AMAPP.API.Controllers
 
 
         [HttpDelete("{id:int}")]
-        [Authorize(Roles = "Producer,Administrator")]
+        [Authorize(Policy = "CanManageProducts")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
