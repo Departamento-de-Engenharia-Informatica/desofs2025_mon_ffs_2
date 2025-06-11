@@ -72,6 +72,16 @@ Pedro Oliveira - 1240482 <br>
   - [User Management](#user-management)
   - [Input Validation](#input-validation)
     - [Create Product](#create-product)
+  - [Other Relevant Practices Adopted](#other-relevant-practices-adopted)
+    - [Rate limiting - DDOS](#rate-limiting---ddos)
+    - [CSRG](#csrg)
+    - [TLS/SSL Encryption](#tlsssl-encryption)
+    - [CORS](#cors)
+    - [Dto's](#dtos)
+    - [Logout com revoke do token](#logout-com-revoke-do-token)
+    - [Branch Management](#branch-management)
+      - [Peer Review Process](#peer-review-process)
+      - [Branch Protection Rules](#branch-protection-rules)
   - [Pipeline](#pipeline)
     - [Job 1: Code Analysis (SAST with CodeQL)](#job-1-code-analysis-sast-with-codeql)
     - [Job 2: Build and Test](#job-2-build-and-test)
@@ -79,9 +89,6 @@ Pedro Oliveira - 1240482 <br>
     - [Job 4: Code Quality Analysis](#job-4-code-quality-analysis)
     - [Job 5: OWASP ZAP Baseline Scan (DAST)](#job-5-owasp-zap-baseline-scan-dast)
     - [Job 6: Deployment](#job-6-deployment)
-  - [Relevant Practices Adopted](#relevant-practices-adopted)
-    - [Default Branch: `develop`](#default-branch-development)
-    - [Branch Protection Rules](#branch-protection-rules)
   - [ASVS](#asvs)
   - [Conclusion](#conclusion)
     - [Sprint Achievements](#sprint-achievements)
@@ -564,6 +571,46 @@ This multi-layered approach significantly reduces the attack surface for image-b
 
 ---
 
+## Other Relevant Practices Adopted
+
+To ensure a secure and robust development lifecycle, the team adopted a structured workflow with multiple security layers and quality controls.
+
+### Rate limiting - DDOS
+
+### CSRG
+
+### TLS/SSL Encryption
+
+### CORS
+
+### Dto's
+
+### Logout com revoke do token
+
+### Branch Management
+
+The repository uses two main branches with different protection levels:
+
+- **`development`** (default branch): Integration environment where new features are first tested. Requires approval from one team member for merge, enabling rapid development iteration.
+
+- **`main`** (production branch): Represents production code with strict controls. Requires explicit approval from all three remaining team members before any merge, ensuring maximum stability and security.
+
+#### Peer Review Process
+
+All code changes are introduced through pull requests with mandatory review, ensuring security concerns, coding standards, and potential vulnerabilities are addressed early in the development cycle.
+
+#### Branch Protection Rules
+
+Key protection rules enforced at repository level:
+
+- **Restrict Deletions**: Prevents protected branches from being deleted, avoiding accidental loss of critical code
+- **Require Pull Request Before Merge**: All changes must go through pull requests, promoting code review and preventing direct pushes
+- **Block Force Pushes**: Disabled to protect branch history integrity and prevent unwanted overwrites
+
+These practices create a multi-layered approach that significantly reduces security flaws reaching production while maintaining clear separation between development and production environments.
+
+---
+
 ## Pipeline
 
 The CI/CD pipeline consists of six main jobs that execute automated security testing, quality assurance, and deployment processes. The pipeline runs on pushes to main/develop branches, pull requests, weekly schedules, and manual triggers.
@@ -591,33 +638,6 @@ Executes dynamic application security testing by running the API in a test envir
 ### Job 6: Deployment
 
 Creates automated deployment packages for pull requests targeting the develop branch. Generates ready-to-run deployment artifacts with startup scripts for both Windows and Linux environments, enabling easy testing of feature branches. The deployment package includes the compiled application, configuration files, and helper scripts for local testing with a 3-day retention period.
-
----
-
-## Relevant Practices Adopted
-
-To ensure a secure and robust development lifecycle, the team adopted a structured and disciplined workflow. All changes to the codebase were introduced through pull requests targeting the `development` branch, enforcing isolation and minimizing the risk of insecure or unstable code being merged prematurely. Each pull request required mandatory peer review and approval by at least one team member, ensuring that security concerns, coding standards, and potential vulnerabilities were addressed early.
-
-Once all planned features were completed and individually reviewed, a final merge into the `main` (production) branch could only occur after receiving explicit approval from all remaining three team members. This multi-level review process reinforced accountability and significantly reduced the likelihood of security flaws reaching production. These practices, combined with clear branching strategies and controlled merge permissions, contributed to a development workflow aligned with secure coding principles.
-
-### Default Branch: `development`
-
-The `develop` branch is set as the default branch of the repository. This ensures that all new features and tests are first integrated in a development environment, before being promoted to the `main` (production) branch.
-This practice follows common Git workflows such as Git Flow, providing a clear separation between development and production environments.
-
-![Default branch](./figs/branch-develop.PNG)
-
-### Branch Protection Rules
-
-To ensure the stability and security of the codebase, several protection rules have been applied to the main branches:
-
-- **Restrict Deletions**: Prevents protected branches from being deleted, avoiding accidental loss of critical code.
-- **Require Pull Request Before Merge**: All changes must be submitted through a pull request before they can be merged into a protected branch. This promotes code review and prevents direct pushes.
-- **Block Force Pushes**: Force pushes are disabled, protecting the integrity of the branch history and preventing unwanted overwrites.
-
-Each of these rules is enforced at the repository level and contributes to better version control practices and team collaboration.
-
-![Branch protection rules](./figs/rulesets.PNG)
 
 ---
 
