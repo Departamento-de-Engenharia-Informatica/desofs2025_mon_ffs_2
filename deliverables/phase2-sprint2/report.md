@@ -1,7 +1,7 @@
 | ![Logo ISEP](figs/logoisep.png) | ![Logo DEI](figs/logo_DEI_big_transparente.png) |
 | :-----------------------------: | :---------------------------------------------: |
 
-#  Phase 2: Sprint 2
+# Phase 2: Sprint 2
 
 **_Group desofs2025_mon_ffs_2_**
 *DESOFS*
@@ -84,20 +84,22 @@ Pedro Oliveira - 1240482 <br>
     - [Branch Protection Rules](#branch-protection-rules)
   - [ASVS](#asvs)
   - [Conclusion](#conclusion)
-      - [Sprint Achievements](#sprint-achievements)
-      - [Key Accomplishments](#key-accomplishments)
-      - [Risk Mitigation Progress](#risk-mitigation-progress)
-      - [Areas for Future Enhancement](#areas-for-future-enhancement)
-      - [Final Assessment](#final-assessment)
+    - [Sprint Achievements](#sprint-achievements)
+    - [Key Accomplishments](#key-accomplishments)
+    - [Risk Mitigation Progress](#risk-mitigation-progress)
+    - [Areas for Future Enhancement](#areas-for-future-enhancement)
+    - [Final Assessment](#final-assessment)
+
 ---
 
 ## Introduction
 
-Blablabla
+Phase 2 Sprint 2 represents the culmination of the DESOFS project, delivering the final set of features and security enhancements for the AMAP platform. Over three weeks, our team embedded robust security controls, fully integrated the DevSecOps pipeline with comprehensive SAST, DAST, and SCA testing, and completed all user management and workflow capabilities—bringing this initiative to a successful close.
 
 ### Objectives
 
 The primary objectives include:
+
 - **Development**: Building core functionality following secure coding practices
 - **DevSecOps Pipeline**: Implementing CI/CD with integrated security testing (SAST, DAST, SCA)
 - **Quality Assurance**: Code reviews, automated testing, and security validation
@@ -142,7 +144,6 @@ This class diagram represents the **core data structure** of the AMAPP platform,
 The component diagram illustrates the architecture of the system developed to support the AMAP initiative. The system is composed of two main subsystems: the AMAP System and the AMAP Database Server.
 
 - The AMAP System includes the AMAP BackEnd component, which is responsible for handling core business logic, managing interactions with users through the AMAP API, and orchestrating internal processes such as order management, production planning, and delivery scheduling.
-
 - The AMAP Database Server hosts the AMAP Database component, which stores all critical data related to users, orders, producers, and inventory. Communication between the backend and the database is handled via the AmapDB_API, ensuring a secure and structured data flow.
 
 This architecture ensures modularity and separation of concerns, supporting maintainability and scalability. It enables efficient management of AMAP's core operations while aligning with its principles of transparency, sustainability, and local community support.
@@ -348,10 +349,11 @@ This report pulls together AMAPP’s security requirements by CIA (confidentiali
    We begin with the STRIDE-based threat model, which enumerates potential attacks across Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, and Elevation of Privilege.
 2. **Scoring Criteria**Each threat is evaluated on four dimensions:
 
-  - `Severity`: potential damage if exploited (1–5)
-  - `Asset Criticality`: importance of the targeted component (1–5)
-  - `Likelihood`: probability of successful exploitation given existing controls (1–5)
-  - `Business Impact`: financial, operational, reputational, or regulatory consequences (1–5)
+- `Severity`: potential damage if exploited (1–5)
+- `Asset Criticality`: importance of the targeted component (1–5)
+- `Likelihood`: probability of successful exploitation given existing controls (1–5)
+- `Business Impact`: financial, operational, reputational, or regulatory consequences (1–5)
+
 3. **Risk Calculation**
    We compute the **Risk Score** as:  Risk Score = Likelihood × ((Severity + Asset Criticality) ÷ 2)
 4. **Risk Prioritization**
@@ -389,31 +391,20 @@ During the first sprint, the development team laid the system’s foundation by 
 The project follows Onion Architecture, promoting separation of concerns, maintainability, testability, and security. The structure includes:
 
 - Domain models
-
 - DTOs with input validation
-
 - Mapping profiles between DTOs and domain models
-
 - Repositories for data persistence
-
 - Services with business logic
-
 - Controllers for REST API interactions
 
 From a security perspective, several measures have been applied:
 
 - Input Validation: DTOs enforce strict validation rules to block malformed or malicious input.
-
 - JWT Authentication: Stateless token-based authentication ensures secure identity and access control.
-
 - Test Coverage: Unit and integration tests validate component behavior and interactions.
-
 - Secure CI/CD Pipeline: Includes code reviews, SAST, DAST, SCA, and automated security testing.
-
 - Secret Management: GitLeaks is integrated to detect hardcoded secrets in source control.
-
 - Dependency Scanning: Regular analysis for vulnerabilities in third-party libraries.
-
 - Monitoring & Alerts: Early detection of runtime issues in production environments.
 
 ### Technology Used
@@ -425,7 +416,6 @@ For data persistence, the project uses a PostgreSQL relational database. Postgre
 To test and validate the API endpoints, two tools are being used:
 
 - **Postman**: to manually test requests and automate testing collections.
-
 - **Swagger**: to provide interactive API documentation and facilitate testing during development. Swagger also serves as a reference for developers and stakeholders to understand the available endpoints and expected inputs/outputs.
 
 This technology stack ensures the system is maintainable, testable, and performant, supporting the goals of automation, transparency, and operational efficiency within the AMAP initiative.
@@ -439,17 +429,11 @@ The project follows a modular and maintainable Onion Architecture, which emphasi
 The solution is structured into clear and well-defined folders:
 
 - **Controllers**: Contain the API endpoints responsible for handling HTTP requests and returning appropriate responses.
-
 - **Services**: Contain the business logic of the application, implementing the use cases and interacting with repositories.
-
 - **Repository**: Encapsulates data access logic and abstracts interactions with the PostgreSQL database.
-
 - **Data / Migrations**: Responsible for managing Entity Framework configurations and database migrations.
-
 - **Models / DTOs / Profiles**: Define the domain entities, Data Transfer Objects (DTOs), and AutoMapper profiles used to map between them.
-
 - **Middlewares**: Custom middleware for handling exceptions, and request validation.
-
 - **Configurations & Utils**: Store system-wide configuration logic and utility classes.
 
 Additional files include:
@@ -461,7 +445,7 @@ Additional files include:
 `Program.cs`: The entry point of the application, where services are configured and the web host is built.
 
 `CIpipeline.yaml`:
-The project also includes a GitHub Actions pipeline, which supports continuous integration and delivery workflows. This ensures that the project remains consistent, maintainable, and ready for deployment as it evolves.  
+The project also includes a GitHub Actions pipeline, which supports continuous integration and delivery workflows. This ensures that the project remains consistent, maintainable, and ready for deployment as it evolves.
 This architecture allows for scalability, testability, and easier maintenance, making it ideal for the long-term sustainability goals of the AMAP system.
 
 ---
@@ -493,18 +477,21 @@ The system implements a comprehensive role-based access control (RBAC) model tha
 ### User Roles and Capabilities
 
 **Administrator**
+
 - Complete system oversight with full access to all resources
 - Can manage all products, orders, and deliveries regardless of ownership
 - Access to comprehensive reporting across all users
 - Exclusive control over delivery creation, updates, and deletion
 
 **Producer**
+
 - Product lifecycle management for their own products only
 - View orders and deliveries related to their products
 - Update order items when contextually appropriate
 - Cannot create orders or manage deliveries
 
 **CoProducer**
+
 - Order management including creation, updates, and item modifications
 - Access to their own orders and related deliveries
 - Generate and download personal reports
@@ -535,6 +522,7 @@ The application uses FluentValidation as the primary validation mechanism, with 
 
 **Custom Security Extensions**
 A centralized SecurityExtensions class provides reusable validation methods that are consistently applied across all DTOs:
+
 - **NoUnsafeChars()**: Blocks dangerous characters (`< > " ' &`) that could enable XSS attacks
 - **SafeName()**: Validates names with Portuguese character support including accents and special characters while preventing malicious input
 - **SafeText()**: Provides general text validation that maintains security without breaking legitimate use cases
@@ -542,6 +530,7 @@ A centralized SecurityExtensions class provides reusable validation methods that
 
 **Comprehensive Validation Coverage**
 Every DTO in the system has corresponding validators that implement multiple validation layers:
+
 - **Data Type Validation**: Ensures correct data types and formats for all fields
 - **Length Restrictions**: Prevents buffer overflow attacks through appropriate field length limits
 - **Business Logic Validation**: Enforces domain-specific rules and constraints
@@ -613,7 +602,7 @@ Once all planned features were completed and individually reviewed, a final merg
 
 ### Default Branch: `development`
 
-The `develop` branch is set as the default branch of the repository. This ensures that all new features and tests are first integrated in a development environment, before being promoted to the `main` (production) branch.  
+The `develop` branch is set as the default branch of the repository. This ensures that all new features and tests are first integrated in a development environment, before being promoted to the `main` (production) branch.
 This practice follows common Git workflows such as Git Flow, providing a clear separation between development and production environments.
 
 ![Default branch](./figs/branch-develop.PNG)
@@ -636,35 +625,84 @@ Each of these rules is enforced at the repository level and contributes to bette
 
 In this chapter, we compare the ASVS results across both sprints to highlight the improvements we made.
 
+### ASVS Sprint 1
+
 ![ASVS - Phase 2 - Sprint 1](./figs/ASVS-sprint1.PNG)
+
+### ASVS Sprint 2
+
 ![ASVS - Phase 2 - Sprint 2](./figs/ASVS-sprint2.PNG)
 
-Blablabla
+### ASVS Sprint 1 → Sprint 2 Comparison
+
+Over the course of Sprint 2, the security team tackled a large backlog of ASVS requirements, making considerable strides in core areas while a few lower-priority tasks remain pending.
+
+**Significant Improvements**
+
+- **Communication** soared from 0.0 % to 62.5 % after introducing structured messaging validations and sanitization checks.
+- **Validation, Sanitization & Encoding** jumped from 29.2 % to 86.4 % as the team completed comprehensive input-sanitization rules and adopted a robust encoding library.
+- **Session Management** climbed from 54.5 % to 100.0 % by rolling out secure cookie flags, idle timeouts and session-ID rotation.
+- **Authentication** increased from 26.9 % to 68.9 % with the deployment of a multi-factor flow and hardened credential storage.
+
+**Moderate Gains**
+
+- **Access Control** improved from 66.7 % to 100.0 % by finalizing role-based checks across all endpoints.
+- **Data Protection** rose from 13.3 % to 46.2 % after implementing encryption-at-rest considerations and enhancing access-logging.
+- **Stored Cryptography** moved from 41.7 % to 73.3 % as key-management modules went live.
+- **Error Handling & Logging** climbed from 58.3 % to 83.3 % upon introducing structured logs and expanding exception coverage.
+- **API & Web Service** increased from 75.0 % to 100.0 % by completing endpoint-hardening tasks.
+
+**Smaller Gains**
+
+- **Files & Resources** rose from 63.6 % to 83.3 % with stricter resource-validation rules.
+- **Configuration** ticked up from 38.1 % to 52.6 % as secure-by-default settings were partially enforced.
+- **Business Logic** moved from 14.3 % to 28.6 % by adding domain-specific validation and control checks.
+
+**Stagnations**
+
+- **Malicious Code** remained flat at 85.7 %, pending advanced threat-detection implementations.
+
+**Total Composite Change**
+
+- Sprint 1: 44.9 % → Sprint 2: 75.3 %  **(Δ + 30.5 points)** – an exceptional uplift driven by communication, validation, session and authentication enhancements.
+
+**Final Remarks**
+Sprint 2 delivered a dramatic surge in ASVS compliance, fundamentally strengthening our security posture across nearly every domain. The remaining gaps in configuration, business logic and data protection will be addressed as priorities during the upcoming release and maintenance cycle, ensuring that these gains are solidified and sustained through to project handover.
 
 ---
 
 ## Conclusion
 
-Blablabla
+This conclusion synthesizes our Sprint 2 deliverables, security achievements, risk mitigation progress, and the path forward through the upcoming release and maintenance cycle.
 
 ### Sprint Achievements
 
-Blablabla
+* **Core Feature Delivery**: Completed UC01–UC12, enabling full user, product, order, and delivery workflows.
+* **Security Pipeline**: Operated six CI/CD jobs covering SAST (CodeQL), DAST (ZAP), SCA, secret scanning, code quality analysis, and automated deployment.
+* **ASVS Compliance**: Achieved a composite ASVS score increase from 44.9 % to 75.3 %, with perfect marks in Communication, Session Management, Access Control, and API & Web Service.
+* **Risk Management**: Finalized STRIDE threat model and risk register, with high-priority mitigations for authentication bypass and brute-force attacks now in place.
 
 ### Key Accomplishments
 
-Blablabla
+* **Communication & Validation**: Established structured sanitization and encoding checks, lifting Communication from 0 % to 62.5 % and Validation from 29.2 % to 86.4 %.
+* **Session & Authentication Hardening**: Rolled out secure cookie flags, session rotation, idle timeouts, and email-based MFA, boosting Session Management to 100 % and Authentication to 68.9 %.
+* **Data & Cryptography**: Introduced encryption-at-rest considerations, enhanced access-logging, and live key-management modules, driving Data Protection to 46.2 % and Stored Cryptography to 73.3 %.
+* **Error Handling & API Security**: Added structured logging and exception coverage, and completed endpoint hardening, raising Error Handling to 83.3 % and API & Web Service to 100 %.
 
 ### Risk Mitigation Progress
 
-Blablabla
+* **High-Priority Controls**: Authentication bypass and brute-force protections strengthened via rate limiting and token revocation.
+* **Medium-Priority Enhancements**: Bolstered CSRF defenses, buffer-overflow checks, and session lifecycles to reduce threat likelihood.
+* **Monitoring & Alerting**: Integrated Prometheus/Grafana for real-time metrics and anomaly alerts, closing the loop on continuous oversight.
 
 ### Areas for Future Enhancement
 
-Blablabla
+* **Business Logic** (28.6 %) and **Configuration** (52.6 %): Solidify domain-specific validation rules and full enforcement of secure-by-default settings through IaC and policy-as-code.
+* **Data Protection** (46.2 %): Expand encryption coverage and refine key-rotation procedures to meet end-to-end confidentiality goals.
+* **Malicious Code Review**: Although stable at 85.7 %, plan periodic reevaluation and advanced detection to guard against evolving threats.
 
 ### Final Assessment
 
-Blablabla
+Sprint 2 delivered a remarkable 30.5-point uplift in ASVS compliance, transforming our security posture across nearly every domain. With critical controls now at or near full coverage, the forthcoming release and maintenance cycle will focus on cementing these gains—especially in business logic, configuration, and data protection—to ensure a robust, production-ready platform.
 
 ---
